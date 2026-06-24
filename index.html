@@ -68,6 +68,29 @@ const SUGGESTED_FC=[
 
 // ── API Key & AI 헬퍼 ──
 
+
+// ── 자동 분류 규칙 (과거 패턴 학습) ──
+const BUILTIN_RULES={"백다방": {"category": "카페/간식", "account": "개인"}, "오라클피부과": {"category": "병원/건강", "account": "개인"}, "태성가스텍충전소": {"category": "차량/교통", "account": "개인"}, "JB 가스+인터넷": {"category": "주거/공과금", "account": "개인"}, "GS25": {"category": "카페/간식", "account": "개인"}, "GS25 신부그랜드점": {"category": "카페/간식", "account": "개인"}, "한성횟집": {"category": "외식/배달", "account": "개인"}, "서일산업 연기충전소": {"category": "차량/교통", "account": "개인"}, "CU 천안청광점": {"category": "카페/간식", "account": "개인"}, "KT통신요금": {"category": "통신비", "account": "개인"}, "코스트코": {"category": "장보기", "account": "공용"}, "네이버페이": {"category": "쇼핑", "account": "개인"}, "트레이더스 안성점": {"category": "장보기", "account": "공용"}, "백다방 천안신부동아점": {"category": "카페/간식", "account": "개인"}, "신비약국": {"category": "병원/건강", "account": "개인"}, "행복한 가정의학과의원": {"category": "병원/건강", "account": "개인"}, "우방슈퍼": {"category": "장보기", "account": "개인"}, "쿠팡": {"category": "쇼핑", "account": "개인"}, "아이스크림샵 신부우방점": {"category": "카페/간식", "account": "개인"}, "농업회사법인 허씨네": {"category": "장보기", "account": "개인"}, "천안청춘크렙": {"category": "외식/배달", "account": "개인"}, "천안IC충전소": {"category": "차량/교통", "account": "개인"}, "메가엠지씨커피 천안신부점": {"category": "카페/간식", "account": "개인"}, "캠퍼스2": {"category": "술/유흥", "account": "개인"}, "역전할머니맥주 성정점": {"category": "술/유흥", "account": "개인"}, "지구 오락실": {"category": "데이트/여행", "account": "개인"}, "이자카야키미토": {"category": "술/유흥", "account": "개인"}, "aliexpress": {"category": "쇼핑", "account": "개인"}, "Aliexpress": {"category": "쇼핑", "account": "개인"}, "동글": {"category": "쇼핑", "account": "개인"}, "신천안스테이션주유소": {"category": "차량/교통", "account": "개인"}, "신천안스테이션LPG충전소": {"category": "차량/교통", "account": "개인"}, "서문시장 주차": {"category": "차량/교통", "account": "개인"}, "교보문고": {"category": "자격증/공부", "account": "개인"}, "배달의민족": {"category": "외식/배달", "account": "개인"}, "서가장인곱창": {"category": "외식/배달", "account": "개인"}, "스파오 천안신부점": {"category": "쇼핑", "account": "개인"}, "으뜸50안경원": {"category": "쇼핑", "account": "개인"}, "티머니택시": {"category": "차량/교통", "account": "개인"}, "명동닭한마리본점": {"category": "외식/배달", "account": "개인"}, "빽다방 천안터미널점": {"category": "카페/간식", "account": "개인"}, "H&M": {"category": "쇼핑", "account": "개인"}, "카카오택시": {"category": "차량/교통", "account": "개인"}, "한국산업인력공단": {"category": "자격증/공부", "account": "개인"}, "컴포즈커피 천안성환점": {"category": "카페/간식", "account": "개인"}, "천안중앙시장": {"category": "차량/교통", "account": "개인"}, "실내 바이크": {"category": "생활용품", "account": "공용"}, "Steam": {"category": "쇼핑", "account": "개인"}, "트레이더스 연회비": {"category": "생활용품", "account": "개인"}, "광동석유": {"category": "차량/교통", "account": "개인"}, "풍성슈퍼": {"category": "장보기", "account": "개인"}, "모니터": {"category": "생활용품", "account": "개인"}, "맥도날드 천안터미널점": {"category": "외식/배달", "account": "개인"}, "용가회전횟귀 천안점": {"category": "외식/배달", "account": "개인"}, "카카오모빌리티": {"category": "차량/교통", "account": "개인"}, "Claude Pro → Max 업그레이드": {"category": "자격증/공부", "account": "개인"}, "한국경제신문+밀리의서재 구독": {"category": "통신비", "account": "개인"}, "시험원서접수": {"category": "자격증/공부", "account": "개인"}, "티맵모빌리티": {"category": "차량/교통", "account": "개인"}, "카카오T": {"category": "차량/교통", "account": "개인"}, "대구농수산물유통관리공사": {"category": "차량/교통", "account": "개인"}, "JH차지": {"category": "차량/교통", "account": "개인"}, "삼용만남의충전소": {"category": "차량/교통", "account": "개인"}, "매우만족": {"category": "외식/배달", "account": "개인"}, "현대카써비스": {"category": "차량/교통", "account": "개인"}, "문타워약국": {"category": "병원/건강", "account": "개인"}, "태평소국밥": {"category": "외식/배달", "account": "개인"}, "세븐일레븐 무주리조트점": {"category": "카페/간식", "account": "개인"}, "GS25 무주": {"category": "카페/간식", "account": "개인"}, "무주덕유산리조트": {"category": "데이트/여행", "account": "개인"}, "한국경제신문": {"category": "통신비", "account": "개인"}, "GS25 신부그랜": {"category": "카페/간식", "account": "개인"}, "버스": {"category": "차량/교통", "account": "개인"}, "지하철": {"category": "차량/교통", "account": "개인"}, "돼지막창구이": {"category": "외식/배달", "account": "개인"}, "중도가스 천안영": {"category": "차량/교통", "account": "개인"}, "학화193": {"category": "외식/배달", "account": "개인"}, "신천안스테이션LPG": {"category": "차량/교통", "account": "개인"}, "신세계백화점 천안": {"category": "쇼핑", "account": "개인"}, "TCL TV": {"category": "생활용품", "account": "개인"}, "코드블랙 PC방": {"category": "데이트/여행", "account": "개인"}, "버거킹 평택로데오점": {"category": "외식/배달", "account": "개인"}, "진짜무쇠삼겹 평택역": {"category": "외식/배달", "account": "개인"}, "롯데리아 평택중앙": {"category": "외식/배달", "account": "개인"}, "모노맨션 평택역점": {"category": "카페/간식", "account": "개인"}, "올리브영 평택": {"category": "쇼핑", "account": "개인"}, "Claude Max": {"category": "자격증/공부", "account": "개인"}, "박대근": {"category": "수입/가족지원", "account": "개인"}, "이사 계약금": {"category": "주거/공과금", "account": "개인"}, "DB손해보험": {"category": "보험", "account": "개인"}, "박용국": {"category": "수입/이사지원", "account": "개인"}, "신한ATM입금": {"category": "기타수입", "account": "개인"}, "이사 보증금": {"category": "주거/공과금", "account": "개인"}, "아정당": {"category": "수입/일당", "account": "개인"}, "카카오뱅크 이자": {"category": "기타수입", "account": "개인"}, "캐시백": {"category": "기타수입", "account": "개인"}, "후불교통대금": {"category": "차량/교통", "account": "개인"}, "천안세무서": {"category": "기타수입", "account": "개인"}, "강서구지방소득": {"category": "기타수입", "account": "개인"}, "금송산업개발": {"category": "수입/일당", "account": "개인"}, "토스프라임 멤버십": {"category": "통신비", "account": "개인"}, "삼원이엔지": {"category": "수입/일당", "account": "개인"}, "무주 영화제 숙박패키지": {"category": "데이트/여행", "account": "개인"}, "DB손보 환급": {"category": "기타수입", "account": "개인"}, "삼성카드 캐시백": {"category": "기타수입", "account": "개인"}, "정찬국": {"category": "수입/기타", "account": "개인"}, "김다혜": {"category": "수입/정산환급", "account": "개인"}, "염통꼬치": {"category": "외식/배달", "account": "개인"}, "농협ATM입금": {"category": "기타수입", "account": "개인"}, "당근마켓": {"category": "쇼핑", "account": "개인"}, "토스뱅크 대출이자": {"category": "대출이자", "account": "개인"}, "두레박줄": {"category": "수입/기타", "account": "개인"}, "KT 인터넷/통신": {"category": "통신비", "account": "공용"}, "생활비 입금": {"category": "수입/이체", "account": "공용"}, "우아한형제들": {"category": "외식/배달", "account": "공용"}, "말자언니": {"category": "술/유흥", "account": "공용"}, "토스페이_마켓컬리_TOSS": {"category": "쇼핑", "account": "공용"}, "안성미": {"category": "주거/공과금", "account": "공용"}, "삼주국민식자재센타": {"category": "장보기", "account": "공용"}, "천안참치정육점": {"category": "장보기", "account": "공용"}, "중앙축산": {"category": "장보기", "account": "공용"}, "월세 입금": {"category": "수입/이체", "account": "공용"}, "우방아파트 관리비": {"category": "주거/공과금", "account": "공용"}, "JB 가스비": {"category": "주거/공과금", "account": "공용"}, "길목치킨": {"category": "외식/배달", "account": "공용"}, "월세지원": {"category": "수입/이체", "account": "공용"}, "컴포즈커피 천안터미널점": {"category": "카페/간식", "account": "공용"}, "아성다이소": {"category": "쇼핑", "account": "공용"}, "지에스25 천안우방점": {"category": "카페/간식", "account": "공용"}, "컨비니언스 신부점": {"category": "카페/간식", "account": "공용"}, "세탁방 충전": {"category": "생활용품", "account": "공용"}, "천안시산림조합": {"category": "생활용품", "account": "공용"}, "쿠팡이츠": {"category": "외식/배달", "account": "공용"}, "무인양품타임스퀘어점": {"category": "쇼핑", "account": "공용"}, "히리네일": {"category": "피부/미용", "account": "공용"}, "리틀 롤스": {"category": "카페/간식", "account": "공용"}, "등촌샤브칼국수": {"category": "외식/배달", "account": "공용"}, "신세계백화점천안아산점": {"category": "쇼핑", "account": "공용"}, "더리터 경북왜관점": {"category": "카페/간식", "account": "공용"}, "리틀빈": {"category": "장보기", "account": "공용"}, "얼큰이": {"category": "장보기", "account": "공용"}, "지에스25 대구대현점": {"category": "카페/간식", "account": "공용"}, "씨유": {"category": "카페/간식", "account": "공용"}, "공용 구매": {"category": "생활용품", "account": "공용"}, "빽다방 천안중앙시장점": {"category": "카페/간식", "account": "공용"}, "평양냉면": {"category": "외식/배달", "account": "공용"}, "정든포차": {"category": "외식/배달", "account": "공용"}, "지에스25 신부그랜드점": {"category": "카페/간식", "account": "공용"}, "홈마트": {"category": "장보기", "account": "공용"}, "빅바이트컴퍼니 쉐이크쉑천안": {"category": "카페/간식", "account": "공용"}, "CJCGV": {"category": "데이트/여행", "account": "공용"}, "모듬회세꼬시전문점": {"category": "외식/배달", "account": "공용"}, "빽다방 세종전의점": {"category": "카페/간식", "account": "공용"}, "두리두리": {"category": "카페/간식", "account": "공용"}, "투다리": {"category": "외식/배달", "account": "공용"}, "FLO 음악 구독": {"category": "통신비", "account": "공용"}, "안골": {"category": "외식/배달", "account": "공용"}, "리스트노래연습장": {"category": "데이트/여행", "account": "공용"}, "장칼국수": {"category": "외식/배달", "account": "공용"}, "씨유천안청광점": {"category": "카페/간식", "account": "공용"}, "배가족발보쌈": {"category": "외식/배달", "account": "공용"}, "소문난오백빵": {"category": "외식/배달", "account": "공용"}, "토스페이_컨텐츠_TOSS": {"category": "통신비", "account": "공용"}, "옥수사": {"category": "쇼핑", "account": "공용"}, "컴퓨터의자": {"category": "생활용품", "account": "공용"}, "식탁테이블": {"category": "생활용품", "account": "공용"}};
+// 사용자 추가 규칙 (localStorage)
+const getUserRules=()=>{try{return JSON.parse(localStorage.getItem("classify_rules")||"{}");}catch{return{};}};
+const saveUserRule=(kw,cat,acc)=>{try{const r=getUserRules();r[kw]={category:cat,account:acc};localStorage.setItem("classify_rules",JSON.stringify(r));}catch{}};
+const allRules=()=>({...BUILTIN_RULES,...getUserRules()});
+
+// 가맹점명으로 카테고리 자동 추론
+function autoClassify(merchant){
+  if(!merchant)return null;
+  const m=merchant.trim();
+  const rules=allRules();
+  // 키워드 길이 긴 순으로 매칭 (더 구체적인 규칙 우선)
+  const keys=Object.keys(rules).sort((a,b)=>b.length-a.length);
+  for(const k of keys){
+    if(m.includes(k)||k.includes(m.split("(")[0].split("*")[0].trim())){
+      return rules[k];
+    }
+  }
+  return null;
+}
+
 // ── 공용 설정 (localStorage) ──
 const getSharedCfg=()=>{try{return JSON.parse(localStorage.getItem("shared_cfg")||'{"ratio":50,"sharedBudget":0}');}catch{return{ratio:50,sharedBudget:0};}};
 const saveSharedCfg=c=>{try{localStorage.setItem("shared_cfg",JSON.stringify(c));}catch{}};
@@ -124,7 +147,7 @@ const saveHoldings=h=>{try{localStorage.setItem("portfolio_holdings",JSON.string
 function showApiKeySetting(){
   const cur=getApiKey();
   const ov=h("div",{style:{position:"fixed",inset:"0",background:"rgba(40,37,31,.55)",display:"flex",alignItems:"center",justifyContent:"center",zIndex:"70",padding:"24px"},onclick:e=>{if(e.target===ov)ov.remove();}});
-  const box=h("div",{style:{width:"100%",maxWidth:"400px",background:C.w,borderRadius:"18px",padding:"24px"}});
+  const box=h("div",{style:{width:"100%",maxWidth:"400px",background:C.w,borderRadius:"18px",padding:"24px",maxHeight:"88vh",overflowY:"auto"}});
   const inp=h("input",{type:"password",value:cur,placeholder:"sk-ant-api03-…",style:{width:"100%",border:`1px solid ${C.line}`,borderRadius:"10px",padding:"11px 12px",fontSize:"14px",marginBottom:"12px"}});
   const sv=h("button",{style:{width:"100%",background:C.brand,color:C.w,fontSize:"15px",fontWeight:"700",padding:"13px",borderRadius:"12px",border:"none",cursor:"pointer"}},"저장");
   sv.onclick=()=>{setApiKey(inp.value);ov.remove();alert("API 키가 저장됐어요 ✅");};
@@ -149,6 +172,47 @@ function showApiKeySetting(){
     cur?h("button",{style:{width:"100%",marginTop:"8px",fontSize:"13px",color:C.over,cursor:"pointer",padding:"8px"},onclick:()=>{setApiKey("");ov.remove();}},"API 키 삭제"):"",
     h("button",{style:{width:"100%",marginTop:"6px",fontSize:"13px",color:C.faint,cursor:"pointer",padding:"6px"},onclick:()=>ov.remove()},"취소")
   );
+  // 백업 버튼들
+  const exportBtn=h("button",{style:{width:"100%",marginTop:"10px",fontSize:"13.5px",fontWeight:"700",padding:"12px",borderRadius:"11px",border:`1px solid ${C.brand}`,color:C.brand,background:C.soft,cursor:"pointer"}},"⬇️ 전체 데이터 백업 (JSON)");
+  exportBtn.onclick=async()=>{
+    exportBtn.textContent="백업 만드는 중…";exportBtn.disabled=true;
+    const{data:txns}=await sb.from("transactions").select("*").order("date");
+    const{data:fc}=await sb.from("fixed_costs").select("*");
+    const{data:inv}=await sb.from("investment_snapshots").select("*");
+    const{data:bg}=await sb.from("monthly_budgets").select("*");
+    const backup={exported_at:new Date().toISOString(),version:"v9",transactions:txns||[],fixed_costs:fc||[],investments:inv||[],budgets:bg||[],rules:getUserRules(),shared_cfg:getSharedCfg()};
+    const blob=new Blob([JSON.stringify(backup,null,2)],{type:"application/json"});
+    const url=URL.createObjectURL(blob);
+    const a=document.createElement("a");a.href=url;a.download=`가계부백업_${td()}.json`;a.click();
+    URL.revokeObjectURL(url);
+    exportBtn.textContent=`✅ ${(txns||[]).length}건 백업 완료`;exportBtn.disabled=false;
+  };
+
+  const csvBtn=h("button",{style:{width:"100%",marginTop:"8px",fontSize:"13.5px",fontWeight:"700",padding:"12px",borderRadius:"11px",border:`1px solid ${C.line}`,color:C.ink,background:C.w,cursor:"pointer"}},"📊 거래내역 CSV 내보내기 (엑셀용)");
+  csvBtn.onclick=async()=>{
+    csvBtn.textContent="만드는 중…";csvBtn.disabled=true;
+    const{data:txns}=await sb.from("transactions").select("*").order("date",{ascending:false});
+    const rows=txns||[];
+    const head=["날짜","계정","유형","카테고리","금액","사용처","메모","결제수단"];
+    const csvRows=[head.join(",")];
+    rows.forEach(t=>{
+      const line=[t.date,t.account,t.type,t.category,t.amount,(t.merchant||"").replace(/,/g," "),(t.memo||"").replace(/,/g," "),(t.payment_method||"")].join(",");
+      csvRows.push(line);
+    });
+    const blob=new Blob(["\uFEFF"+csvRows.join("\n")],{type:"text/csv;charset=utf-8"});
+    const url=URL.createObjectURL(blob);
+    const a=document.createElement("a");a.href=url;a.download=`거래내역_${td()}.csv`;a.click();
+    URL.revokeObjectURL(url);
+    csvBtn.textContent=`✅ ${rows.length}건 CSV 완료`;csvBtn.disabled=false;
+  };
+
+  box.append(
+    h("div",{style:{borderTop:`1px solid ${C.line}`,margin:"16px 0 0"}}),
+    h("div",{style:{fontSize:"13px",fontWeight:"800",color:C.sub,margin:"12px 0 4px"}},"데이터 백업"),
+    h("div",{style:{fontSize:"12px",color:C.faint,marginBottom:"8px",lineHeight:"1.6"}},"내 돈 데이터는 내 손에 사본을 두는 게 안전해요. 정기적으로 백업하세요."),
+    exportBtn,csvBtn
+  );
+
   // 저장 버튼에 공용설정 저장도 포함
   sv.onclick=()=>{setApiKey(inp.value);saveSharedCfg({ratio:Number(ratioEl.value)||50,sharedBudget:Number(budgetEl.value)||0});ov.remove();alert("저장됐어요 ✅");};
   ov.append(box);document.body.append(ov);inp.focus();
@@ -412,10 +476,87 @@ function buildHome(){
   });
   const billSec=buildNextMonthBill();
   const sharedSec=buildSharedSection(st,cfg);
-  return[hero,chips,sharedSec,compSec,billSec,catSec,recSec];
+  const insightSec=buildInsight(st,prevSt);
+  return[hero,chips,insightSec,sharedSec,compSec,billSec,catSec,recSec];
 }
 
 
+
+
+// ── 월간 인사이트 (말로 된 분석) ──
+function buildInsight(st,prevSt){
+  const insights=[];
+  const cur=st.pNet,prev=prevSt.pNet;
+
+  // 1. 전월 대비 개인소비
+  if(prev>0){
+    const diff=cur-prev,pct=Math.round(Math.abs(diff)/prev*100);
+    if(Math.abs(pct)>=10){
+      if(diff>0)insights.push({icon:"📈",tone:"warn",text:`개인 소비가 지난달보다 ${pct}% 늘었어요 (${W(Math.abs(diff))} 증가)`});
+      else insights.push({icon:"📉",tone:"good",text:`개인 소비가 지난달보다 ${pct}% 줄었어요 (${W(Math.abs(diff))} 절약). 잘하고 있어요!`});
+    }else{
+      insights.push({icon:"➡️",tone:"neutral",text:`개인 소비가 지난달과 비슷해요 (${W(cur)})`});
+    }
+  }
+
+  // 2. 카테고리 TOP + 비중
+  const cagg={};
+  for(const t of S.txns){if(kindOf(t.type)!=="spend"||t.account!=="개인")continue;cagg[t.category]=(cagg[t.category]||0)+(Number(t.amount)||0);}
+  const crows=Object.entries(cagg).sort((a,b)=>b[1]-a[1]);
+  if(crows.length){
+    const[topCat,topAmt]=crows[0];
+    const pct=cur>0?Math.round(topAmt/cur*100):0;
+    const c=CM[topCat]||CM["기타"];
+    insights.push({icon:c.i,tone:"neutral",text:`이번 달 가장 많이 쓴 곳은 ${topCat} (${W(topAmt)}, 전체의 ${pct}%)`});
+  }
+
+  // 3. 카테고리별 전월 대비 급증 감지
+  const prevCagg={};
+  for(const t of S.prevTxns){if(kindOf(t.type)!=="spend"||t.account!=="개인")continue;prevCagg[t.category]=(prevCagg[t.category]||0)+(Number(t.amount)||0);}
+  let maxJump=null;
+  for(const[cat,amt] of crows){
+    const pAmt=prevCagg[cat]||0;
+    if(pAmt>10000&&amt>pAmt*1.5){
+      const jump=amt-pAmt;
+      if(!maxJump||jump>maxJump.jump)maxJump={cat,jump,amt,pAmt};
+    }
+  }
+  if(maxJump){
+    const c=CM[maxJump.cat]||CM["기타"];
+    insights.push({icon:"⚠️",tone:"warn",text:`${maxJump.cat} 지출이 지난달의 ${Math.round(maxJump.amt/maxJump.pAmt*10)/10}배로 늘었어요 (${W(maxJump.pAmt)}→${W(maxJump.amt)})`});
+  }
+
+  // 4. 수입 대비 지출
+  if(st.income>0){
+    const rate=Math.round((cur+st.cNet)/st.income*100);
+    if(rate>100)insights.push({icon:"🔴",tone:"warn",text:`이번 달 수입보다 지출이 많아요 (지출이 수입의 ${rate}%)`});
+    else if(rate<=60)insights.push({icon:"💰",tone:"good",text:`수입의 ${rate}%만 썼어요. 저축 여력이 좋아요!`});
+  }
+
+  // 5. 예산 경고
+  if(S.budget>0){
+    const used=cur/S.budget;
+    const isCur=S.curYm===ym(td());
+    const dl=isCur?new Date(new Date().getFullYear(),new Date().getMonth()+1,0).getDate()-new Date().getDate():0;
+    if(used>=1)insights.push({icon:"🚨",tone:"warn",text:`예산을 ${W(cur-S.budget)} 초과했어요`});
+    else if(used>=0.8&&dl>5)insights.push({icon:"⏰",tone:"warn",text:`예산의 ${Math.round(used*100)}%를 썼는데 아직 ${dl}일 남았어요. 페이스 조절이 필요해요`});
+  }
+
+  if(!insights.length)return null;
+
+  const el=sec("💡 이번 달 인사이트","");
+  const list=h("div",{style:{display:"flex",flexDirection:"column",gap:"9px"}});
+  const toneColor={good:C.brand,warn:C.over,neutral:C.sub};
+  const toneBg={good:"#EDFBF4",warn:"#FFF4F1",neutral:"#F6F4EF"};
+  insights.forEach(ins=>{
+    list.append(h("div",{style:{display:"flex",alignItems:"flex-start",gap:"10px",padding:"11px 13px",borderRadius:"11px",background:toneBg[ins.tone]||"#F6F4EF"}},
+      h("span",{style:{fontSize:"15px",flexShrink:"0"}},ins.icon),
+      h("span",{style:{fontSize:"13px",lineHeight:"1.5",color:C.ink}},ins.text)
+    ));
+  });
+  el.append(list);
+  return el;
+}
 
 // ── 공용 현황 섹션 ──
 function buildSharedSection(st,cfg){
@@ -1418,7 +1559,17 @@ function showAdd(){
   ["2","3","4","5","6","9","12","18","24"].forEach(m=>mSel.append(h("option",{value:m},m+"개월")));
   const mHint=h("div",{style:{fontSize:"11.5px",color:C.sub,marginTop:"5px",display:"none"}},"입력 금액을 개월수로 나눠 자동 생성돼요.");
   typ.onchange=()=>{const on=typ.value==="소비(할부)";mSel.style.display=on?"":"none";mHint.style.display=on?"":"none";};
+  const autoHint=h("div",{style:{fontSize:"11.5px",color:C.brand,marginTop:"5px",fontWeight:"600",display:"none"}});
   const mer=h("input",{type:"text",placeholder:"예: 트레이더스",style:{width:"100%",border:`1px solid ${C.line}`,borderRadius:"10px",padding:"11px 12px",fontSize:"14px"}});
+  mer.oninput=()=>{
+    const guess=autoClassify(mer.value);
+    if(guess&&mer.value.trim().length>=2){
+      selCat=guess.category;selAcc=guess.account;
+      drawCats();drawAcc();
+      autoHint.textContent=`✨ 자동 분류: ${guess.category} · ${guess.account}`;
+      autoHint.style.display="";
+    }else{autoHint.style.display="none";}
+  };
   const dt=h("input",{type:"date",value:dft,style:{width:"100%",border:`1px solid ${C.line}`,borderRadius:"10px",padding:"11px 12px",fontSize:"14px"}});
   const mo=h("input",{type:"text",placeholder:"계란 우유 라면…",style:{width:"100%",border:`1px solid ${C.line}`,borderRadius:"10px",padding:"11px 12px",fontSize:"14px"}});
   const accRow=h("div",{style:{display:"flex",gap:"8px"}});
@@ -1447,7 +1598,7 @@ function showAdd(){
     lbl("계정"),h("div",{style:{marginBottom:"13px"}},accRow),
     lbl("유형"),h("div",{style:{marginBottom:"13px"}},typ,mSel,mHint),
     lbl("대분류"),h("div",{style:{marginBottom:"13px"}},catWrap),
-    h("div",{style:{display:"grid",gridTemplateColumns:"1fr 1fr",gap:"10px"}},h("div",{},lbl("사용처 (선택)"),mer),h("div",{},lbl("날짜"),dt)),
+    h("div",{style:{display:"grid",gridTemplateColumns:"1fr 1fr",gap:"10px"}},h("div",{},lbl("사용처 (선택)"),mer,autoHint),h("div",{},lbl("날짜"),dt)),
     h("div",{style:{marginTop:"13px"}},lbl("메모 (선택)"),mo),sv
   );
   ov.append(sh);document.body.append(ov);amt.focus();
