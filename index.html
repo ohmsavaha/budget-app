@@ -65,6 +65,23 @@ const SUGGESTED_FC=[
   {name:"네이버페이 멤버십",category:"통신비",amount:4900,account:"개인",billing_day:7,payment_method:"카카오뱅크",memo:""},
 ];
 
+// ── 공용 고정비 (앱 내장 기본값) ──
+// pay: "공용통장" | "정근카드" | "여친카드" — 결제 출처에 따라 정산 방식이 달라짐
+const SHARED_FC=[
+  {id:"sfc_rent",   name:"월세",          category:"주거/공과금",amount:800000,billing_day:5, pay:"공용통장",memo:"안성미 집주인"},
+  {id:"sfc_maint",  name:"아파트 관리비",  category:"주거/공과금",amount:150000,billing_day:1, pay:"정근카드",memo:"우방아파트 (월별 변동)"},
+  {id:"sfc_gas",    name:"가스비",        category:"주거/공과금",amount:40000, billing_day:25,pay:"정근카드",memo:"JB 가스 (계절별 변동)"},
+  {id:"sfc_net",    name:"KT 인터넷/통신", category:"통신비",     amount:50000, billing_day:21,pay:"공용통장",memo:"공용 인터넷+통신"},
+];
+const PAY_META={
+  "공용통장":{icon:"🏦",label:"공용통장",settle:false},
+  "정근카드":{icon:"💳",label:"정근카드",settle:true,who:"정근"},
+  "여친카드":{icon:"💳",label:"여친카드",settle:true,who:"여친"},
+};
+
+// ── 공용 탭 로컬 설정 (입금 목표 + 정산완료/납부체크 수동표시) ──
+const getSharedTab=()=>{try{return JSON.parse(localStorage.getItem("shared_tab")||'{"depositGoal":{"정근":0,"여친":0},"paidManual":{},"settled":{}}');}catch{return{depositGoal:{"정근":0,"여친":0},paidManual:{},settled:{}};}};
+const saveSharedTab=c=>{try{localStorage.setItem("shared_tab",JSON.stringify(c));}catch{}};
 
 // ── API Key & AI 헬퍼 ──
 
@@ -180,7 +197,7 @@ function showApiKeySetting(){
     const{data:fc}=await sb.from("fixed_costs").select("*");
     const{data:inv}=await sb.from("investment_snapshots").select("*");
     const{data:bg}=await sb.from("monthly_budgets").select("*");
-    const backup={exported_at:new Date().toISOString(),version:"v10",transactions:txns||[],fixed_costs:fc||[],investments:inv||[],budgets:bg||[],rules:getUserRules(),shared_cfg:getSharedCfg()};
+    const backup={exported_at:new Date().toISOString(),version:"v11",transactions:txns||[],fixed_costs:fc||[],investments:inv||[],budgets:bg||[],rules:getUserRules(),shared_cfg:getSharedCfg()};
     const blob=new Blob([JSON.stringify(backup,null,2)],{type:"application/json"});
     const url=URL.createObjectURL(blob);
     const a=document.createElement("a");a.href=url;a.download=`가계부백업_${td()}.json`;a.click();
@@ -238,7 +255,7 @@ function h(tag,p={},...kids){
   return e;
 }
 
-const S={session:undefined,curYm:ym(td()),tab:"home",txns:[],budget:0,invRows:[],prevTxns:[],fixedCosts:[],yearTxns:[],nextTxns:[],sharedFixed:[]};
+const S={session:undefined,curYm:ym(td()),tab:"home",txns:[],budget:0,invRows:[],prevTxns:[],fixedCosts:[],yearTxns:[],nextTxns:[],sharedFixed:[],sharedTxns:[]};
 const app=document.getElementById("app");
 const setApp=(...nodes)=>{app.innerHTML="";nodes.flat().filter(Boolean).forEach(n=>app.append(n));};
 
@@ -326,6 +343,12 @@ async function loadYear(){
   const{data}=await sb.from("transactions").select("date,amount,type,account,category").gte("date",yr+"-01-01").lte("date",yr+"-12-31");
   S.yearTxns=data||[];
 }
+async function loadShared(){
+  const[s,e]=mRange(S.curYm);
+  // 공용 계정 거래 전부 (household_id로 공유됨 → 둘 다 보임)
+  const{data}=await sb.from("transactions").select("*").eq("account","공용").gte("date",s).lte("date",e).order("date",{ascending:false});
+  S.sharedTxns=data||[];
+}
 function renderDash(){
   const isCur=S.curYm===ym(td());
   const prevBtn=h("button",{style:{width:"30px",height:"30px",borderRadius:"999px",color:C.sub,fontSize:"18px"},onclick:()=>{S.curYm=shYm(S.curYm,-1);renderDash();}},"‹");
@@ -347,7 +370,7 @@ function renderDash(){
       h("div",{style:{display:"flex",alignItems:"center",gap:"4px",background:C.w,border:`1px solid ${C.line}`,borderRadius:"999px",padding:"3px 4px"}},prevBtn,todayBtn,nextBtn)
     ),
     h("div",{style:{display:"flex",gap:"6px",marginBottom:"14px",flexWrap:"wrap"}},
-      tabBtn("대시보드","home"),tabBtn("달력","calendar"),tabBtn("고정비","fixed"),tabBtn("투자","invest"),tabBtn("연간","yearly"),
+      tabBtn("대시보드","home"),tabBtn("🤝 공용","shared"),tabBtn("달력","calendar"),tabBtn("고정비","fixed"),tabBtn("투자","invest"),tabBtn("연간","yearly"),
       h("button",{style:{fontSize:"13px",padding:"8px 14px",borderRadius:"999px",border:`1px solid ${C.line}`,background:C.w,color:C.sub,cursor:"pointer"},onclick:()=>showSearch()},"🔍"),
       h("button",{style:{fontSize:"13px",padding:"8px 14px",borderRadius:"999px",border:`1px solid ${C.line}`,background:C.w,color:C.sub,cursor:"pointer"},onclick:()=>showImport()},"📥 가져오기"),
       settingsBtn,logoutBtn
@@ -369,6 +392,12 @@ function renderDash(){
     Promise.all([loadFixed(),loadMonth()]).then(()=>{
       setCt(...buildFixed());
       const fab=h("button",{class:"fab",onclick:()=>showAddFixed(),style:{position:"fixed",bottom:"24px",left:"50%",transform:"translateX(-50%)",display:"flex",alignItems:"center",gap:"7px",background:C.brand,color:C.w,fontSize:"15px",fontWeight:"700",padding:"14px 24px",borderRadius:"999px",border:"none",boxShadow:"0 6px 22px rgba(30,110,82,.34)",zIndex:"30",cursor:"pointer"}},"＋ 고정비 추가");
+      document.body.append(fab);
+    });
+  } else if(S.tab==="shared"){
+    loadShared().then(()=>{
+      setCt(...buildShared());
+      const fab=h("button",{class:"fab",onclick:()=>showAddDeposit(),style:{position:"fixed",bottom:"24px",left:"50%",transform:"translateX(-50%)",display:"flex",alignItems:"center",gap:"7px",background:C.brand,color:C.w,fontSize:"15px",fontWeight:"700",padding:"14px 24px",borderRadius:"999px",border:"none",boxShadow:"0 6px 22px rgba(30,110,82,.34)",zIndex:"30",cursor:"pointer"}},"＋ 공용 입금/지출");
       document.body.append(fab);
     });
   } else if(S.tab==="calendar"){
@@ -1973,7 +2002,393 @@ function showImport(){
   ov.append(sh);document.body.append(ov);
 }
 
-if("serviceWorker" in navigator)window.addEventListener("load",()=>navigator.serviceWorker.register("./sw.js").catch(()=>{}));
-</script>
+
+// ════════════════════ 🤝 공용 탭 ════════════════════
+// 공용 거래 분류 헬퍼
+function sharedKindOf(t){
+  const ty=t.type;
+  if(ty==="공용입금")return "deposit";          // 생활비 입금
+  if(["소비(일시불)","소비(할부)"].includes(ty))return "spend";
+  if(["정산환급","환불/취소"].includes(ty))return "reduce";
+  if(ty==="이체")return "flow";
+  return "spend";
+}
+
+// 고정비 납부 자동 감지: 같은 카테고리+비슷한 금액의 공용 소비가 이번달에 있으면 납부됨
+function sfcPaidAuto(sfc){
+  return S.sharedTxns.some(t=>{
+    if(sharedKindOf(t)!=="spend")return false;
+    const a=Number(t.amount),fa=Number(sfc.amount);
+    const catMatch=t.category===sfc.category;
+    const amtMatch=fa>0&&Math.abs(a-fa)/fa<0.45;
+    return catMatch&&amtMatch;
+  });
+}
+
+function buildShared(){
+  const st=getSharedTab();
+  const mk=ym=>ym; // (예약)
+
+  // 집계
+  const spend=S.sharedTxns.filter(t=>sharedKindOf(t)==="spend").reduce((s,t)=>s+Number(t.amount),0);
+  const reduce=S.sharedTxns.filter(t=>sharedKindOf(t)==="reduce").reduce((s,t)=>s+Number(t.amount),0);
+  const netSpend=Math.max(0,spend-reduce);
+  const deposits=S.sharedTxns.filter(t=>sharedKindOf(t)==="deposit");
+  const depByPerson={"정근":0,"여친":0};
+  deposits.forEach(t=>{
+    const who=(t.merchant||"").includes("여친")?"여친":(t.merchant||"").includes("정근")?"정근":"정근";
+    depByPerson[who]+=Number(t.amount);
+  });
+  const totalDep=depByPerson["정근"]+depByPerson["여친"];
+
+  const out=[];
+
+  // ── ① 상단 요약 ──
+  const hero=h("div",{style:{background:C.w,border:`1px solid ${C.line}`,borderRadius:"18px",padding:"20px"}},
+    h("div",{style:{display:"flex",justifyContent:"space-between",alignItems:"flex-start",marginBottom:"4px"}},
+      h("div",{},
+        h("div",{style:{fontSize:"12.5px",color:C.sub,marginBottom:"6px"}},"이번 달 공용 지출"),
+        h("div",{class:"num",style:{fontSize:"34px",fontWeight:"800",letterSpacing:"-.03em",lineHeight:"1"}},W(netSpend))
+      ),
+      h("div",{style:{fontSize:"22px"}},"🤝")
+    ),
+    h("div",{style:{display:"grid",gridTemplateColumns:"1fr 1fr",gap:"10px",marginTop:"16px"}},
+      h("div",{style:{background:C.soft,borderRadius:"12px",padding:"12px 14px"}},
+        h("div",{style:{fontSize:"11px",color:C.brand,fontWeight:"700",marginBottom:"4px"}},"💰 통장에 모인 돈"),
+        h("div",{class:"num",style:{fontSize:"17px",fontWeight:"800",color:C.brand}},W(totalDep)),
+        h("div",{style:{fontSize:"11px",color:C.brand,marginTop:"2px"}},`정근 ${shortNum(depByPerson["정근"])} · 여친 ${shortNum(depByPerson["여친"])}`)
+      ),
+      h("div",{style:{background:netSpend>totalDep?"#FEF2EE":"#F6F4EF",borderRadius:"12px",padding:"12px 14px"}},
+        h("div",{style:{fontSize:"11px",color:netSpend>totalDep?C.over:C.sub,fontWeight:"700",marginBottom:"4px"}},netSpend>totalDep?"⚠️ 통장 부족":"통장 잔액"),
+        h("div",{class:"num",style:{fontSize:"17px",fontWeight:"800",color:netSpend>totalDep?C.over:C.ink}},W(Math.abs(totalDep-netSpend))),
+        h("div",{style:{fontSize:"11px",color:C.faint,marginTop:"2px"}},netSpend>totalDep?"입금이 더 필요해요":"여유분")
+      )
+    )
+  );
+  out.push(hero);
+
+  // ── ② 공용 고정비 ──
+  const fcSec=sec("📋 이번 달 공용 고정비",h("span",{style:{fontSize:"11.5px",color:C.faint}},"탭하면 상세"));
+  const fcTotal=SHARED_FC.reduce((s,f)=>s+f.amount,0);
+  SHARED_FC.forEach(sfc=>{
+    const c=CM[sfc.category]||CM["기타"];
+    const pm=PAY_META[sfc.pay]||PAY_META["공용통장"];
+    const autoPaid=sfcPaidAuto(sfc);
+    const manualPaid=!!st.paidManual[sfc.id];
+    const paid=autoPaid||manualPaid;
+    const row=h("div",{class:"fcrow",style:{display:"flex",alignItems:"center",gap:"11px",padding:"12px 4px",borderBottom:`1px solid ${C.line}`,cursor:"pointer",borderRadius:"6px",transition:"background .12s"},
+      onclick:()=>showSharedFcDetail(sfc)},
+      h("div",{style:{width:"38px",height:"38px",borderRadius:"11px",background:c.c+"1A",display:"flex",alignItems:"center",justifyContent:"center",fontSize:"18px",flexShrink:"0"}},c.i),
+      h("div",{style:{flex:"1",minWidth:"0"}},
+        h("div",{style:{fontSize:"14px",fontWeight:"600"}},sfc.name),
+        h("div",{style:{fontSize:"11.5px",color:C.sub,marginTop:"2px"}},`${pm.icon} ${pm.label}${sfc.billing_day?` · 매월 ${sfc.billing_day}일`:""}`)
+      ),
+      h("div",{style:{textAlign:"right",marginRight:"2px"}},
+        h("div",{class:"num",style:{fontSize:"14px",fontWeight:"700"}},W(sfc.amount)),
+        h("div",{style:{fontSize:"11px",marginTop:"3px",fontWeight:"700",color:paid?C.brand:C.over}},paid?(autoPaid?"✅ 납부됨":"✅ 확인됨"):"⏳ 미납")
+      ),
+      h("span",{style:{fontSize:"12px",color:C.faint,marginLeft:"2px"}},"›")
+    );
+    fcSec.append(row);
+  });
+  fcSec.append(h("div",{style:{display:"flex",justifyContent:"space-between",padding:"11px 4px 2px",fontSize:"13px",fontWeight:"800"}},
+    h("span",{style:{color:C.sub}},"고정비 합계"),
+    h("span",{class:"num"},W(fcTotal))
+  ));
+  out.push(fcSec);
+
+  // ── ③ 정산 도우미 ──
+  out.push(buildSettlement());
+
+  // ── ④ 생활비 입금 ──
+  out.push(buildDepositSection(depByPerson,st));
+
+  // ── ⑤ 이번 달 공용 거래 내역 ──
+  const txSec=sec("이번 달 공용 내역",`${S.sharedTxns.length}건`);
+  if(!S.sharedTxns.length)txSec.append(empty("아직 공용 거래가 없어요.\n아래 ＋ 버튼으로 추가해보세요."));
+  else{
+    txSec.append(h("div",{style:{fontSize:"11.5px",color:C.faint,padding:"0 2px 6px",textAlign:"right"}},"탭하면 수정"));
+    const reloadShared=async()=>{await loadShared();const ct=document.getElementById("ct");if(ct){ct.innerHTML="";buildShared().forEach(n=>ct.append(n));}};
+    S.sharedTxns.slice(0,20).forEach(t=>{
+      const c=CM[t.category]||CM["기타"];
+      const sk=sharedKindOf(t);
+      const isDep=sk==="deposit";
+      const sg=isDep||sk==="reduce"?"+":sk==="spend"?"−":"";
+      const cl=isDep?C.brand:sk==="reduce"?C.warn:C.ink;
+      txSec.append(h("div",{style:{display:"flex",alignItems:"center",gap:"12px",padding:"11px 4px",borderBottom:`1px solid ${C.line}`,cursor:"pointer",transition:"background .12s",borderRadius:"4px"},
+        onmouseenter:e=>{e.currentTarget.style.background="#F6F4EF";},
+        onmouseleave:e=>{e.currentTarget.style.background="transparent";},
+        onclick:()=>showEditTxn(t,reloadShared)},
+        h("div",{style:{width:"34px",height:"34px",borderRadius:"10px",background:c.c+"1A",display:"flex",alignItems:"center",justifyContent:"center",fontSize:"16px",flexShrink:"0"}},isDep?"💰":c.i),
+        h("div",{style:{flex:"1",minWidth:"0"}},
+          h("div",{style:{fontSize:"14px",fontWeight:"600",whiteSpace:"nowrap",overflow:"hidden",textOverflow:"ellipsis"}},(t.merchant||t.category||t.type)),
+          h("div",{style:{fontSize:"11.5px",color:C.sub,marginTop:"1px"}},`${(t.date||"").slice(5)} · ${t.type}${t.memo?` · ${t.memo}`:""}`)
+        ),
+        h("div",{style:{display:"flex",alignItems:"center",gap:"6px"}},
+          h("div",{class:"num",style:{fontSize:"14.5px",fontWeight:"700",color:cl,whiteSpace:"nowrap"}},sg+W(t.amount).slice(1)),
+          h("span",{style:{fontSize:"12px",color:C.faint}},"›")
+        )
+      ));
+    });
+  }
+  out.push(txSec);
+
+  return out;
+}
+
+// ── 정산 도우미 (고양이) ──
+const CAT_NAMES=["짜장","후추","마요"];
+function buildSettlement(){
+  const st=getSharedTab();
+  const items=[];
+  SHARED_FC.forEach(sfc=>{
+    const pm=PAY_META[sfc.pay];
+    if(!pm||!pm.settle)return;
+    const matched=S.sharedTxns.find(t=>{
+      if(sharedKindOf(t)!=="spend")return false;
+      const a=Number(t.amount),fa=Number(sfc.amount);
+      return t.category===sfc.category&&fa>0&&Math.abs(a-fa)/fa<0.45;
+    });
+    if(!matched)return; // 실제 납부 감지된 것만 정산 대상
+    const amt=Number(matched.amount);
+    const key="fc_"+sfc.id+"_"+S.curYm;
+    items.push({key,who:pm.who,name:sfc.name,amount:amt});
+  });
+
+  const el=sec("🐈 정산 도우미","");
+  const pending=items.filter(it=>!st.settled[it.key]);
+  const done=items.filter(it=>st.settled[it.key]);
+
+  if(!items.length){
+    el.append(h("div",{style:{display:"flex",alignItems:"center",gap:"12px",padding:"6px 2px"}},
+      h("div",{style:{fontSize:"30px"}},"🐈"),
+      h("div",{style:{fontSize:"13px",color:C.sub,lineHeight:"1.6"}},
+        h("span",{style:{fontWeight:"700",color:C.ink}},"짜장: "),"아직 정산할 게 없다냥~",h("br"),
+        h("span",{style:{fontSize:"11.5px",color:C.faint}},"카드로 공용비를 내면 여기서 정산을 도와줄게냥")
+      )
+    ));
+    return el;
+  }
+
+  pending.forEach((it,idx)=>{
+    const half=Math.round(it.amount/2);
+    const catName=CAT_NAMES[idx%CAT_NAMES.length];
+    const who=it.who||"정근";
+    const card=h("div",{style:{background:"#FFFBEE",border:`1px solid ${C.warn}55`,borderRadius:"14px",padding:"14px",marginBottom:"10px"}});
+    const optBtn=(icon,label,sub,valueText,valColor)=>h("div",{style:{display:"flex",alignItems:"center",gap:"10px",padding:"11px 13px",borderRadius:"11px",background:C.w,border:`1px solid ${C.line}`,marginBottom:"7px"}},
+      h("span",{style:{fontSize:"17px"}},icon),
+      h("div",{style:{flex:"1"}},
+        h("div",{style:{fontSize:"13px",fontWeight:"700"}},label),
+        h("div",{style:{fontSize:"11px",color:C.faint,marginTop:"1px"}},sub)
+      ),
+      h("div",{class:"num",style:{fontSize:"15px",fontWeight:"800",color:valColor||C.brand}},valueText)
+    );
+    card.append(
+      h("div",{style:{display:"flex",alignItems:"flex-start",gap:"10px",marginBottom:"12px"}},
+        h("div",{style:{fontSize:"26px",flexShrink:"0"}},"🐈"),
+        h("div",{style:{fontSize:"13px",lineHeight:"1.6"}},
+          h("span",{style:{fontWeight:"800",color:C.ink}},catName+": "),
+          `${who}이가 ${it.name} ${W(it.amount)} 대신 냈다냥! 둘 중 하나로 정산하라냥~`
+        )
+      ),
+      optBtn("🏦","공용통장에 입금","여친도 똑같이 채우기",W(it.amount)),
+      optBtn("💸",who+"에게 직접 송금","절반만 정산",W(half)),
+      h("button",{style:{width:"100%",marginTop:"4px",fontSize:"13px",fontWeight:"700",padding:"11px",borderRadius:"11px",border:`1px solid ${C.brand}`,background:C.soft,color:C.brand,cursor:"pointer"},
+        onclick:()=>{const s2=getSharedTab();s2.settled[it.key]=true;saveSharedTab(s2);const ct=document.getElementById("ct");if(ct){ct.innerHTML="";buildShared().forEach(n=>ct.append(n));}}},"✅ 정산 완료로 표시")
+    );
+    el.append(card);
+  });
+
+  if(done.length){
+    done.forEach(it=>{
+      el.append(h("div",{style:{display:"flex",justifyContent:"space-between",alignItems:"center",padding:"9px 10px",borderRadius:"10px",background:C.soft,marginBottom:"6px"}},
+        h("div",{style:{fontSize:"12.5px",color:C.brand,fontWeight:"600"}},`✅ ${it.name} 정산 완료`),
+        h("button",{style:{fontSize:"11px",color:C.faint,cursor:"pointer"},onclick:()=>{const s2=getSharedTab();delete s2.settled[it.key];saveSharedTab(s2);const ct=document.getElementById("ct");if(ct){ct.innerHTML="";buildShared().forEach(n=>ct.append(n));}}},"되돌리기")
+      ));
+    });
+  }
+  return el;
+}
+
+// ── 생활비 입금 섹션 ──
+function buildDepositSection(depByPerson,st){
+  const el=sec("💰 생활비 입금",h("button",{style:{fontSize:"11.5px",color:C.brand,fontWeight:"700",cursor:"pointer"},onclick:()=>showDepositGoal()},"목표 설정 ✎"));
+  const goal=st.depositGoal||{"정근":0,"여친":0};
+  ["정근","여친"].forEach(who=>{
+    const g=Number(goal[who])||0;
+    const cur=depByPerson[who]||0;
+    const pct=g>0?Math.min(100,Math.round(cur/g*100)):0;
+    const done=g>0&&cur>=g;
+    el.append(h("div",{style:{marginBottom:"14px"}},
+      h("div",{style:{display:"flex",justifyContent:"space-between",alignItems:"baseline",marginBottom:"6px"}},
+        h("span",{style:{fontSize:"13px",fontWeight:"700"}},(who==="정근"?"🧑 ":"👩 ")+who),
+        h("span",{class:"num",style:{fontSize:"12.5px",color:C.sub}},g>0?`${W(cur)} / ${W(g)}`:W(cur))
+      ),
+      g>0?h("div",{style:{height:"9px",borderRadius:"999px",background:"#F0ECE3",overflow:"hidden"}},
+        h("div",{style:{width:pct+"%",height:"100%",background:done?C.brand:C.warn,borderRadius:"999px",transition:"width .4s"}})
+      ):"",
+      g>0?h("div",{style:{fontSize:"11px",color:done?C.brand:C.faint,marginTop:"4px",fontWeight:done?"700":"400"}},done?"✅ 목표 달성!":`${pct}% · ${W(g-cur)} 남음`):h("div",{style:{fontSize:"11px",color:C.faint,marginTop:"2px"}},"목표 미설정 — 입금액만 기록 중")
+    ));
+  });
+  el.append(h("button",{style:{width:"100%",marginTop:"2px",fontSize:"13.5px",fontWeight:"700",color:C.brand,background:C.soft,border:`1px solid ${C.brand}`,borderRadius:"11px",padding:"11px",cursor:"pointer"},
+    onclick:()=>showAddDeposit()},"＋ 입금 기록 추가"));
+  return el;
+}
+
+// ── 공용 입금/지출 추가 시트 ──
+function showAddDeposit(){
+  const ov=h("div",{style:{position:"fixed",inset:"0",background:"rgba(40,37,31,.42)",display:"flex",alignItems:"flex-end",justifyContent:"center",zIndex:"50"},onclick:e=>{if(e.target===ov)ov.remove();}});
+  const sh=h("div",{style:{width:"100%",maxWidth:"520px",background:C.w,borderRadius:"20px 20px 0 0",padding:"18px 20px 26px",maxHeight:"92vh",overflowY:"auto"}});
+  const lbl=t=>h("div",{style:{fontSize:"13px",fontWeight:"800",color:C.sub,marginBottom:"6px"}},t);
+  let mode="입금";     // 입금 | 지출
+  let who="정근";       // 입금자
+  let selCat="공용생활비";
+
+  const amt=h("input",{type:"number",inputmode:"numeric",placeholder:"0",class:"num",style:{flex:"1",border:"none",fontSize:"24px",fontWeight:"800",color:C.ink,background:"transparent"}});
+  const mer=h("input",{type:"text",placeholder:"메모/사용처 (예: 마트, 생활비)",style:{width:"100%",border:`1px solid ${C.line}`,borderRadius:"10px",padding:"11px 12px",fontSize:"14px"}});
+  const dft=ym(td())===S.curYm?td():S.curYm+"-15";
+  const dt=h("input",{type:"date",value:dft,style:{width:"100%",border:`1px solid ${C.line}`,borderRadius:"10px",padding:"11px 12px",fontSize:"14px"}});
+
+  // 모드 토글 (입금/지출)
+  const modeRow=h("div",{style:{display:"flex",gap:"8px"}});
+  const whoRow=h("div",{style:{display:"flex",gap:"8px"}});
+  const catWrap=h("div",{style:{display:"flex",flexWrap:"wrap",gap:"7px"}});
+  const whoBlock=h("div",{style:{marginBottom:"13px"}});
+  const catBlock=h("div",{style:{marginBottom:"13px"}});
+
+  const drawMode=()=>{modeRow.innerHTML="";["입금","지출"].forEach(m=>{const on=mode===m;modeRow.append(h("button",{style:{flex:"1",fontSize:"14px",fontWeight:"700",padding:"11px",borderRadius:"10px",border:`1px solid ${on?C.brand:C.line}`,background:on?C.soft:C.w,color:on?C.brand:C.sub,cursor:"pointer"},onclick:()=>{mode=m;refresh();}},m==="입금"?"💰 통장 입금":"🛒 공용 지출"));});};
+  const drawWho=()=>{whoRow.innerHTML="";["정근","여친"].forEach(p=>{const on=who===p;whoRow.append(h("button",{style:{flex:"1",fontSize:"14px",fontWeight:"600",padding:"11px",borderRadius:"10px",border:`1px solid ${on?C.brand:C.line}`,background:on?C.soft:C.w,color:on?C.brand:C.sub,cursor:"pointer"},onclick:()=>{who=p;drawWho();}},(p==="정근"?"🧑 ":"👩 ")+p));});};
+  const drawCats=()=>{catWrap.innerHTML="";CATS.forEach(c=>{const on=selCat===c.n;catWrap.append(h("button",{style:{fontSize:"12.5px",padding:"7px 11px",borderRadius:"999px",border:`1px solid ${on?c.c:C.line}`,background:on?c.c+"1A":C.w,color:on?c.c:C.ink,fontWeight:on?"700":"500",cursor:"pointer"},onclick:()=>{selCat=c.n;drawCats();}},c.i+" "+c.n));});};
+
+  const refresh=()=>{
+    drawMode();
+    if(mode==="입금"){
+      whoBlock.style.display="";catBlock.style.display="none";
+      mer.placeholder="메모 (선택)";
+    }else{
+      whoBlock.style.display="none";catBlock.style.display="";
+      mer.placeholder="사용처 (예: 마트, 배달)";
+    }
+  };
+  drawWho();drawCats();refresh();
+
+  const sv=h("button",{style:{width:"100%",background:C.brand,color:C.w,fontSize:"15px",fontWeight:"700",padding:"14px",borderRadius:"13px",border:"none",cursor:"pointer",marginTop:"6px"}},"저장하기");
+  sv.onclick=async()=>{
+    const a=Number(amt.value);if(!a||a<=0){alert("금액을 입력해주세요.");return;}
+    sv.disabled=true;sv.textContent="저장 중…";
+    let row;
+    if(mode==="입금"){
+      row={user_id:S.session.user.id,date:dt.value,account:"공용",type:"공용입금",amount:a,category:"공용생활비",merchant:`${who} 입금`,memo:mer.value.trim()||null};
+    }else{
+      row={user_id:S.session.user.id,date:dt.value,account:"공용",type:"소비(일시불)",amount:a,category:selCat,merchant:mer.value.trim()||null,memo:null};
+    }
+    const{error}=await sb.from("transactions").insert(row);
+    if(error){alert("저장 실패: "+error.message);sv.disabled=false;sv.textContent="저장하기";return;}
+    ov.remove();await loadShared();const ct=document.getElementById("ct");if(ct){ct.innerHTML="";buildShared().forEach(n=>ct.append(n));}
+  };
+
+  sh.append(
+    h("div",{style:{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:"16px"}},h("span",{style:{fontSize:"17px",fontWeight:"800"}},"🤝 공용 추가"),h("button",{style:{fontSize:"20px",color:C.sub},onclick:()=>ov.remove()},"✕")),
+    lbl("종류"),h("div",{style:{marginBottom:"13px"}},modeRow),
+    h("div",{style:{marginBottom:"14px"}},lbl("금액"),h("div",{style:{display:"flex",alignItems:"center",border:`1px solid ${C.line}`,borderRadius:"12px",padding:"10px 14px"}},h("span",{style:{fontSize:"22px",fontWeight:"700",color:C.faint,marginRight:"6px"}},"₩"),amt)),
+    (whoBlock.append(lbl("누가 입금?"),whoRow),whoBlock),
+    (catBlock.append(lbl("카테고리"),catWrap),catBlock),
+    h("div",{style:{display:"grid",gridTemplateColumns:"1fr 1fr",gap:"10px",marginBottom:"13px"}},h("div",{},lbl("메모/사용처"),mer),h("div",{},lbl("날짜"),dt)),
+    sv
+  );
+  ov.append(sh);document.body.append(ov);amt.focus();
+}
+
+// ── 입금 목표 설정 시트 ──
+function showDepositGoal(){
+  const st=getSharedTab();
+  const goal=st.depositGoal||{"정근":0,"여친":0};
+  const ov=h("div",{style:{position:"fixed",inset:"0",background:"rgba(40,37,31,.42)",display:"flex",alignItems:"flex-end",justifyContent:"center",zIndex:"55"},onclick:e=>{if(e.target===ov)ov.remove();}});
+  const sh=h("div",{style:{width:"100%",maxWidth:"520px",background:C.w,borderRadius:"20px 20px 0 0",padding:"18px 20px 26px",maxHeight:"85vh",overflowY:"auto"}});
+  const lbl=t=>h("div",{style:{fontSize:"13px",fontWeight:"800",color:C.sub,marginBottom:"6px"}},t);
+  const jEl=h("input",{type:"number",inputmode:"numeric",value:goal["정근"]||"",placeholder:"예: 500000",class:"num",style:{width:"100%",border:`1px solid ${C.line}`,borderRadius:"10px",padding:"11px 12px",fontSize:"14px"}});
+  const yEl=h("input",{type:"number",inputmode:"numeric",value:goal["여친"]||"",placeholder:"예: 500000",class:"num",style:{width:"100%",border:`1px solid ${C.line}`,borderRadius:"10px",padding:"11px 12px",fontSize:"14px"}});
+  const sameBtn=h("button",{style:{width:"100%",fontSize:"12.5px",fontWeight:"700",padding:"9px",borderRadius:"10px",border:`1px solid ${C.line}`,background:C.w,color:C.sub,cursor:"pointer",marginBottom:"14px"},onclick:()=>{if(jEl.value)yEl.value=jEl.value;}},"⇅ 둘 다 같은 금액으로");
+  const sv=h("button",{style:{width:"100%",background:C.brand,color:C.w,fontSize:"15px",fontWeight:"700",padding:"14px",borderRadius:"13px",border:"none",cursor:"pointer"}},"저장하기");
+  sv.onclick=()=>{
+    const s2=getSharedTab();
+    s2.depositGoal={"정근":Number(jEl.value)||0,"여친":Number(yEl.value)||0};
+    saveSharedTab(s2);ov.remove();
+    const ct=document.getElementById("ct");if(ct){ct.innerHTML="";buildShared().forEach(n=>ct.append(n));}
+  };
+  sh.append(
+    h("div",{style:{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:"6px"}},h("span",{style:{fontSize:"17px",fontWeight:"800"}},"💰 매달 입금 목표"),h("button",{style:{fontSize:"20px",color:C.sub},onclick:()=>ov.remove()},"✕")),
+    h("div",{style:{fontSize:"12.5px",color:C.sub,marginBottom:"16px",lineHeight:"1.6"}},"각자 매달 공용통장에 넣을 금액을 정해요. 입금 기록이 이 목표에 자동으로 채워져요."),
+    h("div",{style:{marginBottom:"13px"}},lbl("🧑 정근 목표 (원/월)"),jEl),
+    h("div",{style:{marginBottom:"10px"}},lbl("👩 여친 목표 (원/월)"),yEl),
+    sameBtn,sv
+  );
+  ov.append(sh);document.body.append(ov);
+}
+
+// ── 공용 고정비 상세 시트 ──
+function showSharedFcDetail(sfc){
+  const st=getSharedTab();
+  const c=CM[sfc.category]||CM["기타"];
+  const pm=PAY_META[sfc.pay]||PAY_META["공용통장"];
+  const autoPaid=sfcPaidAuto(sfc);
+  const manualPaid=!!st.paidManual[sfc.id];
+  const matched=S.sharedTxns.find(t=>{
+    if(sharedKindOf(t)!=="spend")return false;
+    const a=Number(t.amount),fa=Number(sfc.amount);
+    return t.category===sfc.category&&fa>0&&Math.abs(a-fa)/fa<0.45;
+  });
+
+  const ov=h("div",{style:{position:"fixed",inset:"0",background:"rgba(40,37,31,.42)",display:"flex",alignItems:"flex-end",justifyContent:"center",zIndex:"55"},onclick:e=>{if(e.target===ov)ov.remove();}});
+  const sh=h("div",{style:{width:"100%",maxWidth:"520px",background:C.w,borderRadius:"20px 20px 0 0",padding:"18px 20px 28px",maxHeight:"85vh",overflowY:"auto"}});
+
+  sh.append(h("div",{style:{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:"18px"}},
+    h("div",{style:{display:"flex",alignItems:"center",gap:"12px"}},
+      h("div",{style:{width:"44px",height:"44px",borderRadius:"13px",background:c.c+"1A",display:"flex",alignItems:"center",justifyContent:"center",fontSize:"22px",flexShrink:"0"}},c.i),
+      h("div",{},h("div",{style:{fontSize:"18px",fontWeight:"800"}},sfc.name),h("div",{class:"num",style:{fontSize:"13px",color:C.sub,marginTop:"2px"}},W(sfc.amount)+" / 월"))
+    ),
+    h("button",{style:{fontSize:"20px",color:C.sub},onclick:()=>ov.remove()},"✕")
+  ));
+
+  const detailRow=(label,value)=>h("div",{style:{display:"flex",justifyContent:"space-between",alignItems:"center",padding:"11px 2px",borderBottom:`1px solid ${C.line}`}},
+    h("span",{style:{fontSize:"13px",color:C.sub}},label),
+    h("span",{style:{fontSize:"13.5px",fontWeight:"600"}},value)
+  );
+  sh.append(
+    detailRow("결제 수단",`${pm.icon} ${pm.label}`),
+    detailRow("결제일",sfc.billing_day?`매월 ${sfc.billing_day}일`:"—"),
+    detailRow("카테고리",`${c.i} ${sfc.category}`),
+    detailRow("이번 달 납부",autoPaid?"✅ 자동 감지됨":manualPaid?"✅ 직접 확인":"⏳ 미납"),
+    matched?detailRow("감지된 거래",`${(matched.date||"").slice(5)} · ${W(matched.amount)}`):"" ,
+    sfc.memo?detailRow("메모",sfc.memo):""
+  );
+
+  // 결제 출처 안내 (정산 관련)
+  if(pm.settle){
+    sh.append(h("div",{style:{background:"#FFFBEE",borderRadius:"12px",padding:"13px 15px",marginTop:"14px",fontSize:"12.5px",lineHeight:"1.7",color:C.ink}},
+      h("span",{style:{fontWeight:"700"}},`🐈 ${pm.who} 카드로 내는 항목이에요`),h("br"),
+      `${pm.who}이가 대신 내면, 공용통장에 ${W(sfc.amount)} 입금(전액) 또는 직접 ${W(Math.round(sfc.amount/2))} 송금(절반)으로 정산하면 돼요. 납부가 감지되면 위 정산 도우미에 자동으로 떠요.`
+    ));
+  }else{
+    sh.append(h("div",{style:{background:C.soft,borderRadius:"12px",padding:"13px 15px",marginTop:"14px",fontSize:"12.5px",lineHeight:"1.7",color:"#1A5E44"}},
+      "🏦 공용통장에서 바로 빠지는 항목이라 따로 정산할 필요가 없어요."
+    ));
+  }
+
+  // 수동 납부 토글
+  const toggleBtn=h("button",{style:{width:"100%",marginTop:"14px",fontSize:"13.5px",fontWeight:"700",padding:"12px",borderRadius:"12px",border:`1px solid ${manualPaid?C.over:C.brand}`,background:manualPaid?"#FEF2EE":C.soft,color:manualPaid?C.over:C.brand,cursor:"pointer"},
+    onclick:()=>{
+      const s2=getSharedTab();
+      if(manualPaid)delete s2.paidManual[sfc.id];else s2.paidManual[sfc.id]=true;
+      saveSharedTab(s2);ov.remove();
+      const ct=document.getElementById("ct");if(ct){ct.innerHTML="";buildShared().forEach(n=>ct.append(n));}
+    }},autoPaid?"자동 감지되어 납부 처리됨":manualPaid?"✓ 납부 표시 해제":"✅ 납부했다고 직접 표시");
+  if(!autoPaid)sh.append(toggleBtn);
+
+  ov.append(sh);document.body.append(ov);
+}
+
+
+if("serviceWorker" in navigator)window.addEventListener("load",()=>navigator.serviceWorker.register("./sw.js").catch(()=>{}));</script>
 </body>
 </html>
