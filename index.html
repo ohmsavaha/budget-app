@@ -180,7 +180,7 @@ function showApiKeySetting(){
     const{data:fc}=await sb.from("fixed_costs").select("*");
     const{data:inv}=await sb.from("investment_snapshots").select("*");
     const{data:bg}=await sb.from("monthly_budgets").select("*");
-    const backup={exported_at:new Date().toISOString(),version:"v9",transactions:txns||[],fixed_costs:fc||[],investments:inv||[],budgets:bg||[],rules:getUserRules(),shared_cfg:getSharedCfg()};
+    const backup={exported_at:new Date().toISOString(),version:"v10",transactions:txns||[],fixed_costs:fc||[],investments:inv||[],budgets:bg||[],rules:getUserRules(),shared_cfg:getSharedCfg()};
     const blob=new Blob([JSON.stringify(backup,null,2)],{type:"application/json"});
     const url=URL.createObjectURL(blob);
     const a=document.createElement("a");a.href=url;a.download=`가계부백업_${td()}.json`;a.click();
@@ -419,9 +419,9 @@ function buildHome(){
   const myShared=Math.round(st.cNet*(cfg.ratio||50)/100);
   const realTotal=st.pNet+myShared;
   const chips=h("div",{style:{display:"grid",gridTemplateColumns:"repeat(3,1fr)",gap:"9px",marginTop:"11px"}},
-    chip("🎯","나의 실질 총지출",W(realTotal),C.ink),
-    chip("💼","이번 달 수입",W(st.income)),
-    chip(st.balance>=0?"📈":"📉",st.balance>=0?"잉여":"적자",W(Math.abs(st.balance)),st.balance>=0?C.brand:C.over)
+    chip("🎯","나의 실질 총지출",W(realTotal),C.ink,()=>showSpendBreakdown(st,cfg)),
+    chip("💼","이번 달 수입",W(st.income),null,()=>showIncomeDetail()),
+    chip(st.balance>=0?"📈":"📉",st.balance>=0?"잉여":"적자",W(Math.abs(st.balance)),st.balance>=0?C.brand:C.over,()=>showBalanceBreakdown(st,cfg))
   );
   const compSec=buildComparison(st,prevSt);
   const cagg={};
@@ -1547,14 +1547,18 @@ function buildInvest(){
 }
 
 // ── ADD SHEET ──
-function showAdd(){
+function showAdd(preset){
   const ov=h("div",{style:{position:"fixed",inset:"0",background:"rgba(40,37,31,.42)",display:"flex",alignItems:"flex-end",justifyContent:"center",zIndex:"50"},onclick:e=>{if(e.target===ov)ov.remove();}});
   const sh=h("div",{style:{width:"100%",maxWidth:"520px",background:C.w,borderRadius:"20px 20px 0 0",padding:"18px 20px 26px",maxHeight:"92vh",overflowY:"auto"}});
   let selCat="외식/배달",selAcc="개인";
+  const _p=preset||{};
+  if(_p.account)selAcc=_p.account;
+  if(_p.category)selCat=_p.category;
   const dft=ym(td())===S.curYm?td():S.curYm+"-15";
   const amt=h("input",{type:"number",inputmode:"numeric",placeholder:"0",class:"num",style:{flex:"1",border:"none",fontSize:"24px",fontWeight:"800",color:C.ink,background:"transparent"}});
   const typ=h("select",{style:{width:"100%",border:`1px solid ${C.line}`,borderRadius:"10px",padding:"11px 12px",fontSize:"14px",color:C.ink,background:C.w}});
   TYPES.forEach(t=>typ.append(h("option",{value:t},t)));
+  if(_p.type)typ.value=_p.type;
   const mSel=h("select",{style:{width:"100%",border:`1px solid ${C.line}`,borderRadius:"10px",padding:"11px 12px",fontSize:"14px",color:C.ink,background:C.w,display:"none"}});
   ["2","3","4","5","6","9","12","18","24"].forEach(m=>mSel.append(h("option",{value:m},m+"개월")));
   const mHint=h("div",{style:{fontSize:"11.5px",color:C.sub,marginTop:"5px",display:"none"}},"입력 금액을 개월수로 나눠 자동 생성돼요.");
@@ -1764,7 +1768,19 @@ function showInvest(){
 }
 
 // ── UI HELPERS ──
-function chip(icon,lbl,v,tone){return h("div",{style:{background:C.w,border:`1px solid ${C.line}`,borderRadius:"14px",padding:"12px 13px"}},h("div",{style:{fontSize:"11px",color:C.sub,marginBottom:"6px",display:"flex",alignItems:"center",gap:"4px"}},h("span",{style:{fontSize:"13px"}},icon),lbl),h("div",{class:"num",style:{fontSize:"16px",fontWeight:"800",letterSpacing:"-.02em",color:tone||C.ink}},v));}
+function chip(icon,lbl,v,tone,onClick){
+  const el=h("div",{style:{position:"relative",background:C.w,border:`1px solid ${C.line}`,borderRadius:"14px",padding:"12px 13px",cursor:onClick?"pointer":"default",transition:"background .12s"}},
+    h("div",{style:{fontSize:"11px",color:C.sub,marginBottom:"6px",display:"flex",alignItems:"center",gap:"4px"}},h("span",{style:{fontSize:"13px"}},icon),lbl),
+    h("div",{class:"num",style:{fontSize:"16px",fontWeight:"800",letterSpacing:"-.02em",color:tone||C.ink}},v),
+    onClick?h("span",{style:{position:"absolute",top:"10px",right:"11px",fontSize:"12px",color:C.faint}},"›"):""
+  );
+  if(onClick){
+    el.addEventListener("click",onClick);
+    el.addEventListener("mouseenter",()=>{el.style.background="#FAF8F4";});
+    el.addEventListener("mouseleave",()=>{el.style.background=C.w;});
+  }
+  return el;
+}
 function mini(lbl,v,tone){return h("div",{style:{background:"#F6F4EF",borderRadius:"10px",padding:"10px 12px"}},h("div",{style:{fontSize:"11.5px",color:C.sub}},lbl),h("div",{class:"num",style:{fontSize:"15px",fontWeight:"700",color:tone||C.ink,marginTop:"3px"}},v));}
 function sec(title,right){
   const titleEl=typeof title==="string"?h("span",{style:{fontSize:"14.5px",fontWeight:"700"}},title):title;
@@ -1772,6 +1788,128 @@ function sec(title,right){
   return h("div",{style:{background:C.w,border:`1px solid ${C.line}`,borderRadius:"16px",padding:"16px 18px",marginTop:"12px"}},h("div",{style:{display:"flex",justifyContent:"space-between",alignItems:"baseline",marginBottom:"13px"}},titleEl,rightEl));
 }
 function empty(t){return h("div",{style:{textAlign:"center",color:C.faint,fontSize:"13px",padding:"18px 0",lineHeight:"1.7"}},t);}
+
+// ── 분해 시트 (공통) ──
+function showBreakdownSheet(title,opts){
+  const o=opts||{};
+  const ov=h("div",{style:{position:"fixed",inset:"0",background:"rgba(40,37,31,.42)",display:"flex",alignItems:"flex-end",justifyContent:"center",zIndex:"55"},onclick:e=>{if(e.target===ov)ov.remove();}});
+  const sh=h("div",{style:{width:"100%",maxWidth:"520px",background:C.w,borderRadius:"20px 20px 0 0",padding:"18px 20px 28px",maxHeight:"85vh",overflowY:"auto"}});
+  sh.append(h("div",{style:{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:o.subtitle?"4px":"14px"}},
+    h("span",{style:{fontSize:"17px",fontWeight:"800"}},title),
+    h("button",{style:{fontSize:"20px",color:C.sub},onclick:()=>ov.remove()},"✕")));
+  if(o.subtitle)sh.append(h("div",{style:{fontSize:"12.5px",color:C.sub,marginBottom:"14px",lineHeight:"1.6"}},o.subtitle));
+  const list=h("div");
+  (o.lines||[]).forEach(ln=>{
+    if(ln.divider){list.append(h("div",{style:{borderTop:`1px solid ${C.line}`,margin:"7px 0"}}));return;}
+    list.append(h("div",{style:{display:"flex",justifyContent:"space-between",alignItems:"center",padding:ln.strong?"11px 2px":"7px 2px"}},
+      h("div",{style:{display:"flex",alignItems:"center",gap:"8px",minWidth:"0"}},
+        ln.icon?h("span",{style:{fontSize:"15px",flexShrink:"0"}},ln.icon):"",
+        h("div",{style:{minWidth:"0"}},
+          h("div",{style:{fontSize:ln.strong?"14.5px":"13.5px",fontWeight:ln.strong?"800":"500",color:ln.muted?C.sub:C.ink}},ln.label),
+          ln.sub?h("div",{style:{fontSize:"11px",color:C.faint,marginTop:"2px",lineHeight:"1.4"}},ln.sub):""
+        )
+      ),
+      h("span",{class:"num",style:{fontSize:ln.strong?"16px":"14px",fontWeight:ln.strong?"800":"700",color:ln.color||C.ink,whiteSpace:"nowrap",marginLeft:"10px"}},(ln.sign||"")+W(Math.abs(Number(ln.value)||0)))
+    ));
+  });
+  sh.append(list);
+  if(o.note)sh.append(h("div",{style:{background:"#EEF5F1",borderRadius:"12px",padding:"13px 15px",marginTop:"14px",fontSize:"12.5px",lineHeight:"1.75",color:"#1A5E44"}},...(Array.isArray(o.note)?o.note:[o.note])));
+  if(o.footer)sh.append(o.footer);
+  ov.append(sh);document.body.append(ov);
+}
+
+// ── 실질 총지출 분해 ──
+function showSpendBreakdown(st,cfg){
+  const ratio=(cfg&&cfg.ratio)||50;
+  const myShared=Math.round(st.cNet*ratio/100);
+  const realTotal=st.pNet+myShared;
+  const footer=h("button",{style:{width:"100%",marginTop:"14px",fontSize:"13px",fontWeight:"700",color:C.brand,background:C.soft,border:`1px solid ${C.brand}`,borderRadius:"11px",padding:"11px",cursor:"pointer"},onclick:()=>showApiKeySetting()},`⚙️ 내 부담 비율 바꾸기 (현재 ${ratio}%)`);
+  showBreakdownSheet("🎯 나의 실질 총지출",{
+    subtitle:"내가 실제로 부담하는 지출만 모은 금액이에요.",
+    lines:[
+      {label:"개인 순소비",value:st.pNet,icon:"💸",sub:"개인 소비 − 개인 환급"},
+      {label:`공용 순소비 × 내 부담 ${ratio}%`,value:myShared,icon:"🤝",sub:`공용 전체 ${W(st.cNet)} 중 ${ratio}%`},
+      {divider:true},
+      {label:"실질 총지출",value:realTotal,strong:true,color:C.ink}
+    ],
+    note:"공용 지출은 전액이 아니라 내 부담 비율만큼만 더해요. 저축·투자는 '쓴 돈'이 아니라 여기엔 안 들어가요.",
+    footer
+  });
+}
+
+// ── 적자/잉여 분해 ──
+function showBalanceBreakdown(st,cfg){
+  const ratio=(cfg&&cfg.ratio)||50;
+  const isDef=st.balance<0;
+  const myShared=Math.round(st.cNet*ratio/100);
+  const realTotal=st.pNet+myShared;
+  const ref=h("div",{style:{display:"flex",justifyContent:"space-between",alignItems:"center",marginTop:"14px",padding:"11px 13px",background:"#F6F4EF",borderRadius:"11px"}},
+    h("span",{style:{fontSize:"12px",color:C.sub}},`참고 · 실질 기준 총지출 (공용 ${ratio}%)`),
+    h("span",{class:"num",style:{fontSize:"13px",fontWeight:"700",color:C.ink}},W(realTotal)));
+  showBreakdownSheet(isDef?"📉 적자 상세":"📈 잉여 상세",{
+    subtitle:"이번 달 통장에 실제로 남은(또는 모자란) 돈이에요.",
+    lines:[
+      {label:"수입",value:st.income,icon:"💼",color:C.brand,sign:"+"},
+      {label:"개인 순소비",value:st.pNet,icon:"💸",sign:"−"},
+      {label:"공용 순소비 (전액)",value:st.cNet,icon:"🤝",sign:"−"},
+      {label:"저축·투자",value:st.save,icon:"🏦",sign:"−"},
+      {divider:true},
+      {label:isDef?"적자":"잉여",value:Math.abs(st.balance),strong:true,color:isDef?C.over:C.brand,sign:isDef?"−":"+"}
+    ],
+    note:"여기서는 공용 지출이 전액 빠지고 저축·투자도 빠져요. 그래서 위의 '실질 총지출'과 숫자가 달라요 — 실질 총지출은 공용을 내 부담분만, 저축은 빼고 계산하거든요.",
+    footer:ref
+  });
+}
+
+// ── 수입 상세 ──
+function showIncomeDetail(){
+  const incomeTxns=S.txns.filter(t=>kindOf(t.type)==="income").sort((a,b)=>Number(b.amount)-Number(a.amount));
+  const reduceTxns=S.txns.filter(t=>kindOf(t.type)==="reduce").sort((a,b)=>Number(b.amount)-Number(a.amount));
+  const total=incomeTxns.reduce((s,t)=>s+Number(t.amount),0);
+  const reduceTotal=reduceTxns.reduce((s,t)=>s+Number(t.amount),0);
+  const ov=h("div",{style:{position:"fixed",inset:"0",background:"rgba(40,37,31,.42)",display:"flex",alignItems:"flex-end",justifyContent:"center",zIndex:"55"},onclick:e=>{if(e.target===ov)ov.remove();}});
+  const sh=h("div",{style:{width:"100%",maxWidth:"520px",background:C.w,borderRadius:"20px 20px 0 0",padding:"18px 20px 28px",maxHeight:"88vh",overflowY:"auto"}});
+  const reloadHome=async()=>{await loadMonth();ov.remove();const ct=document.getElementById("ct");if(ct){ct.innerHTML="";buildHome().forEach(n=>ct.append(n));}};
+  sh.append(h("div",{style:{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:"4px"}},
+    h("div",{style:{display:"flex",alignItems:"center",gap:"11px"}},
+      h("div",{style:{width:"42px",height:"42px",borderRadius:"13px",background:C.soft,display:"flex",alignItems:"center",justifyContent:"center",fontSize:"21px",flexShrink:"0"}},"💼"),
+      h("div",{},h("div",{style:{fontSize:"17px",fontWeight:"800"}},"이번 달 수입"),h("div",{class:"num",style:{fontSize:"12px",color:C.brand,fontWeight:"700",marginTop:"2px"}},`${W(total)} · ${incomeTxns.length}건`))
+    ),
+    h("button",{style:{fontSize:"20px",color:C.sub},onclick:()=>ov.remove()},"✕")
+  ));
+  const addBtn=h("button",{style:{width:"100%",margin:"14px 0 6px",fontSize:"14px",fontWeight:"700",color:C.brand,background:C.soft,border:`1px solid ${C.brand}`,borderRadius:"12px",padding:"12px",cursor:"pointer"},onclick:()=>{ov.remove();showAdd({type:"수입",category:"근로수입",account:"개인"});}},"＋ 수입 추가");
+  sh.append(addBtn);
+  const rowEl=(t,clr,prefix)=>{
+    const c=CM[t.category]||CM["기타"];
+    return h("div",{style:{display:"flex",alignItems:"center",gap:"12px",padding:"11px 4px",borderBottom:`1px solid ${C.line}`,cursor:"pointer",transition:"background .12s",borderRadius:"4px"},
+      onmouseenter:e=>{e.currentTarget.style.background="#F6F4EF";},
+      onmouseleave:e=>{e.currentTarget.style.background="transparent";},
+      onclick:()=>showEditTxn(t,reloadHome)},
+      h("div",{style:{width:"34px",height:"34px",borderRadius:"10px",background:c.c+"1A",display:"flex",alignItems:"center",justifyContent:"center",fontSize:"16px",flexShrink:"0"}},c.i),
+      h("div",{style:{flex:"1",minWidth:"0"}},
+        h("div",{style:{fontSize:"14px",fontWeight:"600",whiteSpace:"nowrap",overflow:"hidden",textOverflow:"ellipsis"}},t.merchant||t.category||t.type),
+        h("div",{style:{fontSize:"11.5px",color:C.sub,marginTop:"1px"}},`${(t.date||"").slice(5)} · ${t.account} · ${t.type}${t.memo?` · ${t.memo}`:""}`)
+      ),
+      h("div",{style:{display:"flex",alignItems:"center",gap:"6px"}},
+        h("div",{class:"num",style:{fontSize:"14.5px",fontWeight:"700",color:clr,whiteSpace:"nowrap"}},prefix+W(t.amount).slice(1)),
+        h("span",{style:{fontSize:"12px",color:C.faint}},"›")
+      )
+    );
+  };
+  if(!incomeTxns.length)sh.append(empty("이번 달 수입 기록이 없어요."));
+  else{
+    sh.append(h("div",{style:{fontSize:"11.5px",color:C.faint,padding:"6px 2px 4px",textAlign:"right"}},"탭하면 수정 · 금액 큰 순"));
+    incomeTxns.forEach(t=>sh.append(rowEl(t,C.brand,"+")));
+  }
+  if(reduceTxns.length){
+    sh.append(h("div",{style:{display:"flex",justifyContent:"space-between",alignItems:"baseline",margin:"20px 0 2px"}},
+      h("span",{style:{fontSize:"13px",fontWeight:"800",color:C.sub}},"↩️ 정산·환급 (수입 아님)"),
+      h("span",{class:"num",style:{fontSize:"11.5px",color:C.faint}},W(reduceTotal))));
+    sh.append(h("div",{style:{fontSize:"11.5px",color:C.faint,padding:"2px 2px 6px",lineHeight:"1.6"}},"환불·정산은 '번 돈'이 아니라 나간 돈이 되돌아온 거라, 수입에는 안 잡혀요. 대신 그만큼 지출이 줄어요."));
+    reduceTxns.forEach(t=>sh.append(rowEl(t,C.warn,"+")));
+  }
+  ov.append(sh);document.body.append(ov);
+}
 
 // ── IMPORT ──
 function showImport(){
