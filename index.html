@@ -324,8 +324,8 @@ async function loadMonth(){
   S.budget=bg.data?Number(bg.data.personal_budget):0;
   S.prevTxns=ptx.data||[];
   S.nextTxns=ntx.data||[];
-  const{data:sfData}=await sb.from("fixed_costs").select("*").eq("account","공용").eq("is_active",true);
-  S.sharedFixed=sfData||[];
+  // 공용 고정비는 앱 내장 상수 사용 (fixed_costs 테이블엔 account 칸이 없어 조회 불가)
+  S.sharedFixed=SHARED_FC.map(f=>({name:f.name,category:f.category,amount:f.amount,billing_day:f.billing_day,account:"공용"}));
 }
 async function loadInvest(){
   const[s,e]=mRange(S.curYm);
