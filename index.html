@@ -150,9 +150,13 @@ async function claudeVision(file,prompt){
   });
   if(!resp.ok){const e=await resp.json();throw new Error(e.error?.message||resp.status);}
   const data=await resp.json();
-  const txt=data.content?.find(c=>c.type==="text")?.text||"{}";
-  try{return JSON.parse(txt.replace(/```json|```/g,"").trim());}
-  catch{return{_raw:txt};}
+  let txt=data.content?.find(c=>c.type==="text")?.text||"{}";
+  console.log("[AI원본응답]",txt);
+  const _a=txt.indexOf("{"),_b=txt.lastIndexOf("}");
+  if(_a>=0&&_b>_a)txt=txt.slice(_a,_b+1);
+  txt=txt.replace(/(\d),(?=\d)/g,"$1");
+  try{const _o=JSON.parse(txt);console.log("[AI결과]",_o);return _o;}
+  catch(err){console.log("[AI파싱실패]",err,txt);return{_raw:txt};}
 }
 
 // ── Yahoo Finance 주가 ──
