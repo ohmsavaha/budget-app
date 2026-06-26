@@ -373,6 +373,8 @@ async function loadInvest(){
   const[s,e]=mRange(S.curYm);
   const{data}=await sb.from("investment_snapshots").select("*").gte("snapshot_date",s).lte("snapshot_date",e).order("snapshot_date",{ascending:false});
   S.invRows=data||[];
+  const{data:hd}=await sb.from("investment_holdings").select("*").order("snapshot_date",{ascending:false}).order("eval_value_krw",{ascending:false});
+  S.holdings=hd||[];
 }
 async function loadFixed(){
   const{data}=await sb.from("fixed_costs").select("*").eq("user_id",S.session.user.id).eq("is_active",true).order("amount",{ascending:false});
@@ -1644,9 +1646,29 @@ function buildInvest(){
   if(!rows.length)hist.append(empty("기록 없음"));
   else rows.forEach(r=>hist.append(h("div",{style:{display:"flex",justifyContent:"space-between",padding:"10px 2px",borderBottom:`1px solid ${C.line}`}},h("span",{style:{fontSize:"13px",color:C.sub}},`${(r.snapshot_date||"").slice(5)} ${r.broker||""}`),h("div",{class:"num",style:{fontSize:"13.5px",fontWeight:"700"}},W(r.total_value_krw)," ",h("span",{style:{color:Number(r.total_pl_krw)>=0?C.brand:C.over,fontWeight:"600"}},`(${r.return_rate_krw??0}%)`)))));
   const addBtn=h("button",{style:{width:"100%",background:C.brand,color:C.w,fontSize:"15px",fontWeight:"700",padding:"14px",borderRadius:"13px",border:"none",cursor:"pointer",marginTop:"10px"},onclick:()=>showInvest()},"＋ 오늘 투자현황 기록");
-  return[hero,hist,addBtn];
+  const hold=S.holdings||[];
+  let holdSec=null;
+  if(hold.length){
+    const latestDate=hold[0].snapshot_date;
+    const latest=hold.filter(x=>x.snapshot_date===latestDate);
+    holdSec=sec("📊 보유 종목",`${(latestDate||"").slice(5)} 기준 · ${latest.length}개`);
+    const tot=latest.reduce((s,x)=>s+(Number(x.eval_value_krw)||0),0);
+    latest.forEach(x=>{
+      const pl=Number(x.pl_krw)||0,rr=x.return_rate;
+      holdSec.append(h("div",{style:{display:"flex",alignItems:"center",gap:"10px",padding:"11px 2px",borderBottom:`1px solid ${C.line}`}},
+        h("div",{style:{flex:"1",minWidth:"0"}},
+          h("div",{style:{fontSize:"14px",fontWeight:"600",whiteSpace:"nowrap",overflow:"hidden",textOverflow:"ellipsis"}},x.name),
+          h("div",{style:{fontSize:"11.5px",color:C.sub,marginTop:"1px"}},(x.quantity!=null?`${x.quantity}주`:"")+(tot>0?` · 비중 ${Math.round((Number(x.eval_value_krw)||0)/tot*100)}%`:""))
+        ),
+        h("div",{style:{textAlign:"right"}},
+          h("div",{class:"num",style:{fontSize:"14px",fontWeight:"700"}},W(x.eval_value_krw)),
+          h("div",{class:"num",style:{fontSize:"11px",fontWeight:"700",marginTop:"2px",color:pl>=0?C.brand:C.over}},(pl>=0?"+":"−")+W(Math.abs(pl)).slice(1)+(rr!=null?` (${rr}%)`:""))
+        )
+      ));
+    });
+  }
+  return[hero,holdSec,hist,addBtn].filter(Boolean);
 }
-
 // ── ADD SHEET ──
 function showAdd(preset){
   const ov=h("div",{style:{position:"fixed",inset:"0",background:"rgba(40,37,31,.42)",display:"flex",alignItems:"flex-end",justifyContent:"center",zIndex:"50"},onclick:e=>{if(e.target===ov)ov.remove();}});
