@@ -373,7 +373,8 @@ async function loadInvest(){
   const[s,e]=mRange(S.curYm);
   const{data}=await sb.from("investment_snapshots").select("*").gte("snapshot_date",s).lte("snapshot_date",e).order("snapshot_date",{ascending:false});
   S.invRows=data||[];
-  const{data:hd}=await sb.from("investment_holdings").select("*").order("snapshot_date",{ascending:false}).order("eval_value_krw",{ascending:false});
+  const{data:hd,error:hdErr}=await sb.from("investment_holdings").select("*").order("snapshot_date",{ascending:false}).order("created_at",{ascending:false});
+  if(hdErr)console.log("[종목로드에러]",hdErr);
   S.holdings=hd||[];
 }
 async function loadFixed(){
