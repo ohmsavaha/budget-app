@@ -1663,21 +1663,47 @@ function buildInvest(){
   if(hold.length){
     const latestDate=hold[0].snapshot_date;
     const latest=hold.filter(x=>x.snapshot_date===latestDate);
+    let curMode=S.holdCur||"KRW"; // KRW | USD
     holdSec=sec("📊 보유 종목",`${(latestDate||"").slice(5)} 기준 · ${latest.length}개`);
-    const tot=latest.reduce((s,x)=>s+(Number(x.eval_value_krw)||0),0);
-    latest.forEach(x=>{
-      const pl=Number(x.pl_krw)||0,rr=x.return_rate;
-      holdSec.append(h("div",{style:{display:"flex",alignItems:"center",gap:"10px",padding:"11px 2px",borderBottom:`1px solid ${C.line}`}},
-        h("div",{style:{flex:"1",minWidth:"0"}},
-          h("div",{style:{fontSize:"14px",fontWeight:"600",whiteSpace:"nowrap",overflow:"hidden",textOverflow:"ellipsis"}},x.name),
-          h("div",{style:{fontSize:"11.5px",color:C.sub,marginTop:"1px"}},(x.quantity!=null?`${x.quantity}주`:"")+(tot>0?` · 비중 ${Math.round((Number(x.eval_value_krw)||0)/tot*100)}%`:""))
-        ),
-        h("div",{style:{textAlign:"right"}},
-          h("div",{class:"num",style:{fontSize:"14px",fontWeight:"700"}},W(x.eval_value_krw)),
-          h("div",{class:"num",style:{fontSize:"11px",fontWeight:"700",marginTop:"2px",color:pl>=0?C.brand:C.over}},(pl>=0?"+":"−")+W(Math.abs(pl)).slice(1)+(rr!=null?` (${rr}%)`:""))
-        )
-      ));
-    });
+    // ₩/$ 토글
+    const toggle=h("div",{style:{display:"flex",gap:"6px",marginBottom:"10px"}});
+    const listWrap=h("div",{});
+    const fxOf=x=>Number(x.fx_rate)||Number(latest[0]?.fx_rate)||1380;
+    const evalIn=(x,cur)=>{
+      if(cur==="USD")return x.eval_value_usd!=null?Number(x.eval_value_usd):(Number(x.eval_value_krw)||0)/fxOf(x);
+      return x.eval_value_krw!=null?Number(x.eval_value_krw):(Number(x.eval_value_usd)||0)*fxOf(x);
+    };
+    const plIn=(x,cur)=>{
+      if(cur==="USD")return x.pl_usd!=null?Number(x.pl_usd):(Number(x.pl_krw)||0)/fxOf(x);
+      return x.pl_krw!=null?Number(x.pl_krw):(Number(x.pl_usd)||0)*fxOf(x);
+    };
+    const fmtMoney=(v,cur)=>cur==="USD"?("$"+(Math.round(Number(v)*100)/100).toLocaleString("en-US",{minimumFractionDigits:2,maximumFractionDigits:2})):W(v);
+    const drawList=()=>{
+      listWrap.innerHTML="";
+      const tot=latest.reduce((s,x)=>s+evalIn(x,curMode),0);
+      latest.forEach(x=>{
+        const ev=evalIn(x,curMode),pl=plIn(x,curMode),rr=x.return_rate;
+        listWrap.append(h("div",{style:{display:"flex",alignItems:"center",gap:"10px",padding:"11px 2px",borderBottom:`1px solid ${C.line}`}},
+          h("div",{style:{flex:"1",minWidth:"0"}},
+            h("div",{style:{fontSize:"14px",fontWeight:"600",whiteSpace:"nowrap",overflow:"hidden",textOverflow:"ellipsis"}},x.name),
+            h("div",{style:{fontSize:"11.5px",color:C.sub,marginTop:"1px"}},(x.quantity!=null?`${x.quantity}주`:"")+(tot>0?` · 비중 ${Math.round(ev/tot*100)}%`:""))
+          ),
+          h("div",{style:{textAlign:"right"}},
+            h("div",{class:"num",style:{fontSize:"14px",fontWeight:"700"}},fmtMoney(ev,curMode)),
+            h("div",{class:"num",style:{fontSize:"11px",fontWeight:"700",marginTop:"2px",color:pl>=0?C.brand:C.over}},(pl>=0?"+":"−")+fmtMoney(Math.abs(pl),curMode).replace(/^[₩$]/,m=>m)+(rr!=null?` (${rr}%)`:""))
+          )
+        ));
+      });
+    };
+    const drawToggle=()=>{
+      toggle.innerHTML="";
+      [["KRW","₩ 원화"],["USD","$ 달러"]].forEach(([m,lb])=>{
+        const on=curMode===m;
+        toggle.append(h("button",{style:{flex:"1",fontSize:"12.5px",fontWeight:"700",padding:"8px",borderRadius:"9px",border:`1px solid ${on?C.brand:C.line}`,background:on?C.soft:C.w,color:on?C.brand:C.sub,cursor:"pointer"},onclick:()=>{curMode=m;S.holdCur=m;drawToggle();drawList();}},lb));
+      });
+    };
+    drawToggle();drawList();
+    holdSec.append(toggle,listWrap);
   }
   return[hero,holdSec,hist,addBtn].filter(Boolean);
 }
