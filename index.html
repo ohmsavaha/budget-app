@@ -158,7 +158,26 @@ async function claudeVision(file,prompt){
   try{const _o=JSON.parse(txt);console.log("[AI결과]",_o);return _o;}
   catch(err){console.log("[AI파싱실패]",err,txt);return{_raw:txt};}
 }
-
+async function claudeVisionMulti(files,prompt){
+  const key=getApiKey();
+  if(!key)throw new Error("no_key");
+  const imgs=[];
+  for(const f of files){const{b64,mime}=await imgToB64(f);imgs.push({type:"image",source:{type:"base64",media_type:mime,data:b64}});}
+  const resp=await fetch("https://api.anthropic.com/v1/messages",{
+    method:"POST",
+    headers:{"Content-Type":"application/json","x-api-key":key,"anthropic-version":"2023-06-01","anthropic-dangerous-direct-browser-access":"true"},
+    body:JSON.stringify({model:"claude-sonnet-4-6",max_tokens:2000,messages:[{role:"user",content:[...imgs,{type:"text",text:prompt}]}]})
+  });
+  if(!resp.ok){const e=await resp.json();throw new Error(e.error?.message||resp.status);}
+  const data=await resp.json();
+  let txt=data.content?.find(c=>c.type==="text")?.text||"{}";
+  console.log("[AI원본응답-멀티]",txt);
+  const _a=txt.indexOf("{"),_b=txt.lastIndexOf("}");
+  if(_a>=0&&_b>_a)txt=txt.slice(_a,_b+1);
+  txt=txt.replace(/(\d),(?=\d)/g,"$1");
+  try{const _o=JSON.parse(txt);console.log("[AI결과-멀티]",_o);return _o;}
+  catch(err){console.log("[AI파싱실패-멀티]",err,txt);return{_raw:txt};}
+}
 // ── Yahoo Finance 주가 ──
 async function fetchPrice(ticker){
   try{
@@ -1860,17 +1879,17 @@ function showInvest(){
     ov.remove();await loadInvest();const ct=document.getElementById("ct");if(ct){ct.innerHTML="";buildInvest().forEach(n=>ct.append(n));}
   };
   // 스크린샷 업로드
-  const imgInp=h("input",{type:"file",accept:"image/*",style:{display:"none"}});
-  const imgBtn=h("button",{style:{flex:"1",fontSize:"13px",fontWeight:"700",padding:"10px",borderRadius:"10px",border:`1px solid ${C.line}`,background:C.w,color:C.ink,cursor:"pointer"}},"📷 스크린샷 자동 입력");
+  const imgInp=h("input",{type:"file",accept:"image/*",multiple:"multiple",style:{display:"none"}});
+  const imgBtn=h("button",{style:{flex:"1",fontSize:"13px",fontWeight:"700",padding:"10px",borderRadius:"10px",border:`1px solid ${C.line}`,background:C.w,color:C.ink,cursor:"pointer"}},"📷 스크린샷 자동 입력 (여러장 OK)");
   imgBtn.onclick=()=>imgInp.click();
   imgInp.onchange=async e=>{
-    const file=e.target.files[0];if(!file)return;
-    imgBtn.textContent="🔍 분석 중…";imgBtn.disabled=true;
+    const files=Array.from(e.target.files||[]);if(!files.length)return;
+    imgBtn.textContent=`🔍 ${files.length}장 분석 중…`;imgBtn.disabled=true;
     const INVEST_PROMPT=`이 투자 현황 스크린샷에서 데이터를 추출하세요. JSON만 반환:
 {"total_value_krw":총평가액숫자,"total_pl_krw":총손익숫자,"return_rate_krw":수익률숫자(예:-2.3),"cash_krw":예수금숫자,"exchange_rate":환율숫자,"total_invested_krw":투자원금숫자,"holdings":[{"name":"종목명","quantity":보유수량숫자,"eval_value":평가액숫자,"pl":손익숫자,"return_rate":수익률숫자,"currency":"USD또는KRW"}]}
 원화 기준(holdings의 평가액·손익은 화면에 보이는 통화 그대로, currency에 표시). 숫자만. 콤마 빼고. 없는 항목은 null. holdings는 보이는 모든 종목을 배열로.`;
     try{
-      const r=await claudeVision(file,INVEST_PROMPT);
+      const r=files.length>1?await claudeVisionMulti(files,INVEST_PROMPT):await claudeVision(files[0],INVEST_PROMPT);
       if(r.total_value_krw){flds.val.value=r.total_value_krw;}
       if(r.total_pl_krw){flds.pl.value=r.total_pl_krw;}
       if(r.return_rate_krw){flds.rkrw.value=r.return_rate_krw;}
