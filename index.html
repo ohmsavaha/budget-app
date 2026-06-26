@@ -1845,8 +1845,8 @@ function showInvest(){
     const file=e.target.files[0];if(!file)return;
     imgBtn.textContent="🔍 분석 중…";imgBtn.disabled=true;
     const INVEST_PROMPT=`이 투자 현황 스크린샷에서 데이터를 추출하세요. JSON만 반환:
-{"total_value_krw":총평가액숫자,"total_pl_krw":총손익숫자,"return_rate_krw":수익률숫자(예:-2.3),"cash_krw":예수금숫자,"exchange_rate":환율숫자,"total_invested_krw":투자원금숫자}
-원화 기준. 숫자만. 없는 항목은 null.`;
+{"total_value_krw":총평가액숫자,"total_pl_krw":총손익숫자,"return_rate_krw":수익률숫자(예:-2.3),"cash_krw":예수금숫자,"exchange_rate":환율숫자,"total_invested_krw":투자원금숫자,"holdings":[{"name":"종목명","quantity":보유수량숫자,"eval_value":평가액숫자,"pl":손익숫자,"return_rate":수익률숫자,"currency":"USD또는KRW"}]}
+원화 기준(holdings의 평가액·손익은 화면에 보이는 통화 그대로, currency에 표시). 숫자만. 콤마 빼고. 없는 항목은 null. holdings는 보이는 모든 종목을 배열로.`;
     try{
       const r=await claudeVision(file,INVEST_PROMPT);
       if(r.total_value_krw){flds.val.value=r.total_value_krw;}
@@ -1855,6 +1855,7 @@ function showInvest(){
       if(r.cash_krw){flds.cash.value=r.cash_krw;}
       if(r.exchange_rate){flds.fx.value=r.exchange_rate;}
       if(r.total_invested_krw){flds.inv.value=r.total_invested_krw;}
+      if(Array.isArray(r.holdings)&&r.holdings.length){parsedHoldings=r.holdings;drawHoldings();}
       imgBtn.textContent="✅ 자동 입력 완료 — 확인 후 저장";
     }catch(err){
       imgBtn.textContent=err.message==="no_key"?"⚙️ API 키 필요":"❌ 분석 실패 — 직접 입력해주세요";
