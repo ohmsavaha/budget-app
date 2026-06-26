@@ -1896,8 +1896,9 @@ function showInvest(){
   const row2=(a,b)=>h("div",{style:{display:"grid",gridTemplateColumns:"1fr 1fr",gap:"10px",marginBottom:"13px"}},a,b);
   const wf=(l,el)=>h("div",{},lbl(l),el);
   const dtEl=h("input",{type:"date",value:td(),style:{width:"100%",border:`1px solid ${C.line}`,borderRadius:"10px",padding:"11px 12px",fontSize:"14px"}});
-  const brEl=h("input",{type:"text",value:"토스증권",style:{width:"100%",border:`1px solid ${C.line}`,borderRadius:"10px",padding:"11px 12px",fontSize:"14px"}});
+  const brEl=h("input",{type:"text",value:"토스증권",style:{width:"100%",border:`1px solid ${C.line}`,borderRadius:"10px",padding:"11px 12px",fontSize:"14px"}}); 
   const flds={val:ni("총평가액 (원)*"),inv:ni("총투자원금"),cash:ni("예수금"),pl:ni("총손익"),rkrw:ni("수익률 원화 %"),rusd:ni("수익률 달러 %"),fx:ni("환율 ₩/$"),dep:ni("입금액"),wd:ni("출금액"),memo:h("input",{type:"text",placeholder:"메모",style:{width:"100%",border:`1px solid ${C.line}`,borderRadius:"10px",padding:"11px 12px",fontSize:"14px"}})};
+  (async()=>{try{const fx=await fetchFxRate();if(fx?.price&&!flds.fx.value){flds.fx.value=Math.round(fx.price*100)/100;console.log("[환율자동]",fx.price);}}catch(e){console.log("[환율실패]",e);}})();
   const sv=h("button",{style:{width:"100%",background:C.brand,color:C.w,fontSize:"15px",fontWeight:"700",padding:"14px",borderRadius:"13px",border:"none",cursor:"pointer",marginTop:"6px"}},"저장하기");
   sv.onclick=async()=>{
     if(!flds.val.value){alert("총평가액을 입력해주세요.");return;}
