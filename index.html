@@ -1868,12 +1868,18 @@ function showInvest(){
   sv.onclick=async()=>{
     if(!flds.val.value){alert("총평가액을 입력해주세요.");return;}
     sv.disabled=true;sv.textContent="저장 중…";
+    if(!flds.fx.value){
+      try{sv.textContent="환율 가져오는 중…";const fx=await fetchPrice("USDKRW=X");if(fx?.price)flds.fx.value=Math.round(fx.price*100)/100;}catch{}
+      sv.textContent="저장 중…";
+    }
     const nm=v=>v===""||v===undefined?null:Number(v);
     const row={user_id:S.session.user.id,snapshot_date:dtEl.value,broker:brEl.value,total_value_krw:nm(flds.val.value),total_invested_krw:nm(flds.inv.value),cash_krw:nm(flds.cash.value),total_pl_krw:nm(flds.pl.value),return_rate_krw:nm(flds.rkrw.value),return_rate_usd:nm(flds.rusd.value),exchange_rate:nm(flds.fx.value),deposit:nm(flds.dep.value)||0,withdrawal:nm(flds.wd.value)||0,memo:flds.memo.value||null};
     const{error}=await sb.from("investment_snapshots").upsert(row,{onConflict:"user_id,snapshot_date"});
     if(error){alert("저장 실패: "+error.message);sv.disabled=false;sv.textContent="저장하기";return;}
-    if(parsedHoldings.length){
-      const hrows=parsedHoldings.filter(hd=>hd.name).map(hd=>({user_id:S.session.user.id,snapshot_date:dtEl.value,broker:brEl.value,name:hd.name,ticker:hd.ticker||null,quantity:hd.quantity??null,eval_value_krw:hd.eval_value??null,pl_krw:hd.pl??null,return_rate:hd.return_rate??null,currency:hd.currency||"USD"}));
+   if(parsedHoldings.length){
+      const fxRate=Number(flds.fx.value)||1380;
+      const toKrw=(v,cur)=>{const n=Number(v);if(n==null||isNaN(n))return null;return(cur==="KRW")?Math.round(n):Math.round(n*fxRate);};
+      const hrows=parsedHoldings.filter(hd=>hd.name).map(hd=>({user_id:S.session.user.id,snapshot_date:dtEl.value,broker:brEl.value,name:hd.name,ticker:hd.ticker||null,quantity:hd.quantity??null,eval_value_krw:toKrw(hd.eval_value,hd.currency),pl_krw:toKrw(hd.pl,hd.currency),return_rate:hd.return_rate??null,currency:hd.currency||"USD"}));
       if(hrows.length)await sb.from("investment_holdings").insert(hrows);
     }
     ov.remove();await loadInvest();const ct=document.getElementById("ct");if(ct){ct.innerHTML="";buildInvest().forEach(n=>ct.append(n));}
