@@ -1414,6 +1414,9 @@ const isVariableFc=(fc)=>{try{const v=localStorage.getItem("fcvar:"+(fc.id||fc.n
 const setVariableFc=(fc,on)=>{try{localStorage.setItem("fcvar:"+(fc.id||fc.name),on?"1":"0");}catch{}};
 const isSubscriptionFc=(fc)=>{try{const v=localStorage.getItem("fcsub:"+(fc.id||fc.name));if(v==="1")return true;if(v==="0")return false;}catch{}return /(구독|멤버십|멤버쉽|프라임|와우|밀리|flo|뮤직|music|membership|넷플릭스|netflix|유튜브|youtube|디즈니|disney|왓챠|티빙|웨이브|spotify)/i.test((fc.name||"")+(fc.memo||""));};
 const setSubscriptionFc=(fc,on)=>{try{localStorage.setItem("fcsub:"+(fc.id||fc.name),on?"1":"0");}catch{}};
+const getFcShare=(fc)=>{if(fc.account!=="공용")return 100;try{const v=localStorage.getItem("fcshare:"+(fc.id||fc.name));if(v!=null&&v!=="")return Math.max(0,Math.min(100,Number(v)));}catch{}return 50;};
+const setFcShare=(fc,p)=>{try{localStorage.setItem("fcshare:"+(fc.id||fc.name),String(Math.max(0,Math.min(100,Math.round(p)))));}catch{}};
+const myShareAmount=(fc)=>Number(fc.amount||0)*getFcShare(fc)/100;
 const fcTol=(fc)=>isVariableFc(fc)?0.6:0.18;
 function fcDueInfo(fc){
   const bd=Number(fc.billing_day);if(!bd)return null;
@@ -1588,6 +1591,17 @@ function showFixedDetail(fc,reload){
   })();
 
   // 수정 버튼
+  // 공용 고정비 → 내 부담 비율
+  if(fc.account==="공용"){
+    const curShare=getFcShare(fc);
+    sh.append(h("div",{style:{fontSize:"11.5px",color:C.faint,marginTop:"20px",marginBottom:"7px"}},`🤝 내 부담 비율 — 현재 ${curShare}% · 월 ${W(myShareAmount(fc))}`));
+    const shareRow=h("div",{style:{display:"flex",gap:"5px",flexWrap:"wrap"}});
+    [0,25,50,75,100].forEach(p=>{
+      const on=curShare===p;
+      shareRow.append(h("button",{style:{flex:"1",minWidth:"50px",fontSize:"12px",fontWeight:"700",padding:"9px 4px",borderRadius:"9px",border:`1px solid ${on?C.brand:C.line}`,background:on?C.soft:C.w,color:on?C.brand:C.sub,cursor:"pointer"},onclick:()=>{setFcShare(fc,p);close();reload();}},p+"%"));
+    });
+    sh.append(shareRow);
+  }
   // 설정 토글 (매달 변동 / 구독 서비스)
   const tgl=(label,active,fn)=>h("button",{style:{flex:"1",fontSize:"11.5px",fontWeight:"700",padding:"10px",borderRadius:"9px",border:`1px solid ${active?C.brand:C.line}`,background:active?C.soft:C.w,color:active?C.brand:C.sub,cursor:"pointer"},onclick:fn},label);
   sh.append(h("div",{style:{fontSize:"11.5px",color:C.faint,marginTop:"20px",marginBottom:"7px"}},"이 고정비 설정"),
@@ -1613,6 +1627,7 @@ function buildFixed(){
   // 개인/공용 분리 + 연간 환산
   const personalTotal=withStatus.filter(f=>f.account!=="공용").reduce((s,f)=>s+Number(f.amount),0);
   const publicTotal=withStatus.filter(f=>f.account==="공용").reduce((s,f)=>s+Number(f.amount),0);
+  const myTotal=withStatus.reduce((s,f)=>s+myShareAmount(f),0);
   const splitAnnualBlock=h("div",{style:{marginTop:"14px",display:"flex",flexDirection:"column",gap:"8px"}},
     h("div",{style:{display:"flex",gap:"8px"}},
       h("div",{style:{flex:"1",background:"#F6F4EF",borderRadius:"10px",padding:"10px 12px"}},
@@ -1622,7 +1637,12 @@ function buildFixed(){
         h("div",{style:{fontSize:"10.5px",color:C.sub,marginBottom:"3px"}},"🤝 공용 고정비"),
         h("div",{class:"num",style:{fontSize:"14px",fontWeight:"800"}},W(publicTotal)))
     ),
-    h("div",{style:{textAlign:"center",fontSize:"11.5px",color:C.faint}},"연간 환산 약 ",h("span",{class:"num",style:{fontWeight:"800",color:C.sub}},W(total*12)))
+    h("div",{style:{background:C.soft,borderRadius:"10px",padding:"11px 14px",display:"flex",justifyContent:"space-between",alignItems:"center"}},
+      h("div",{},h("div",{style:{fontSize:"11px",color:C.brand,fontWeight:"800"}},"🙋 내 실부담 (이번 달)"),
+        h("div",{style:{fontSize:"10px",color:C.faint,marginTop:"2px"}},"공용 분담 비율 반영 · 항목별 조정 가능")),
+      h("div",{class:"num",style:{fontSize:"17px",fontWeight:"800",color:C.brand}},W(myTotal))
+    ),
+    h("div",{style:{textAlign:"center",fontSize:"11px",color:C.faint}},"전체 연 ",h("span",{class:"num",style:{fontWeight:"700",color:C.sub}},W(total*12))," · 내 부담 연 ",h("span",{class:"num",style:{fontWeight:"800",color:C.sub}},W(myTotal*12)))
   );
 
   // 헤더 카드
@@ -1639,7 +1659,7 @@ function buildFixed(){
         h("div",{style:{fontSize:"11.5px",color:C.brand,marginTop:"2px"}},`${paidList.length}건 · ${paidPct}%`)
       ),
       h("div",{style:{background:unpaidAmt>0?"#FEF2EE":"#F6F4EF",borderRadius:"12px",padding:"12px 14px"}},
-        h("div",{style:{fontSize:"11px",color:unpaidAmt>0?C.over:C.faint,fontWeight:"700",marginBottom:"4px"}},unpaidAmt>0?"⏳ 미납":"🎉 전액 납부"),
+        h("div",{style:{fontSize:"11px",color:unpaidAmt>0?C.over:C.faint,fontWeight:"700",marginBottom:"4px"}},unpaidAmt>0?"⏳ 미납":"✅ 미납 없음"),
         h("div",{class:"num",style:{fontSize:"17px",fontWeight:"800",color:unpaidAmt>0?C.over:C.faint}},W(unpaidAmt)),
         h("div",{style:{fontSize:"11.5px",color:unpaidAmt>0?C.over:C.faint,marginTop:"2px"}},`${unpaidList.length}건`)
       )
