@@ -2108,23 +2108,40 @@ const getCardOrder=(tab)=>{try{return JSON.parse(localStorage.getItem("cardorder
 const setCardOrder=(tab,arr)=>{try{localStorage.setItem("cardorder:"+tab,JSON.stringify(arr));}catch{}};
 const getTabOrder=()=>{try{return JSON.parse(localStorage.getItem("taborder")||"[]");}catch{return[];}};
 const setTabOrder=(arr)=>{try{localStorage.setItem("taborder",JSON.stringify(arr));}catch{}};
+const getCardState=(tab)=>{try{return JSON.parse(localStorage.getItem("cardstate:"+tab)||"{}");}catch{return{};}};
+const setCardStateFor=(tab,key,patch)=>{const st=getCardState(tab);st[key]=Object.assign(st[key]||{},patch);try{localStorage.setItem("cardstate:"+tab,JSON.stringify(st));}catch{}};
 let REORDER={editing:false,scope:null,doneBar:null};
 function autoKey(el){return((el.textContent||"").replace(/\s+/g,"").slice(0,10))||("k"+Math.random());}
 function ensureReorderStyle(){
   if(document.getElementById("reorder-style"))return;
   const st=document.createElement("style");st.id="reorder-style";
   st.textContent="@keyframes rwiggle{0%{transform:rotate(-.5deg)}50%{transform:rotate(.5deg)}100%{transform:rotate(-.5deg)}}"
+    +"#ct.cardgrid{display:grid;grid-template-columns:repeat(2,1fr);gap:12px;align-items:start}"
+    +"#ct.cardgrid>*{grid-column:1 / -1}"
+    +"#ct.cardgrid>.rcard{margin-top:0;margin-bottom:0}"
+    +"#ct.cardgrid>.rcard.half{grid-column:auto}"
+    +".rcard.half{font-size:12.5px}"
+    +".rcard.half canvas{max-width:100%!important;height:auto!important}"
+    +".rcard.collapsed>*:not(:first-child):not(.rctl){display:none!important}"
+    +".rcard.collapsed{padding-bottom:14px!important}"
     +".rcard,.rtab{transition:transform .22s cubic-bezier(.2,.8,.2,1),box-shadow .18s ease}"
     +".reorder-editing .rcard,.tabedit .rtab{animation:rwiggle .3s ease-in-out infinite}"
     +".reorder-editing .rcard>*{pointer-events:none}"
+    +".reorder-editing .rcard .rctl,.reorder-editing .rcard .rctl *{pointer-events:auto}"
     +".rcard.rdrag,.rtab.rdrag{animation:none!important;transition:box-shadow .18s ease;z-index:60;box-shadow:0 14px 32px rgba(0,0,0,.20);opacity:.98}"
-    +".reorder-editing .rcard::after{content:'≡';position:absolute;top:8px;right:13px;font-size:17px;color:#B7B0A4;pointer-events:none;z-index:2}";
+    +".rctl{position:absolute;top:6px;right:8px;display:none;gap:4px;z-index:5}"
+    +".reorder-editing .rcard .rctl{display:flex}"
+    +".rctl button{width:27px;height:27px;border-radius:8px;border:1px solid rgba(0,0,0,.12);background:#fff;color:#5b5347;font-size:13px;line-height:1;display:flex;align-items:center;justify-content:center;box-shadow:0 1px 5px rgba(0,0,0,.13);cursor:pointer}"
+    +".rhidden{grid-column:1 / -1;text-align:center;font-size:12.5px;color:#8a8275;background:rgba(120,110,95,.08);border:1px dashed rgba(120,110,95,.35);border-radius:12px;padding:11px;margin-top:4px;cursor:pointer}";
   document.head.append(st);
 }
 function showDoneBar(){
   if(REORDER.doneBar)return;
-  const bar=h("button",{style:{position:"fixed",bottom:"24px",left:"50%",transform:"translateX(-50%)",background:C.ink,color:C.w,fontSize:"14px",fontWeight:"700",padding:"12px 26px",borderRadius:"999px",border:"none",boxShadow:"0 6px 22px rgba(0,0,0,.28)",zIndex:"70",cursor:"pointer"},onclick:()=>exitReorder()},"✓ 순서 편집 완료");
-  document.body.append(bar);REORDER.doneBar=bar;
+  const wrap=h("div",{style:{position:"fixed",bottom:"24px",left:"50%",transform:"translateX(-50%)",display:"flex",gap:"8px",zIndex:"70"}},
+    h("button",{style:{background:C.w,color:C.sub,fontSize:"13px",fontWeight:"700",padding:"12px 18px",borderRadius:"999px",border:`1px solid ${C.line}`,boxShadow:"0 6px 22px rgba(0,0,0,.18)",cursor:"pointer"},onclick:()=>{if(confirm("이 화면의 순서·크기·접기·숨김을 기본값으로 되돌릴까요?"))resetReorder();}},"↺ 기본값"),
+    h("button",{style:{background:C.ink,color:C.w,fontSize:"14px",fontWeight:"700",padding:"12px 26px",borderRadius:"999px",border:"none",boxShadow:"0 6px 22px rgba(0,0,0,.28)",cursor:"pointer"},onclick:()=>exitReorder()},"✓ 완료")
+  );
+  document.body.append(wrap);REORDER.doneBar=wrap;
 }
 function enterReorder(scope){
   ensureReorderStyle();REORDER.editing=true;REORDER.scope=scope;
@@ -2152,6 +2169,7 @@ function attachDrag(el,opts){
   const{scope,axis,onDrop,inEdit}=opts;
   let pressTimer=null,sx=0,sy=0,dragging=false;
   const onDown=(e)=>{
+    if(e.target&&e.target.closest&&e.target.closest(".rctl"))return;
     const pt=e.touches?e.touches[0]:e;sx=pt.clientX;sy=pt.clientY;
     if(REORDER.editing&&inEdit()){beginDrag(e);return;}
     pressTimer=setTimeout(()=>{pressTimer=null;if("vibrate"in navigator){try{navigator.vibrate(14);}catch{}}enterReorder(scope);beginDrag(e);},450);
@@ -2177,6 +2195,7 @@ function attachDrag(el,opts){
     ph.style.width=rect.width+"px";ph.style.height=rect.height+"px";
     ph.style.margin=cs.margin;ph.style.boxSizing="border-box";ph.style.flex="0 0 auto";
     ph.style.borderRadius="16px";ph.style.background="rgba(120,110,95,.07)";
+    ph.style.gridColumn=el.classList.contains("half")?"auto":"1 / -1";
     ct.insertBefore(ph,el);
     // 잡은 카드를 body로 띄움(레이아웃 분리)
     document.body.appendChild(el);
@@ -2237,14 +2256,64 @@ function flipMove(nodes,mutate){
   });
 }
 
+function addCardControls(el,tab,key){
+  const mk=(txt,title,fn)=>h("button",{title,onclick:(ev)=>{ev.stopPropagation();ev.preventDefault();fn(ev.currentTarget);}},txt);
+  const bar=h("div",{class:"rctl"},
+    mk(el.classList.contains("half")?"▭":"◻","크기 전환",(b)=>{const half=el.classList.toggle("half");setCardStateFor(tab,key,{sz:half?1:0});b.textContent=half?"▭":"◻";const ct=el.parentNode;if(ct){const ph=ct.querySelector(":scope > .rhidden");}try{window.dispatchEvent(new Event("resize"));}catch{}}),
+    mk(el.classList.contains("collapsed")?"▾":"▴","접기/펼치기",(b)=>{const c=el.classList.toggle("collapsed");setCardStateFor(tab,key,{col:c?1:0});b.textContent=c?"▾":"▴";}),
+    mk("✕","숨기기",()=>{setCardStateFor(tab,key,{hid:1});const ct=el.parentNode;el.style.transition="transform .2s ease,opacity .2s ease";el.style.transform="scale(.8)";el.style.opacity="0";setTimeout(()=>{el.remove();if(ct)ensureHiddenChip(ct,tab);},200);})
+  );
+  el.appendChild(bar);
+}
+function ensureHiddenChip(ct,tab){
+  const st=getCardState(tab);const keys=Object.keys(st).filter(k=>st[k]&&st[k].hid);
+  let chip=ct.querySelector(":scope > .rhidden");
+  if(!keys.length){if(chip)chip.remove();return;}
+  if(!chip){chip=h("div",{class:"rhidden",onclick:()=>openHiddenSheet(tab)});ct.appendChild(chip);}
+  else ct.appendChild(chip);
+  chip.textContent="👁️ 숨긴 카드 "+keys.length+"개 · 탭하여 복구";
+}
+function openHiddenSheet(tab){
+  const st=getCardState(tab);const keys=Object.keys(st).filter(k=>st[k]&&st[k].hid);
+  const ov=h("div",{style:{position:"fixed",inset:"0",background:"rgba(40,37,31,.42)",display:"flex",alignItems:"flex-end",justifyContent:"center",zIndex:"80"},onclick:e=>{if(e.target===ov)ov.remove();}});
+  const sh=h("div",{style:{width:"100%",maxWidth:"520px",background:C.w,borderRadius:"20px 20px 0 0",padding:"18px 20px 26px",maxHeight:"80vh",overflowY:"auto"}});
+  sh.append(h("div",{style:{fontSize:"16px",fontWeight:"800",marginBottom:"14px"}},"👁️ 숨긴 카드"));
+  if(!keys.length)sh.append(h("div",{style:{fontSize:"13px",color:C.faint,padding:"10px 0"}},"숨긴 카드가 없어요."));
+  keys.forEach(k=>{
+    sh.append(h("div",{style:{display:"flex",justifyContent:"space-between",alignItems:"center",padding:"11px 2px",borderBottom:`1px solid ${C.line}`}},
+      h("span",{style:{fontSize:"13.5px"}},k),
+      h("button",{style:{fontSize:"12.5px",fontWeight:"700",color:C.brand,background:C.soft,border:`1px solid ${C.brand}`,borderRadius:"9px",padding:"7px 14px",cursor:"pointer"},onclick:()=>{setCardStateFor(tab,k,{hid:0});ov.remove();renderDash();}},"복구")
+    ));
+  });
+  ov.append(sh);document.body.append(ov);
+}
+function resetReorder(){
+  if(REORDER.scope==="tab"){setTabOrder([]);}
+  else{const tab=S.tab;try{localStorage.removeItem("cardorder:"+tab);localStorage.removeItem("cardstate:"+tab);}catch{}}
+  exitReorder();renderDash();
+}
 function reorderCards(tab,cards){
   const list=(cards||[]).filter(Boolean);
   if(list.length<2)return list;
   ensureReorderStyle();
-  list.forEach(el=>{el.dataset.rkey=autoKey(el);el.classList.add("rcard");if(!el.style.position)el.style.position="relative";attachDrag(el,{scope:"card",axis:"y",inEdit:()=>REORDER.scope==="card",onDrop:()=>persistOrder(tab)});});
+  const st=getCardState(tab);
+  const visible=[];
+  list.forEach((el,i)=>{
+    const key=autoKey(el);el.dataset.rkey=key;el.classList.add("rcard");
+    if(!el.style.position)el.style.position="relative";
+    const cs=st[key]||{};
+    if(cs.sz)el.classList.add("half");
+    if(cs.col)el.classList.add("collapsed");
+    addCardControls(el,tab,key);
+    attachDrag(el,{scope:"card",axis:"y",inEdit:()=>REORDER.scope==="card",onDrop:()=>persistOrder(tab)});
+    if(!cs.hid)visible.push({el,key,i});
+  });
   const saved=getCardOrder(tab);
   const idxOf=k=>{const i=saved.indexOf(k);return i<0?9999:i;};
-  return list.map((el,i)=>({el,k:el.dataset.rkey,i})).sort((a,b)=>(idxOf(a.k)-idxOf(b.k))||(a.i-b.i)).map(o=>o.el);
+  visible.sort((a,b)=>(idxOf(a.key)-idxOf(b.key))||(a.i-b.i));
+  const out=visible.map(o=>o.el);
+  if(out[0])requestAnimationFrame(()=>{const ct=out[0].parentNode;if(ct){ct.classList.add("cardgrid");ensureHiddenChip(ct,tab);}});
+  return out;
 }
 // 탭 바 재배치: defs=[[key,labelNode/btn],...] 이미 만들어진 버튼들에 핸들러+순서적용
 function reorderTabs(barEl,btns){
