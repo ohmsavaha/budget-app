@@ -34,6 +34,7 @@ import{createClient}from'https://esm.sh/@supabase/supabase-js@2';
 const SURL="https://axlxdkybghxcltilsqgj.supabase.co";
 const SKEY="sb_publishable_GQhGSdWGOfGnvC643UEgjA_mneIg-uV";
 const sb=createClient(SURL,SKEY);
+const DEBUG=false;const dlog=(...a)=>{if(DEBUG)console.log(...a);};
 
 const C={brand:"#1E6E52",soft:"#E7F1EB",over:"#C2553D",warn:"#C98A2B",ink:"#28251F",sub:"#8C857A",faint:"#B7B0A4",line:"#ECE7DD",bg:"#F6F4EF",w:"#fff"};
 const CATS=[
@@ -152,12 +153,12 @@ async function claudeVision(file,prompt){
   if(!resp.ok){const e=await resp.json();throw new Error(e.error?.message||resp.status);}
   const data=await resp.json();
   let txt=data.content?.find(c=>c.type==="text")?.text||"{}";
-  console.log("[AI원본응답]",txt);
+  dlog("[AI원본응답]",txt);
   const _a=txt.indexOf("{"),_b=txt.lastIndexOf("}");
   if(_a>=0&&_b>_a)txt=txt.slice(_a,_b+1);
   txt=txt.replace(/(\d),(?=\d)/g,"$1");
-  try{const _o=JSON.parse(txt);console.log("[AI결과]",_o);return _o;}
-  catch(err){console.log("[AI파싱실패]",err,txt);return{_raw:txt};}
+  try{const _o=JSON.parse(txt);dlog("[AI결과]",_o);return _o;}
+  catch(err){dlog("[AI파싱실패]",err,txt);return{_raw:txt};}
 }
 async function claudeVisionMulti(files,prompt){
   const key=getApiKey();
@@ -172,12 +173,12 @@ async function claudeVisionMulti(files,prompt){
   if(!resp.ok){const e=await resp.json();throw new Error(e.error?.message||resp.status);}
   const data=await resp.json();
   let txt=data.content?.find(c=>c.type==="text")?.text||"{}";
-  console.log("[AI원본응답-멀티]",txt);
+  dlog("[AI원본응답-멀티]",txt);
   const _a=txt.indexOf("{"),_b=txt.lastIndexOf("}");
   if(_a>=0&&_b>_a)txt=txt.slice(_a,_b+1);
   txt=txt.replace(/(\d),(?=\d)/g,"$1");
-  try{const _o=JSON.parse(txt);console.log("[AI결과-멀티]",_o);return _o;}
-  catch(err){console.log("[AI파싱실패-멀티]",err,txt);return{_raw:txt};}
+  try{const _o=JSON.parse(txt);dlog("[AI결과-멀티]",_o);return _o;}
+  catch(err){dlog("[AI파싱실패-멀티]",err,txt);return{_raw:txt};}
 }
 // ── Yahoo Finance 주가 ──
 const MARKET_PROXY="https://axlxdkybghxcltilsqgj.supabase.co/functions/v1/market-proxy";
@@ -189,7 +190,7 @@ async function fetchQuotes(symbols){
     const r=await fetch(`${MARKET_PROXY}?symbols=${encodeURIComponent(list.join(","))}`,{headers:{apikey:SKEY,Authorization:"Bearer "+SKEY}});
     const d=await r.json();
     return d?.data||{};
-  }catch(e){console.log("[시세조회실패]",e);return{};}
+  }catch(e){dlog("[시세조회실패]",e);return{};}
 }
 async function fetchFxRate(){
   // 환율 전용 무료 API (CORS 허용, 키 불필요)
@@ -403,7 +404,7 @@ async function loadInvest(){
   const{data}=await sb.from("investment_snapshots").select("*").gte("snapshot_date",s).lte("snapshot_date",e).order("snapshot_date",{ascending:false});
   S.invRows=data||[];
   const{data:hd,error:hdErr}=await sb.from("investment_holdings").select("*").order("snapshot_date",{ascending:false}).order("created_at",{ascending:false});
-  if(hdErr)console.log("[종목로드에러]",hdErr);
+  if(hdErr)dlog("[종목로드에러]",hdErr);
   S.holdings=hd||[];
 }
 async function loadFixed(){
@@ -1697,7 +1698,7 @@ async function loadMarketSpark(force){
     const r=await fetch(`${MARKET_PROXY}?symbols=${encodeURIComponent(syms)}&spark=1`,{headers:{apikey:SKEY,Authorization:"Bearer "+SKEY}});
     const d=await r.json();
     S.marketSpark=d?.data||{};
-  }catch(e){console.log("[시장차트실패]",e);S.marketSpark={};}
+  }catch(e){dlog("[시장차트실패]",e);S.marketSpark={};}
   return S.marketSpark;
 }
 // 미니 스파크라인 SVG
@@ -1905,7 +1906,7 @@ async function showAssetDetail(symbol,displayName,holding){
     if(!d||!d.history||!d.history.length){tipBox.textContent="데이터를 불러오지 못했어요.";return;}
     curPrice=d.price;curCurrency=d.currency;
     const ohlc=extractOHLC(d,d.history);
-    if(!window._ohlcLogged){window._ohlcLogged=1;console.log("[OHLC keys]",Object.keys(d),"→",ohlc?("o/h/l/c "+ohlc.o.length+"개"):"없음");}
+    if(!window._ohlcLogged){window._ohlcLogged=1;dlog("[OHLC keys]",Object.keys(d),"→",ohlc?("o/h/l/c "+ohlc.o.length+"개"):"없음");}
     // 정보 패널 (받아온 모든 데이터)
     if(infoPanel){
       infoPanel.innerHTML="";
@@ -1988,7 +1989,32 @@ const getStockMemo=(tk)=>{try{return localStorage.getItem("stockmemo:"+(tk||""))
 const setStockMemo=(tk,v)=>{try{if(v)localStorage.setItem("stockmemo:"+tk,v);else localStorage.removeItem("stockmemo:"+tk);}catch{}};
 
 // ══════════ 업종 분류 ══════════
-const SECTORS={NVDA:"반도체",TSM:"반도체",INTC:"반도체",AMD:"반도체",AVGO:"반도체",ASML:"반도체",JOBY:"우주항공·모빌리티",RKLB:"우주항공·모빌리티",SPCX:"우주항공·모빌리티",XOVR:"우주항공·모빌리티",ACHR:"우주항공·모빌리티",IONQ:"양자·AI",QBTS:"양자·AI",RGTI:"양자·AI",PLTR:"양자·AI",GOOGL:"빅테크",GOOG:"빅테크",AAPL:"빅테크",MSFT:"빅테크",AMZN:"빅테크",META:"빅테크",TSLA:"빅테크",NFLX:"빅테크",VOO:"ETF·지수",QQQ:"ETF·지수",SPY:"ETF·지수",DXYZ:"ETF·지수",SCHD:"ETF·지수",VTI:"ETF·지수"};
+const SECTORS={
+  // 반도체
+  NVDA:"반도체",TSM:"반도체",INTC:"반도체",AMD:"반도체",AVGO:"반도체",ASML:"반도체",QCOM:"반도체",MU:"반도체",AMAT:"반도체",LRCX:"반도체",TXN:"반도체",ARM:"반도체",SMCI:"반도체",
+  // 우주항공·모빌리티
+  JOBY:"우주항공·모빌리티",RKLB:"우주항공·모빌리티",SPCX:"우주항공·모빌리티",XOVR:"우주항공·모빌리티",ACHR:"우주항공·모빌리티",LUNR:"우주항공·모빌리티",ASTS:"우주항공·모빌리티",RDW:"우주항공·모빌리티",
+  // 양자·AI
+  IONQ:"양자·AI",QBTS:"양자·AI",RGTI:"양자·AI",PLTR:"양자·AI",AI:"양자·AI",SOUN:"양자·AI",BBAI:"양자·AI",
+  // 빅테크
+  GOOGL:"빅테크",GOOG:"빅테크",AAPL:"빅테크",MSFT:"빅테크",AMZN:"빅테크",META:"빅테크",TSLA:"빅테크",NFLX:"빅테크",ORCL:"빅테크",CRM:"빅테크",ADBE:"빅테크",
+  // ETF·지수
+  VOO:"ETF·지수",QQQ:"ETF·지수",SPY:"ETF·지수",DXYZ:"ETF·지수",SCHD:"ETF·지수",VTI:"ETF·지수",VT:"ETF·지수",IVV:"ETF·지수",DIA:"ETF·지수",ARKK:"ETF·지수",JEPI:"ETF·지수",
+  // 방산
+  LMT:"방산",RTX:"방산",NOC:"방산",GD:"방산",BA:"방산",LHX:"방산",HII:"방산",KTOS:"방산",AVAV:"방산",
+  // 헬스케어·바이오
+  LLY:"헬스케어·바이오",UNH:"헬스케어·바이오",JNJ:"헬스케어·바이오",MRK:"헬스케어·바이오",PFE:"헬스케어·바이오",ABBV:"헬스케어·바이오",TMO:"헬스케어·바이오",ABT:"헬스케어·바이오",AMGN:"헬스케어·바이오",GILD:"헬스케어·바이오",MRNA:"헬스케어·바이오",VRTX:"헬스케어·바이오",REGN:"헬스케어·바이오",ISRG:"헬스케어·바이오",
+  // 에너지
+  XOM:"에너지",CVX:"에너지",COP:"에너지",SLB:"에너지",EOG:"에너지",OXY:"에너지",PSX:"에너지",MPC:"에너지",VLO:"에너지",ENPH:"에너지",FSLR:"에너지",NEE:"에너지",
+  // 금융
+  JPM:"금융",V:"금융",MA:"금융",BAC:"금융",WFC:"금융",GS:"금융",MS:"금융","BRK.B":"금융",BLK:"금융",AXP:"금융",C:"금융",SCHW:"금융",PYPL:"금융",COIN:"금융",HOOD:"금융",SOFI:"금융",
+  // 소비재
+  KO:"소비재",PEP:"소비재",MCD:"소비재",NKE:"소비재",SBUX:"소비재",COST:"소비재",WMT:"소비재",PG:"소비재",HD:"소비재",LOW:"소비재",TGT:"소비재",MNST:"소비재",
+  // 산업·로봇
+  CAT:"산업·로봇",DE:"산업·로봇",HON:"산업·로봇",GE:"산업·로봇",MMM:"산업·로봇",UPS:"산업·로봇",EMR:"산업·로봇",ETN:"산업·로봇",PH:"산업·로봇",ROK:"산업·로봇",
+  // 통신·미디어
+  T:"통신·미디어",VZ:"통신·미디어",TMUS:"통신·미디어",DIS:"통신·미디어",CMCSA:"통신·미디어",WBD:"통신·미디어",PARA:"통신·미디어",SPOT:"통신·미디어",ROKU:"통신·미디어"
+};
 const sectorOf=(ticker)=>{const t=(ticker||"").toUpperCase().split(".")[0];return SECTORS[t]||"기타";};
 
 // ══════════ 업종 비중 도넛 ══════════
@@ -2003,7 +2029,7 @@ function buildSectorDonut(latest){
   const wrap=h("div",{style:{display:"flex",gap:"16px",alignItems:"center",flexWrap:"wrap"}});
   const canvasBox=h("div",{style:{position:"relative",width:"150px",height:"150px",flexShrink:"0"}});
   const cv=document.createElement("canvas");cv.width=150;cv.height=150;canvasBox.append(cv);
-  const colors=["#D85A30","#2E7D32","#2F6D9B","#8B4FB2","#B23A5C","#16747B","#8A5A39","#405AA3"];
+  const colors=["#D85A30","#2E7D32","#2F6D9B","#8B4FB2","#B23A5C","#16747B","#8A5A39","#405AA3","#C99A2B","#5B8C3A","#9B4D6E","#3C7A7E","#7A6CA8"];
   const legend=h("div",{style:{flex:"1",minWidth:"160px",display:"flex",flexDirection:"column",gap:"6px"}});
   items.forEach((x,i)=>{
     const pct=Math.round(x.val/total*100);
@@ -2490,7 +2516,7 @@ function buildInvest(){
         const d=await r.json();
         S.holdSpark=d?.data||{};
         drawList();
-      }catch(e){console.log("[보유차트실패]",e);}
+      }catch(e){dlog("[보유차트실패]",e);}
     })();
     const refreshBtn=h("button",{style:{width:"100%",marginBottom:"10px",fontSize:"13px",fontWeight:"700",padding:"10px",borderRadius:"10px",border:`1px solid ${C.brand}`,background:C.w,color:C.brand,cursor:"pointer"}},"💹 현재가로 평가액 갱신");
     refreshBtn.onclick=async()=>{
@@ -2498,7 +2524,7 @@ function buildInvest(){
       if(!syms.length){alert("종목에 심볼(ticker)이 없어요. 저장할 때 심볼을 입력해주세요.");return;}
       refreshBtn.textContent="💹 시세 받아오는 중…";refreshBtn.disabled=true;
       const quotes=await fetchQuotes(syms);
-      const fx=Number(latest[0]?.fx_rate)||Number(lt?.exchange_rate)||1536;
+      const fx=Number(latest[0]?.fx_rate)||Number(lt?.exchange_rate)||1380;
       let updated=0;
       for(const x of latest){
         const q=x.ticker&&quotes[x.ticker];
@@ -2751,7 +2777,7 @@ function showInvest(){
   const dtEl=h("input",{type:"date",value:td(),style:{width:"100%",border:`1px solid ${C.line}`,borderRadius:"10px",padding:"11px 12px",fontSize:"14px"}});
   const brEl=h("input",{type:"text",value:"토스증권",style:{width:"100%",border:`1px solid ${C.line}`,borderRadius:"10px",padding:"11px 12px",fontSize:"14px"}}); 
   const flds={val:ni("총평가액 (원)*"),inv:ni("총투자원금"),cash:ni("예수금"),pl:ni("총손익"),rkrw:ni("수익률 원화 %"),rusd:ni("수익률 달러 %"),fx:ni("환율 ₩/$"),dep:ni("입금액"),wd:ni("출금액"),memo:h("input",{type:"text",placeholder:"메모",style:{width:"100%",border:`1px solid ${C.line}`,borderRadius:"10px",padding:"11px 12px",fontSize:"14px"}})};
-  (async()=>{try{const fx=await fetchFxRate();if(fx?.price&&!flds.fx.value){flds.fx.value=Math.round(fx.price*100)/100;console.log("[환율자동]",fx.price);}}catch(e){console.log("[환율실패]",e);}})();
+  (async()=>{try{const fx=await fetchFxRate();if(fx?.price&&!flds.fx.value){flds.fx.value=Math.round(fx.price*100)/100;dlog("[환율자동]",fx.price);}}catch(e){dlog("[환율실패]",e);}})();
   const sv=h("button",{style:{width:"100%",background:C.brand,color:C.w,fontSize:"15px",fontWeight:"700",padding:"14px",borderRadius:"13px",border:"none",cursor:"pointer",marginTop:"6px"}},"저장하기");
   sv.onclick=async()=>{
     if(!flds.val.value){alert("총평가액을 입력해주세요.");return;}
@@ -2797,12 +2823,12 @@ function showInvest(){
         const investedKrw=(avg&&q)?Math.round(avg*q*(cur==="KRW"?1:fxRate)):(()=>{const ev=toKrw(hd.eval_value,cur),pl=toKrw(hd.pl,cur);return(ev!=null)?ev-(pl||0):null;})();
         return{user_id:S.session.user.id,snapshot_date:dtEl.value,broker:brEl.value,name:hd.name,ticker:hd.ticker||null,quantity:hd.quantity??null,eval_value_krw:toKrw(hd.eval_value,cur),pl_krw:toKrw(hd.pl,cur),eval_value_usd:toUsd(hd.eval_value,cur),pl_usd:toUsd(hd.pl,cur),fx_rate:fxRate,return_rate:hd.return_rate??null,currency:cur,avg_price:avg??null,avg_price_currency:cur,invested_krw:investedKrw};
       });
-     console.log("[종목저장시도]",hrows);
+     dlog("[종목저장시도]",hrows);
       if(hrows.length){
         // 같은 날짜 종목 먼저 삭제 → 중복 방지 (항상 최신만 유지)
         await sb.from("investment_holdings").delete().eq("user_id",S.session.user.id).eq("snapshot_date",dtEl.value);
         const{error:hErr}=await sb.from("investment_holdings").insert(hrows);
-        if(hErr){console.log("[종목저장에러]",hErr);alert("종목 저장 실패: "+hErr.message);}else console.log("[종목저장성공]",hrows.length+"개");
+        if(hErr){dlog("[종목저장에러]",hErr);alert("종목 저장 실패: "+hErr.message);}else dlog("[종목저장성공]",hrows.length+"개");
       }
     }
     ov.remove();await loadInvest();const ct=document.getElementById("ct");if(ct){ct.innerHTML="";buildInvest().forEach(n=>ct.append(n));}
