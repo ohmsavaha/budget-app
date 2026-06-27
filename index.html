@@ -410,6 +410,8 @@ async function loadInvest(){
 async function loadFixed(){
   const{data}=await sb.from("fixed_costs").select("*").eq("user_id",S.session.user.id).eq("is_active",true).order("amount",{ascending:false});
   S.fixedCosts=data||[];
+  const{data:inact}=await sb.from("fixed_costs").select("*").eq("user_id",S.session.user.id).eq("is_active",false).order("amount",{ascending:false});
+  S.fixedInactive=inact||[];
 }
 
 
@@ -1435,6 +1437,24 @@ function fcDueInfo(fc){
   let dday=null;if(isThisMonth){dday=Math.round((new Date(dueStr)-new Date(td()))/86400000);}
   return{dueStr,day,dday,isThisMonth};
 }
+function fcStatus(fc){
+  if(fc.paid)return "paid";
+  const now=ym(td()),viewing=S.curYm;
+  if(viewing>now)return "scheduled";
+  const due=fcDueInfo(fc);
+  if(due&&due.isThisMonth){
+    if(due.dday>0)return "scheduled";
+    if(due.dday===0)return "today";
+    return "check";
+  }
+  return "check";
+}
+const STATUS_META={
+  paid:{lb:"✅ 납부됨",col:C.brand,bg:"transparent",bd:"transparent"},
+  scheduled:{lb:"🕒 예정",col:C.sub,bg:"transparent",bd:C.line},
+  today:{lb:"📍 오늘 결제",col:C.warn,bg:"#FFFBEE",bd:C.warn},
+  check:{lb:"⏳ 확인 필요",col:C.over,bg:"#FEF7F4",bd:C.over}
+};
 const getFcSort=()=>{try{return localStorage.getItem("fcsort")||"due";}catch{return"due";}};
 const setFcSort=(v)=>{try{localStorage.setItem("fcsort",v);}catch{}};
 function sortFcList(list){
@@ -1632,6 +1652,16 @@ function buildFixed(){
   const paidPct=total>0?Math.round(paidAmt/total*100):0;
   const unpaidList=withStatus.filter(fc=>!fc.paid);
   const paidList=withStatus.filter(fc=>fc.paid);
+  const checkList=withStatus.filter(fc=>fcStatus(fc)==="check");
+  const schedList=withStatus.filter(fc=>{const st=fcStatus(fc);return st==="scheduled"||st==="today";});
+  const checkAmt=checkList.reduce((s,fc)=>s+Number(fc.amount),0);
+  const schedAmt=schedList.reduce((s,fc)=>s+Number(fc.amount),0);
+  const isCurMonth=S.curYm===ym(td());
+  const upcomingBanner=(isCurMonth&&(schedAmt>0||checkAmt>0))?h("div",{style:{background:"linear-gradient(135deg,#2C8F6B,#1E6E52)",borderRadius:"16px",padding:"16px 18px",color:"#fff"}},
+    h("div",{style:{fontSize:"11.5px",opacity:".92"}},"이번 달 앞으로 빠질 고정비"),
+    h("div",{class:"num",style:{fontSize:"27px",fontWeight:"800",marginTop:"3px",letterSpacing:"-.02em"}},W(schedAmt)),
+    checkAmt>0?h("div",{style:{fontSize:"11.5px",marginTop:"7px",background:"rgba(255,255,255,.18)",borderRadius:"8px",padding:"6px 10px",display:"inline-block"}},`⚠️ 확인 필요 ${W(checkAmt)} 별도`):""
+  ):null;
   // 개인/공용 분리 + 연간 환산
   const personalTotal=withStatus.filter(f=>f.account!=="공용").reduce((s,f)=>s+Number(f.amount),0);
   const publicTotal=withStatus.filter(f=>f.account==="공용").reduce((s,f)=>s+Number(f.amount),0);
@@ -1660,16 +1690,21 @@ function buildFixed(){
     h("div",{style:{height:"11px",borderRadius:"999px",background:"#F0ECE3",overflow:"hidden",marginBottom:"10px"}},
       h("div",{style:{width:`${paidPct}%`,height:"100%",background:C.brand,borderRadius:"999px",transition:"width .5s"}})
     ),
-    h("div",{style:{display:"grid",gridTemplateColumns:"1fr 1fr",gap:"10px"}},
-      h("div",{style:{background:C.soft,borderRadius:"12px",padding:"12px 14px"}},
-        h("div",{style:{fontSize:"11px",color:C.brand,fontWeight:"700",marginBottom:"4px"}},"✅ 납부 완료"),
-        h("div",{class:"num",style:{fontSize:"17px",fontWeight:"800",color:C.brand}},W(paidAmt)),
-        h("div",{style:{fontSize:"11.5px",color:C.brand,marginTop:"2px"}},`${paidList.length}건 · ${paidPct}%`)
+    h("div",{style:{display:"grid",gridTemplateColumns:"1fr 1fr 1fr",gap:"8px"}},
+      h("div",{style:{background:C.soft,borderRadius:"12px",padding:"11px 12px"}},
+        h("div",{style:{fontSize:"10.5px",color:C.brand,fontWeight:"700",marginBottom:"4px"}},"✅ 완료"),
+        h("div",{class:"num",style:{fontSize:"15px",fontWeight:"800",color:C.brand}},W(paidAmt)),
+        h("div",{style:{fontSize:"10.5px",color:C.brand,marginTop:"2px"}},`${paidList.length}건`)
       ),
-      h("div",{style:{background:unpaidAmt>0?"#FEF2EE":"#F6F4EF",borderRadius:"12px",padding:"12px 14px"}},
-        h("div",{style:{fontSize:"11px",color:unpaidAmt>0?C.over:C.faint,fontWeight:"700",marginBottom:"4px"}},unpaidAmt>0?"⏳ 미납":"✅ 미납 없음"),
-        h("div",{class:"num",style:{fontSize:"17px",fontWeight:"800",color:unpaidAmt>0?C.over:C.faint}},W(unpaidAmt)),
-        h("div",{style:{fontSize:"11.5px",color:unpaidAmt>0?C.over:C.faint,marginTop:"2px"}},`${unpaidList.length}건`)
+      h("div",{style:{background:"#F6F4EF",borderRadius:"12px",padding:"11px 12px"}},
+        h("div",{style:{fontSize:"10.5px",color:C.sub,fontWeight:"700",marginBottom:"4px"}},"🕒 예정"),
+        h("div",{class:"num",style:{fontSize:"15px",fontWeight:"800",color:C.sub}},W(schedAmt)),
+        h("div",{style:{fontSize:"10.5px",color:C.sub,marginTop:"2px"}},`${schedList.length}건`)
+      ),
+      h("div",{style:{background:checkAmt>0?"#FEF2EE":"#F6F4EF",borderRadius:"12px",padding:"11px 12px"}},
+        h("div",{style:{fontSize:"10.5px",color:checkAmt>0?C.over:C.faint,fontWeight:"700",marginBottom:"4px"}},"⏳ 확인필요"),
+        h("div",{class:"num",style:{fontSize:"15px",fontWeight:"800",color:checkAmt>0?C.over:C.faint}},W(checkAmt)),
+        h("div",{style:{fontSize:"10.5px",color:checkAmt>0?C.over:C.faint,marginTop:"2px"}},`${checkList.length}건`)
       )
     ),
     splitAnnualBlock
@@ -1737,18 +1772,18 @@ function buildFixed(){
     const dayStr=fc.billing_day?`매월 ${fc.billing_day}일`:"";
     const delBtn=h("button",{style:{color:C.faint,fontSize:"14px",padding:"6px",flexShrink:"0"},onclick:async(e)=>{
       e.stopPropagation();
-      if(!confirm(`'${fc.name}' 고정비를 삭제할까요?`))return;
+      if(!confirm(`'${fc.name}'을 해지(보관)할까요?\n나중에 '해지한 고정비'에서 다시 활성화할 수 있어요.`))return;
       await sb.from("fixed_costs").update({is_active:false}).eq("id",fc.id);
       await reloadFixed();
     }},"✕");
 
-    const _due=fcDueInfo(fc);
-    const ddayChip=(!paid&&_due&&_due.isThisMonth&&_due.dday!=null)?h("div",{style:{fontSize:"10px",fontWeight:"800",marginTop:"3px",color:_due.dday<=3?C.over:C.sub}},_due.dday<0?`${Math.abs(_due.dday)}일 지남`:_due.dday===0?"오늘 납부일":`D-${_due.dday}`):"";
+    const _st=fcStatus(fc),_sm=STATUS_META[_st],_due=fcDueInfo(fc);
+    const ddayChip=(_st!=="paid"&&_due&&_due.isThisMonth&&_due.dday!=null)?h("div",{style:{fontSize:"10px",fontWeight:"800",marginTop:"3px",color:_sm.col}},_due.dday<0?`${Math.abs(_due.dday)}일 지남`:_due.dday===0?"오늘 납부일":`D-${_due.dday}`):"";
     return h("div",{class:"fcrow",style:{
       display:"flex",alignItems:"center",gap:"12px",
       padding:"13px 4px 13px 8px",borderBottom:`1px solid ${C.line}`,
-      borderLeft:paid?"3px solid transparent":`3px solid ${C.over}`,
-      background:paid?"transparent":"#FEF7F4",
+      borderLeft:`3px solid ${_sm.bd}`,
+      background:_sm.bg,
       cursor:"pointer",borderRadius:"4px",transition:"background .12s"
     },onclick:()=>showFixedDetail(fc,reloadFixed)},
       h("div",{style:{width:"38px",height:"38px",borderRadius:"11px",background:c.c+"1A",display:"flex",alignItems:"center",justifyContent:"center",fontSize:"18px",flexShrink:"0"}},c.i),
@@ -1760,7 +1795,7 @@ function buildFixed(){
       ),
       h("div",{style:{textAlign:"right",marginRight:"4px"}},
         h("div",{class:"num",style:{fontSize:"14px",fontWeight:"700"}},W(fc.amount)),
-        h("div",{style:{fontSize:"11px",marginTop:"3px",fontWeight:"700",color:paid?C.brand:C.over}},paid?"✅ 납부됨":"⏳ 미납"),
+        h("div",{style:{fontSize:"11px",marginTop:"3px",fontWeight:"700",color:_sm.col}},_sm.lb),
         ddayChip
       ),
       delBtn
@@ -1861,7 +1896,23 @@ function buildFixed(){
     moreSec.append(moreList);
     sections.push(moreSec);
   }
-  return reorderCards("fixed",[hero,...sections]);
+  // 💤 해지한 고정비
+  const inactive=S.fixedInactive||[];
+  if(inactive.length){
+    const offSec=sec("💤 해지한 고정비",`${inactive.length}건`);
+    inactive.forEach(fc=>{
+      const c=CM[fc.category]||CM["기타"];
+      offSec.append(h("div",{style:{display:"flex",alignItems:"center",gap:"10px",padding:"10px 2px",borderBottom:`1px solid ${C.line}`,opacity:".8"}},
+        h("span",{style:{fontSize:"16px",flexShrink:"0"}},c.i),
+        h("div",{style:{flex:"1",minWidth:"0"}},h("div",{style:{fontSize:"13px",fontWeight:"600",whiteSpace:"nowrap",overflow:"hidden",textOverflow:"ellipsis"}},fc.name),
+          h("div",{style:{fontSize:"11px",color:C.faint,marginTop:"1px"}},W(fc.amount)+(fc.payment_method?" · "+fc.payment_method:""))),
+        h("button",{style:{fontSize:"11.5px",fontWeight:"700",color:C.brand,background:C.soft,border:`1px solid ${C.brand}`,borderRadius:"8px",padding:"6px 11px",cursor:"pointer",flexShrink:"0"},onclick:async()=>{await sb.from("fixed_costs").update({is_active:true}).eq("id",fc.id);await reloadFixed();}},"↩ 활성화"),
+        h("button",{style:{fontSize:"13px",color:C.faint,padding:"4px",flexShrink:"0"},onclick:async()=>{if(!confirm(`'${fc.name}'을 완전히 삭제할까요? 되돌릴 수 없어요.`))return;await sb.from("fixed_costs").delete().eq("id",fc.id);await reloadFixed();}},"🗑️")
+      ));
+    });
+    sections.push(offSec);
+  }
+  return reorderCards("fixed",[upcomingBanner,hero,...sections]);
 }
 
 // ── 고정비 추가 시트 ──
