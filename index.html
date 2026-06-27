@@ -2041,7 +2041,13 @@ function buildInvest(){
           h("div",{style:{width:"94px",minWidth:"0",flexShrink:"0"}},
             h("div",{style:{fontSize:"13.5px",fontWeight:"700",whiteSpace:"nowrap",overflow:"hidden",textOverflow:"ellipsis"}},x.name),
             h("div",{style:{fontSize:"10.5px",color:C.faint,fontWeight:"600",marginTop:"1px"}},x.ticker||""),
-            h("div",{style:{fontSize:"10.5px",color:C.sub,marginTop:"2px",whiteSpace:"nowrap"}},(x.quantity!=null?`${(+x.quantity).toFixed(2)}주`:"")+(tot>0?` · ${Math.round(ev/tot*100)}%`:"")+(x.avg_price!=null?` · 평단 ${x.avg_price_currency==="KRW"?"₩"+Math.round(x.avg_price).toLocaleString():"$"+Number(x.avg_price).toFixed(2)}`:"")),
+            (()=>{
+              const parts=[];
+              if(x.quantity!=null)parts.push(`${(+x.quantity).toFixed(2)}주`);
+              if(tot>0)parts.push(`${Math.round(ev/tot*100)}%`);
+              if(x.avg_price!=null){const ap=x.avg_price_currency==="KRW"?"₩"+Math.round(x.avg_price).toLocaleString():"$"+Number(x.avg_price).toFixed(2);parts.push("평단 "+ap);}
+              return h("div",{style:{fontSize:"10.5px",color:C.sub,marginTop:"2px",whiteSpace:"nowrap"}},parts.join(" · "));
+            })(),
           h("div",{style:{flex:"1",display:"flex",justifyContent:"center",alignItems:"center"}},spk?sparkline(spk,spkCol,(S.holdSpark&&x.ticker&&S.holdSpark[x.ticker]&&S.holdSpark[x.ticker].stamps)||null,x.currency==="KRW"?"KRW":"USD"):h("div",{style:{fontSize:"10px",color:C.faint}},x.ticker?"…":"")),
           h("div",{style:{textAlign:"right",flexShrink:"0"}},
             h("div",{class:"num",style:{fontSize:"14px",fontWeight:"700"}},fmtMoney(ev,curMode)),
