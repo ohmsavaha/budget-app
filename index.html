@@ -1974,15 +1974,20 @@ function buildInvest(){
       const tot=latest.reduce((s,x)=>s+evalIn(x,curMode),0);
       latest.forEach(x=>{
         const ev=evalIn(x,curMode),pl=plIn(x,curMode),rr=x.return_rate,dc=x.day_change_pct;
-       listWrap.append(h("div",{style:{display:"flex",alignItems:"center",gap:"10px",padding:"11px 2px",borderBottom:`1px solid ${C.line}`,cursor:x.ticker?"pointer":"default",transition:"background .12s"},onmouseenter:e=>{if(x.ticker)e.currentTarget.style.background="#F6F4EF";},onmouseleave:e=>{e.currentTarget.style.background="transparent";},onclick:()=>{if(x.ticker)showAssetDetail(x.ticker,x.name);}},
+        const spk=(S.holdSpark&&x.ticker&&S.holdSpark[x.ticker]&&S.holdSpark[x.ticker].history)||null;
+        const spkCol=spk&&spk.length>1?(spk[spk.length-1]>=spk[0]?C.brand:C.over):C.faint;
+        listWrap.append(h("div",{style:{display:"flex",alignItems:"center",gap:"11px",padding:"12px 2px",borderBottom:`1px solid ${C.line}`,cursor:x.ticker?"pointer":"default",transition:"background .12s"},onmouseenter:e=>{if(x.ticker)e.currentTarget.style.background="#F6F4EF";},onmouseleave:e=>{e.currentTarget.style.background="transparent";},onclick:()=>{if(x.ticker)showAssetDetail(x.ticker,x.name);}},
           stockIcon(x.name,x.ticker),
-          h("div",{style:{flex:"1",minWidth:"0"}},
-            h("div",{style:{fontSize:"14px",fontWeight:"600",whiteSpace:"nowrap",overflow:"hidden",textOverflow:"ellipsis"}},x.name,x.ticker?h("span",{style:{fontSize:"10.5px",color:C.faint,fontWeight:"600",marginLeft:"5px"}},x.ticker):""),
-            h("div",{style:{fontSize:"11.5px",color:C.sub,marginTop:"1px"}},(x.quantity!=null?`${x.quantity}주`:"")+(tot>0?` · 비중 ${Math.round(ev/tot*100)}%`:"")+(dc!=null?` · 오늘 ${dc>=0?"+":""}${dc}%`:""))
+          h("div",{style:{width:"94px",minWidth:"0",flexShrink:"0"}},
+            h("div",{style:{fontSize:"13.5px",fontWeight:"700",whiteSpace:"nowrap",overflow:"hidden",textOverflow:"ellipsis"}},x.name),
+            h("div",{style:{fontSize:"10.5px",color:C.faint,fontWeight:"600",marginTop:"1px"}},x.ticker||""),
+            h("div",{style:{fontSize:"10.5px",color:C.sub,marginTop:"2px",whiteSpace:"nowrap"}},(x.quantity!=null?`${(+x.quantity).toFixed(2)}주`:"")+(tot>0?` · ${Math.round(ev/tot*100)}%`:""))
           ),
-          h("div",{style:{textAlign:"right"}},
+          h("div",{style:{flex:"1",display:"flex",justifyContent:"center",alignItems:"center"}},spk?sparkline(spk,spkCol):h("div",{style:{fontSize:"10px",color:C.faint}},x.ticker?"…":"")),
+          h("div",{style:{textAlign:"right",flexShrink:"0"}},
             h("div",{class:"num",style:{fontSize:"14px",fontWeight:"700"}},fmtMoney(ev,curMode)),
-            h("div",{class:"num",style:{fontSize:"11px",fontWeight:"700",marginTop:"2px",color:pl>=0?C.brand:C.over}},(pl>=0?"+":"−")+fmtMoney(Math.abs(pl),curMode).replace(/^[₩$]/,m=>m)+(rr!=null?` (${rr}%)`:""))
+            h("div",{class:"num",style:{fontSize:"11px",fontWeight:"700",marginTop:"2px",color:pl>=0?C.brand:C.over}},(pl>=0?"+":"−")+fmtMoney(Math.abs(pl),curMode).replace(/^[₩$]/,m=>m)+(rr!=null?` (${rr}%)`:"")),
+            dc!=null?h("div",{class:"num",style:{fontSize:"10px",fontWeight:"600",marginTop:"1px",color:dc>=0?C.brand:C.over}},`오늘 ${dc>=0?"+":""}${dc}%`):""
           )
         ));
       });
@@ -1995,6 +2000,17 @@ function buildInvest(){
       });
     };
     drawToggle();drawList();
+    // 보유종목 7일 미니차트용 시세 (한 번에 받아서 캐시)
+    (async()=>{
+      const syms=[...new Set(latest.map(x=>x.ticker).filter(Boolean))];
+      if(!syms.length)return;
+      try{
+        const r=await fetch(`${MARKET_PROXY}?symbols=${encodeURIComponent(syms.join(","))}&spark=1`,{headers:{apikey:SKEY,Authorization:"Bearer "+SKEY}});
+        const d=await r.json();
+        S.holdSpark=d?.data||{};
+        drawList();
+      }catch(e){console.log("[보유차트실패]",e);}
+    })();
     const refreshBtn=h("button",{style:{width:"100%",marginBottom:"10px",fontSize:"13px",fontWeight:"700",padding:"10px",borderRadius:"10px",border:`1px solid ${C.brand}`,background:C.w,color:C.brand,cursor:"pointer"}},"💹 현재가로 평가액 갱신");
     refreshBtn.onclick=async()=>{
       const syms=latest.map(x=>x.ticker).filter(Boolean);
