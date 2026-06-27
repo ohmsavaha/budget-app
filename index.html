@@ -2330,9 +2330,23 @@ function showInvest(){
       const toUsd=(v,cur)=>{const n=Number(v);if(n==null||isNaN(n))return null;return(cur==="KRW")?Math.round(n/fxRate*100)/100:Math.round(n*100)/100;};
       const hrows=parsedHoldings.filter(hd=>hd.name).map(hd=>{
         const cur=hd.currency||"USD";
-        const investedKrw=(hd.avg_price&&hd.quantity)?Math.round(hd.avg_price*hd.quantity*(cur==="KRW"?1:fxRate)):(()=>{const ev=toKrw(hd.eval_value,cur),pl=toKrw(hd.pl,cur);return(ev!=null)?ev-(pl||0):null;})();
-        return{user_id:S.session.user.id,snapshot_date:dtEl.value,broker:brEl.value,name:hd.name,ticker:hd.ticker||null,quantity:hd.quantity??null,eval_value_krw:toKrw(hd.eval_value,cur),pl_krw:toKrw(hd.pl,cur),eval_value_usd:toUsd(hd.eval_value,cur),pl_usd:toUsd(hd.pl,cur),fx_rate:fxRate,return_rate:hd.return_rate??null,currency:cur,avg_price:hd.avg_price??null,avg_price_currency:cur,invested_krw:investedKrw};
-      });
+        // 평단 자동 계산: 직접 입력값 우선 → 없으면 수익률로 역산 → 그것도 없으면 (평가액-손익)/수량
+        let avg=hd.avg_price;
+        const q=Number(hd.quantity)||0;
+        const evRaw=Number(hd.eval_value)||0;      // 화면 통화 기준 평가액(종목 단위)
+        const plRaw=Number(hd.pl)||0;
+        const rr=hd.return_rate;
+        if(avg==null&&q>0){
+          // 종목 현재 단가 = 평가액/수량
+          const curPriceUnit=evRaw/q;
+          if(rr!=null&&(1+rr/100)!==0){
+            avg=curPriceUnit/(1+rr/100);            // 수익률로 역산
+          }else if(evRaw){
+            avg=(evRaw-plRaw)/q;                     // 평가액-손익으로 역산
+          }
+          if(avg!=null)avg=Math.round(avg*100)/100;
+        }
+        const
      console.log("[종목저장시도]",hrows);
       if(hrows.length){
         // 같은 날짜 종목 먼저 삭제 → 중복 방지 (항상 최신만 유지)
