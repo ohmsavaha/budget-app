@@ -2374,7 +2374,9 @@ function showInvest(){
           }
           if(avg!=null)avg=Math.round(avg*100)/100;
         }
-        const
+        const investedKrw=(avg&&q)?Math.round(avg*q*(cur==="KRW"?1:fxRate)):(()=>{const ev=toKrw(hd.eval_value,cur),pl=toKrw(hd.pl,cur);return(ev!=null)?ev-(pl||0):null;})();
+        return{user_id:S.session.user.id,snapshot_date:dtEl.value,broker:brEl.value,name:hd.name,ticker:hd.ticker||null,quantity:hd.quantity??null,eval_value_krw:toKrw(hd.eval_value,cur),pl_krw:toKrw(hd.pl,cur),eval_value_usd:toUsd(hd.eval_value,cur),pl_usd:toUsd(hd.pl,cur),fx_rate:fxRate,return_rate:hd.return_rate??null,currency:cur,avg_price:avg??null,avg_price_currency:cur,invested_krw:investedKrw};
+      });
      console.log("[종목저장시도]",hrows);
       if(hrows.length){
         // 같은 날짜 종목 먼저 삭제 → 중복 방지 (항상 최신만 유지)
