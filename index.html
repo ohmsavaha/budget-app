@@ -2281,12 +2281,19 @@ function showInvest(){
       const qtyEl=h("input",{type:"number",value:hd.quantity??"",placeholder:"수량",style:{flex:"1",minWidth:"0",border:`1px solid ${C.line}`,borderRadius:"8px",padding:"8px 9px",fontSize:"12.5px"}});
       const valEl=h("input",{type:"number",value:hd.eval_value??"",placeholder:"평가액",style:{flex:"1.3",minWidth:"0",border:`1px solid ${C.line}`,borderRadius:"8px",padding:"8px 9px",fontSize:"12.5px"}});
       const tkEl=h("input",{type:"text",value:hd.ticker||"",placeholder:"심볼",style:{flex:"0.9",minWidth:"0",border:`1px solid ${C.line}`,borderRadius:"8px",padding:"8px 9px",fontSize:"12px",textTransform:"uppercase"}});
+      const avgEl=h("input",{type:"number",value:hd.avg_price??"",placeholder:"평단",style:{flex:"1",minWidth:"0",border:`1px solid ${C.line}`,borderRadius:"8px",padding:"8px 9px",fontSize:"12.5px"}});
       nameEl.oninput=()=>parsedHoldings[i].name=nameEl.value;
       qtyEl.oninput=()=>parsedHoldings[i].quantity=Number(qtyEl.value)||null;
       valEl.oninput=()=>parsedHoldings[i].eval_value=Number(valEl.value)||null;
       tkEl.oninput=()=>parsedHoldings[i].ticker=tkEl.value.trim().toUpperCase()||null;
+      avgEl.oninput=()=>parsedHoldings[i].avg_price=Number(avgEl.value)||null;
+      // 평단 자동 역산 버튼 (평가액-손익)/수량
+      const autoBtn=h("button",{style:{fontSize:"11px",color:C.brand,fontWeight:"700",padding:"0 5px",flexShrink:"0",whiteSpace:"nowrap"},title:"평가액과 손익으로 평단가 자동 계산",onclick:()=>{
+        const ev=Number(parsedHoldings[i].eval_value),pl=Number(parsedHoldings[i].pl)||0,q=Number(parsedHoldings[i].quantity);
+        if(ev&&q){const invested=ev-pl;const avg=Math.round(invested/q*100)/100;parsedHoldings[i].avg_price=avg;avgEl.value=avg;}
+      }},"↺");
       const del=h("button",{style:{color:C.faint,fontSize:"14px",padding:"0 4px",flexShrink:"0"},onclick:()=>{parsedHoldings.splice(i,1);drawHoldings();}},"✕");
-      holdingsBox.append(h("div",{style:{display:"flex",gap:"5px",alignItems:"center",marginBottom:"5px"}},nameEl,qtyEl,valEl,tkEl,del));;
+      holdingsBox.append(h("div",{style:{display:"flex",gap:"5px",alignItems:"center",marginBottom:"5px"}},nameEl,qtyEl,valEl,tkEl,avgEl,autoBtn,del));;
     });
   };
   const ni=(ph)=>h("input",{type:"number",inputmode:"decimal",placeholder:ph,style:{width:"100%",border:`1px solid ${C.line}`,borderRadius:"10px",padding:"11px 12px",fontSize:"14px"}});
@@ -2321,7 +2328,11 @@ function showInvest(){
       const fxRate=Number(flds.fx.value)||1380;
       const toKrw=(v,cur)=>{const n=Number(v);if(n==null||isNaN(n))return null;return(cur==="KRW")?Math.round(n):Math.round(n*fxRate);};
       const toUsd=(v,cur)=>{const n=Number(v);if(n==null||isNaN(n))return null;return(cur==="KRW")?Math.round(n/fxRate*100)/100:Math.round(n*100)/100;};
-      const hrows=parsedHoldings.filter(hd=>hd.name).map(hd=>({user_id:S.session.user.id,snapshot_date:dtEl.value,broker:brEl.value,name:hd.name,ticker:hd.ticker||null,quantity:hd.quantity??null,eval_value_krw:toKrw(hd.eval_value,hd.currency),pl_krw:toKrw(hd.pl,hd.currency),eval_value_usd:toUsd(hd.eval_value,hd.currency),pl_usd:toUsd(hd.pl,hd.currency),fx_rate:fxRate,return_rate:hd.return_rate??null,currency:hd.currency||"USD"}));
+      const hrows=parsedHoldings.filter(hd=>hd.name).map(hd=>{
+        const cur=hd.currency||"USD";
+        const investedKrw=(hd.avg_price&&hd.quantity)?Math.round(hd.avg_price*hd.quantity*(cur==="KRW"?1:fxRate)):(()=>{const ev=toKrw(hd.eval_value,cur),pl=toKrw(hd.pl,cur);return(ev!=null)?ev-(pl||0):null;})();
+        return{user_id:S.session.user.id,snapshot_date:dtEl.value,broker:brEl.value,name:hd.name,ticker:hd.ticker||null,quantity:hd.quantity??null,eval_value_krw:toKrw(hd.eval_value,cur),pl_krw:toKrw(hd.pl,cur),eval_value_usd:toUsd(hd.eval_value,cur),pl_usd:toUsd(hd.pl,cur),fx_rate:fxRate,return_rate:hd.return_rate??null,currency:cur,avg_price:hd.avg_price??null,avg_price_currency:cur,invested_krw:investedKrw};
+      });
      console.log("[종목저장시도]",hrows);
       if(hrows.length){
         // 같은 날짜 종목 먼저 삭제 → 중복 방지 (항상 최신만 유지)
