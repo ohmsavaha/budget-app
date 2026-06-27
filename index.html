@@ -412,6 +412,11 @@ async function loadFixed(){
   S.fixedCosts=data||[];
   const{data:inact}=await sb.from("fixed_costs").select("*").eq("user_id",S.session.user.id).eq("is_active",false).order("amount",{ascending:false});
   S.fixedInactive=inact||[];
+  try{
+    const dsince=(()=>{const d=new Date();d.setMonth(d.getMonth()-3);return d.toISOString().slice(0,10);})();
+    const{data:rt}=await sb.from("transactions").select("merchant,category,amount,date,type,account,payment_method").gte("date",dsince).order("date",{ascending:false});
+    S.fcDiscover=detectRecurring(rt||[]);
+  }catch(e){dlog("[자동발견실패]",e);S.fcDiscover=[];}
 }
 
 
@@ -1432,6 +1437,43 @@ const FREQ_MONTHS={"월":1,"분기":3,"반기":6,"연":12};
 const getFcFreq=(fc)=>{const m=fcMeta(fc);return m.frequency||"월";};
 const setFcFreq=(fc,v)=>setFcMeta(fc,{frequency:v});
 const fcMonthlyEquiv=(fc)=>Number(fc.amount||0)/(FREQ_MONTHS[getFcFreq(fc)]||1);
+const normKey=m=>(m||"").toLowerCase().replace(/\s+/g,"").replace(/[0-9]{2,}.*$/,"");
+function detectRecurring(txns){
+  const dismissed=(()=>{try{return JSON.parse(localStorage.getItem("fcdiscover_dismiss")||"[]");}catch{return[];}})();
+  const reg=[...(S.fixedCosts||[]),...(S.fixedInactive||[])];
+  const regKeys=reg.map(f=>normKey(f.name)).filter(Boolean);
+  const regMatch=reg.map(f=>normKey(f.match_name||"")).filter(Boolean);
+  const groups={};
+  txns.forEach(t=>{
+    if(kindOf(t.type)!=="spend"||t.type==="소비(할부)")return;
+    const key=normKey(t.merchant);
+    if(!key||key.length<2)return;
+    const g=groups[key]||(groups[key]={list:[],names:{}});
+    g.list.push(t);
+    const dn=(t.merchant||"").trim();if(dn)g.names[dn]=(g.names[dn]||0)+1;
+  });
+  const out=[];
+  Object.entries(groups).forEach(([key,g])=>{
+    const list=g.list;
+    const months=[...new Set(list.map(t=>(t.date||"").slice(0,7)))];
+    if(months.length<2)return;
+    if(list.length/months.length>3)return;
+    const amts=list.map(t=>Number(t.amount)||0).sort((a,b)=>a-b);
+    const med=amts[Math.floor(amts.length/2)];
+    if(med<1000)return;
+    const near=amts.filter(a=>Math.abs(a-med)/med<=0.35);
+    if(near.length<2)return;
+    if(dismissed.includes(key))return;
+    if(regKeys.some(rk=>rk&&(rk.includes(key)||key.includes(rk))))return;
+    if(regMatch.some(rk=>rk&&(key.includes(rk)||rk.includes(key))))return;
+    const typical=Math.round(near.reduce((s,a)=>s+a,0)/near.length);
+    const last=list.slice().sort((a,b)=>(b.date||"").localeCompare(a.date||""))[0];
+    const dispName=Object.entries(g.names).sort((a,b)=>b[1]-a[1])[0]?.[0]||key;
+    out.push({key,name:dispName,amount:typical,category:last.category||"기타",account:last.account||"개인",payment_method:last.payment_method||null,months:months.length});
+  });
+  out.sort((a,b)=>b.months-a.months||b.amount-a.amount);
+  return out.slice(0,8);
+}
 function fcDueInfo(fc){
   const bd=Number(fc.billing_day);if(!bd)return null;
   const[Y,M]=S.curYm.split("-").map(Number);
@@ -1906,6 +1948,25 @@ function buildFixed(){
         h("span",{class:"num",style:{fontWeight:"700",flexShrink:"0"}},W(byPay[k]))));
     });
     sections.push(paySec);
+  }
+
+  // 🔍 반복 결제 자동 발견
+  if((S.fcDiscover||[]).length){
+    const dscSec=sec("🔍 반복 결제 발견","거래내역에서 찾은 고정비 후보");
+    S.fcDiscover.forEach(d=>{
+      const c=CM[d.category]||CM["기타"];
+      dscSec.append(h("div",{style:{display:"flex",alignItems:"center",gap:"11px",padding:"10px 4px",borderBottom:`1px solid ${C.line}`}},
+        h("span",{style:{fontSize:"16px",width:"22px",textAlign:"center",flexShrink:"0"}},c.i),
+        h("div",{style:{flex:"1",minWidth:"0"}},
+          h("div",{style:{fontSize:"13px",fontWeight:"600",whiteSpace:"nowrap",overflow:"hidden",textOverflow:"ellipsis"}},d.name),
+          h("div",{style:{fontSize:"11px",color:C.sub,marginTop:"1px"}},`약 ${W(d.amount)} · ${d.months}개월 반복 · ${d.account}`)),
+        h("div",{style:{display:"flex",gap:"6px",flexShrink:"0",alignItems:"center"}},
+          h("button",{title:"이 후보 무시",style:{fontSize:"13px",lineHeight:"1",padding:"5px 7px",borderRadius:"7px",background:"transparent",border:`1px solid ${C.line}`,color:C.faint,cursor:"pointer"},onclick:async()=>{try{const dd=JSON.parse(localStorage.getItem("fcdiscover_dismiss")||"[]");if(!dd.includes(d.key))dd.push(d.key);localStorage.setItem("fcdiscover_dismiss",JSON.stringify(dd));}catch{}S.fcDiscover=(S.fcDiscover||[]).filter(x=>x.key!==d.key);await reloadFixed();}},"✕"),
+          h("button",{style:{fontSize:"12px",fontWeight:"700",color:C.w,background:C.brand,padding:"6px 11px",borderRadius:"7px",border:"none",cursor:"pointer"},onclick:()=>showAddFixed({name:d.name,category:d.category,amount:d.amount,account:d.account,payment_method:d.payment_method,memo:"반복 결제 자동 발견"})},"＋ 등록")))
+      );
+    });
+    dscSec.append(h("div",{style:{fontSize:"10.5px",color:C.faint,marginTop:"8px",lineHeight:"1.6"}},"최근 3개월간 매달 비슷한 금액으로 반복된 결제예요. 등록하면 고정비로 추적돼요."));
+    sections.push(dscSec);
   }
 
   // 더 추가할 추천 항목
