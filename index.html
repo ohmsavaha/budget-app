@@ -1410,7 +1410,29 @@ function showCatDetail(catName){
 
 // ── 고정비 탭 ──
 // ══════════ 고정비 납부 판정 + 증빙 (정확 매칭 + 수동 조정) ══════════
-const fcTol=(fc)=>/(변동|관리비|월별|가변)/.test((fc.memo||"")+(fc.name||""))?0.6:0.18;
+const isVariableFc=(fc)=>{try{const v=localStorage.getItem("fcvar:"+(fc.id||fc.name));if(v==="1")return true;if(v==="0")return false;}catch{}return /(변동|관리비|월별|가변)/.test((fc.memo||"")+(fc.name||""));};
+const setVariableFc=(fc,on)=>{try{localStorage.setItem("fcvar:"+(fc.id||fc.name),on?"1":"0");}catch{}};
+const isSubscriptionFc=(fc)=>{try{const v=localStorage.getItem("fcsub:"+(fc.id||fc.name));if(v==="1")return true;if(v==="0")return false;}catch{}return /(구독|멤버십|멤버쉽|프라임|와우|밀리|flo|뮤직|music|membership|넷플릭스|netflix|유튜브|youtube|디즈니|disney|왓챠|티빙|웨이브|spotify)/i.test((fc.name||"")+(fc.memo||""));};
+const setSubscriptionFc=(fc,on)=>{try{localStorage.setItem("fcsub:"+(fc.id||fc.name),on?"1":"0");}catch{}};
+const fcTol=(fc)=>isVariableFc(fc)?0.6:0.18;
+function fcDueInfo(fc){
+  const bd=Number(fc.billing_day);if(!bd)return null;
+  const[Y,M]=S.curYm.split("-").map(Number);
+  const lastDay=new Date(Y,M,0).getDate();const day=Math.min(bd,lastDay);
+  const dueStr=`${Y}-${String(M).padStart(2,"0")}-${String(day).padStart(2,"0")}`;
+  const isThisMonth=S.curYm===ym(td());
+  let dday=null;if(isThisMonth){dday=Math.round((new Date(dueStr)-new Date(td()))/86400000);}
+  return{dueStr,day,dday,isThisMonth};
+}
+const getFcSort=()=>{try{return localStorage.getItem("fcsort")||"due";}catch{return"due";}};
+const setFcSort=(v)=>{try{localStorage.setItem("fcsort",v);}catch{}};
+function sortFcList(list){
+  const s=getFcSort(),arr=list.slice();
+  if(s==="amount")arr.sort((a,b)=>Number(b.amount)-Number(a.amount));
+  else if(s==="name")arr.sort((a,b)=>(a.name||"").localeCompare(b.name||""));
+  else if(s==="due")arr.sort((a,b)=>{const da=fcDueInfo(a),db=fcDueInfo(b);return(da?da.day:99)-(db?db.day:99);});
+  return arr;
+}
 const isIncomeType=(t)=>["수입","정산환급","환불/취소","공용입금"].includes(t);
 const FCKEY=(fc,ym)=>`fcpay:${fc.id||fc.name}:${ym}`;
 function getFcOverride(fc,ym){try{return JSON.parse(localStorage.getItem(FCKEY(fc,ym))||"null");}catch{return null;}}
@@ -1566,7 +1588,14 @@ function showFixedDetail(fc,reload){
   })();
 
   // 수정 버튼
-  sh.append(h("button",{style:{width:"100%",marginTop:"22px",fontSize:"13.5px",fontWeight:"700",padding:"12px",borderRadius:"11px",border:`1px solid ${C.line}`,background:C.w,color:C.sub,cursor:"pointer"},onclick:()=>{close();showEditFixed(fc,reload);}},"✏️ 고정비 정보 수정"));
+  // 설정 토글 (매달 변동 / 구독 서비스)
+  const tgl=(label,active,fn)=>h("button",{style:{flex:"1",fontSize:"11.5px",fontWeight:"700",padding:"10px",borderRadius:"9px",border:`1px solid ${active?C.brand:C.line}`,background:active?C.soft:C.w,color:active?C.brand:C.sub,cursor:"pointer"},onclick:fn},label);
+  sh.append(h("div",{style:{fontSize:"11.5px",color:C.faint,marginTop:"20px",marginBottom:"7px"}},"이 고정비 설정"),
+    h("div",{style:{display:"flex",gap:"6px"}},
+      tgl((isVariableFc(fc)?"☑️":"⬜")+" 매달 금액 변동",isVariableFc(fc),()=>{setVariableFc(fc,!isVariableFc(fc));close();reload();}),
+      tgl((isSubscriptionFc(fc)?"☑️":"⬜")+" 구독 서비스",isSubscriptionFc(fc),()=>{setSubscriptionFc(fc,!isSubscriptionFc(fc));close();reload();})
+    ));
+  sh.append(h("button",{style:{width:"100%",marginTop:"12px",fontSize:"13.5px",fontWeight:"700",padding:"12px",borderRadius:"11px",border:`1px solid ${C.line}`,background:C.w,color:C.sub,cursor:"pointer"},onclick:()=>{close();showEditFixed(fc,reload);}},"✏️ 고정비 정보 수정"));
 
   ov2.append(sh);document.body.append(ov2);
 }
@@ -1581,6 +1610,20 @@ function buildFixed(){
   const paidPct=total>0?Math.round(paidAmt/total*100):0;
   const unpaidList=withStatus.filter(fc=>!fc.paid);
   const paidList=withStatus.filter(fc=>fc.paid);
+  // 개인/공용 분리 + 연간 환산
+  const personalTotal=withStatus.filter(f=>f.account!=="공용").reduce((s,f)=>s+Number(f.amount),0);
+  const publicTotal=withStatus.filter(f=>f.account==="공용").reduce((s,f)=>s+Number(f.amount),0);
+  const splitAnnualBlock=h("div",{style:{marginTop:"14px",display:"flex",flexDirection:"column",gap:"8px"}},
+    h("div",{style:{display:"flex",gap:"8px"}},
+      h("div",{style:{flex:"1",background:"#F6F4EF",borderRadius:"10px",padding:"10px 12px"}},
+        h("div",{style:{fontSize:"10.5px",color:C.sub,marginBottom:"3px"}},"👤 개인 고정비"),
+        h("div",{class:"num",style:{fontSize:"14px",fontWeight:"800"}},W(personalTotal))),
+      h("div",{style:{flex:"1",background:"#F6F4EF",borderRadius:"10px",padding:"10px 12px"}},
+        h("div",{style:{fontSize:"10.5px",color:C.sub,marginBottom:"3px"}},"🤝 공용 고정비"),
+        h("div",{class:"num",style:{fontSize:"14px",fontWeight:"800"}},W(publicTotal)))
+    ),
+    h("div",{style:{textAlign:"center",fontSize:"11.5px",color:C.faint}},"연간 환산 약 ",h("span",{class:"num",style:{fontWeight:"800",color:C.sub}},W(total*12)))
+  );
 
   // 헤더 카드
   const hero=h("div",{style:{background:C.w,border:`1px solid ${C.line}`,borderRadius:"18px",padding:"20px"}},
@@ -1600,7 +1643,8 @@ function buildFixed(){
         h("div",{class:"num",style:{fontSize:"17px",fontWeight:"800",color:unpaidAmt>0?C.over:C.faint}},W(unpaidAmt)),
         h("div",{style:{fontSize:"11.5px",color:unpaidAmt>0?C.over:C.faint,marginTop:"2px"}},`${unpaidList.length}건`)
       )
-    )
+    ),
+    splitAnnualBlock
   );
 
   // 고정비 없을 때 → 추천 목록 클릭 추가
@@ -1670,9 +1714,13 @@ function buildFixed(){
       await reloadFixed();
     }},"✕");
 
+    const _due=fcDueInfo(fc);
+    const ddayChip=(!paid&&_due&&_due.isThisMonth&&_due.dday!=null)?h("div",{style:{fontSize:"10px",fontWeight:"800",marginTop:"3px",color:_due.dday<=3?C.over:C.sub}},_due.dday<0?`${Math.abs(_due.dday)}일 지남`:_due.dday===0?"오늘 납부일":`D-${_due.dday}`):"";
     return h("div",{class:"fcrow",style:{
       display:"flex",alignItems:"center",gap:"12px",
-      padding:"13px 4px",borderBottom:`1px solid ${C.line}`,
+      padding:"13px 4px 13px 8px",borderBottom:`1px solid ${C.line}`,
+      borderLeft:paid?"3px solid transparent":`3px solid ${C.over}`,
+      background:paid?"transparent":"#FEF7F4",
       cursor:"pointer",borderRadius:"4px",transition:"background .12s"
     },onclick:()=>showFixedDetail(fc,reloadFixed)},
       h("div",{style:{width:"38px",height:"38px",borderRadius:"11px",background:c.c+"1A",display:"flex",alignItems:"center",justifyContent:"center",fontSize:"18px",flexShrink:"0"}},c.i),
@@ -1684,23 +1732,82 @@ function buildFixed(){
       ),
       h("div",{style:{textAlign:"right",marginRight:"4px"}},
         h("div",{class:"num",style:{fontSize:"14px",fontWeight:"700"}},W(fc.amount)),
-        h("div",{style:{fontSize:"11px",marginTop:"3px",fontWeight:"700",color:paid?C.brand:C.over}},paid?"✅ 납부됨":"⏳ 미납")
+        h("div",{style:{fontSize:"11px",marginTop:"3px",fontWeight:"700",color:paid?C.brand:C.over}},paid?"✅ 납부됨":"⏳ 미납"),
+        ddayChip
       ),
       delBtn
     );
   };
 
-  // 미납 섹션 먼저
   const sections=[];
+
+  // 🔔 다가오는 납부 (이번 달 · 미납 · 청구일순)
+  if(S.curYm===ym(td())){
+    const upcoming=unpaidList.map(fc=>({fc,due:fcDueInfo(fc)})).filter(x=>x.due&&x.due.dday!=null).sort((a,b)=>a.due.dday-b.due.dday);
+    if(upcoming.length){
+      const dueSec=sec("🔔 다가오는 납부",`${upcoming.length}건`);
+      upcoming.slice(0,6).forEach(({fc,due})=>{
+        const urgent=due.dday<=3;
+        dueSec.append(h("div",{style:{display:"flex",justifyContent:"space-between",alignItems:"center",padding:"9px 2px",borderBottom:`1px solid ${C.line}`,cursor:"pointer"},onclick:()=>showFixedDetail(fc,reloadFixed)},
+          h("div",{style:{display:"flex",alignItems:"center",gap:"9px",minWidth:"0"}},
+            h("div",{style:{fontSize:"11px",fontWeight:"800",minWidth:"44px",textAlign:"center",color:urgent?C.w:C.sub,background:urgent?C.over:"#EFEBE2",borderRadius:"7px",padding:"4px 6px",flexShrink:"0"}},due.dday<0?`${Math.abs(due.dday)}일↑`:due.dday===0?"오늘":`D-${due.dday}`),
+            h("div",{style:{fontSize:"13px",fontWeight:"600",whiteSpace:"nowrap",overflow:"hidden",textOverflow:"ellipsis"}},fc.name)),
+          h("div",{class:"num",style:{fontSize:"13.5px",fontWeight:"700",flexShrink:"0",marginLeft:"8px"}},W(fc.amount))
+        ));
+      });
+      sections.push(dueSec);
+    }
+  }
+
+  // 정렬 선택
+  const sortSel=h("div",{style:{display:"flex",gap:"5px",marginBottom:"4px",flexWrap:"wrap"}});
+  [["due","납부일순"],["amount","금액순"],["name","이름순"]].forEach(([k,lb])=>{
+    const on=getFcSort()===k;
+    sortSel.append(h("button",{style:{fontSize:"11.5px",fontWeight:"700",padding:"6px 11px",borderRadius:"8px",border:`1px solid ${on?C.brand:C.line}`,background:on?C.soft:C.w,color:on?C.brand:C.sub,cursor:"pointer"},onclick:()=>{setFcSort(k);reloadFixed();}},lb));
+  });
+
   if(unpaidList.length){
     const unSec=sec(h("span",{style:{color:C.over}},"⏳ 미납"),`${unpaidList.length}건 · ${W(unpaidAmt).slice(1)}`);
-    unpaidList.forEach(fc=>unSec.append(buildRow(fc)));
+    unSec.append(sortSel);
+    sortFcList(unpaidList).forEach(fc=>unSec.append(buildRow(fc)));
     sections.push(unSec);
   }
   if(paidList.length){
     const pSec=sec("✅ 납부 완료",`${paidList.length}건 · ${W(paidAmt).slice(1)}`);
-    paidList.forEach(fc=>pSec.append(buildRow(fc)));
+    if(!unpaidList.length)pSec.append(sortSel);
+    sortFcList(paidList).forEach(fc=>pSec.append(buildRow(fc)));
     sections.push(pSec);
+  }
+
+  // 📺 구독 서비스 묶음
+  const subs=withStatus.filter(isSubscriptionFc);
+  if(subs.length){
+    const subTotal=subs.reduce((s2,f)=>s2+Number(f.amount),0);
+    const subSec=sec("📺 구독 서비스",`${subs.length}개 · 월 ${W(subTotal).slice(1)}`);
+    sortFcList(subs).forEach(fc=>{
+      subSec.append(h("div",{style:{display:"flex",justifyContent:"space-between",alignItems:"center",padding:"9px 2px",borderBottom:`1px solid ${C.line}`,cursor:"pointer"},onclick:()=>showFixedDetail(fc,reloadFixed)},
+        h("div",{style:{display:"flex",alignItems:"center",gap:"8px",minWidth:"0"}},
+          h("span",{style:{fontSize:"15px",flexShrink:"0"}},(CM[fc.category]||CM["기타"]).i),
+          h("div",{style:{fontSize:"13px",fontWeight:"600",whiteSpace:"nowrap",overflow:"hidden",textOverflow:"ellipsis"}},fc.name)),
+        h("div",{class:"num",style:{fontSize:"13px",fontWeight:"700",flexShrink:"0",marginLeft:"8px",color:fc.paid?C.sub:C.over}},W(fc.amount))
+      ));
+    });
+    subSec.append(h("div",{style:{fontSize:"11px",color:C.faint,marginTop:"8px",lineHeight:"1.6"}},`연간 약 ${W(subTotal*12)} · 항목을 열어 구독 여부를 켜고 끌 수 있어요`));
+    sections.push(subSec);
+  }
+
+  // 💳 결제수단별 합계
+  const byPay={};
+  withStatus.forEach(f=>{const k=f.payment_method||"기타";byPay[k]=(byPay[k]||0)+Number(f.amount);});
+  const payKeys=Object.keys(byPay).sort((a,b)=>byPay[b]-byPay[a]);
+  if(payKeys.length>1){
+    const paySec=sec("💳 결제수단별","합계 기준");
+    payKeys.forEach(k=>{
+      paySec.append(h("div",{style:{display:"flex",justifyContent:"space-between",padding:"8px 2px",borderBottom:`1px solid ${C.line}`,fontSize:"12.5px"}},
+        h("span",{style:{color:C.sub,whiteSpace:"nowrap",overflow:"hidden",textOverflow:"ellipsis",marginRight:"8px"}},k),
+        h("span",{class:"num",style:{fontWeight:"700",flexShrink:"0"}},W(byPay[k]))));
+    });
+    sections.push(paySec);
   }
 
   // 더 추가할 추천 항목
