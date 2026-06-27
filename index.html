@@ -179,6 +179,17 @@ async function claudeVisionMulti(files,prompt){
   catch(err){console.log("[AI파싱실패-멀티]",err,txt);return{_raw:txt};}
 }
 // ── Yahoo Finance 주가 ──
+const MARKET_PROXY="https://axlxdkybghxcltilsqgj.supabase.co/functions/v1/market-proxy";
+async function fetchQuotes(symbols){
+  // symbols: ["NVDA","TSLA",...] → {NVDA:{price,changePct,currency},...}
+  const list=[...new Set(symbols.filter(Boolean))];
+  if(!list.length)return{};
+  try{
+    const r=await fetch(`${MARKET_PROXY}?symbols=${encodeURIComponent(list.join(","))}`,{headers:{apikey:SKEY,Authorization:"Bearer "+SKEY}});
+    const d=await r.json();
+    return d?.data||{};
+  }catch(e){console.log("[시세조회실패]",e);return{};}
+}
 async function fetchFxRate(){
   // 환율 전용 무료 API (CORS 허용, 키 불필요)
   try{
@@ -1703,7 +1714,31 @@ function buildInvest(){
       });
     };
     drawToggle();drawList();
-    holdSec.append(toggle,listWrap);
+    // 💹 현재가 자동 갱신 버튼
+    const refreshBtn=h("button",{style:{width:"100%",marginBottom:"10px",fontSize:"13px",fontWeight:"700",padding:"10px",borderRadius:"10px",border:`1px solid ${C.brand}`,background:C.w,color:C.brand,cursor:"pointer"}},"💹 현재가로 평가액 갱신");
+    refreshBtn.onclick=async()=>{
+      const syms=latest.map(x=>x.ticker).filter(Boolean);
+      if(!syms.length){alert("종목에 심볼(ticker)이 없어요. 저장할 때 심볼을 입력해주세요.");return;}
+      refreshBtn.textContent="💹 시세 받아오는 중…";refreshBtn.disabled=true;
+      const quotes=await fetchQuotes(syms);
+      const fx=Number(latest[0]?.fx_rate)||Number(flds?.fx?.value)||1536;
+      let updated=0;
+      for(const x of latest){
+        const q=x.ticker&&quotes[x.ticker];
+        if(!q||q.price==null)continue;
+        const qty=Number(x.quantity)||0;
+        if(!qty)continue;
+        const usd=q.currency==="KRW"?null:q.price*qty;          // 달러 종목
+        const krw=q.currency==="KRW"?q.price*qty:Math.round(q.price*qty*fx);
+        const newUsd=usd!=null?Math.round(usd*100)/100:x.eval_value_usd;
+        await sb.from("investment_holdings").update({eval_value_krw:Math.round(krw),eval_value_usd:newUsd,day_change_pct:q.changePct??null}).eq("id",x.id);
+        updated++;
+      }
+      refreshBtn.textContent=`✅ ${updated}개 갱신됨`;
+      await loadInvest();
+      const ct=document.getElementById("ct");if(ct){ct.innerHTML="";buildInvest().forEach(n=>ct.append(n));}
+    };
+    holdSec.append(refreshBtn,toggle,listWrap);
   }
   return[hero,holdSec,hist,addBtn].filter(Boolean);
 }
