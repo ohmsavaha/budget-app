@@ -1695,24 +1695,18 @@ async function loadMarketSpark(force){
 }
 // 미니 스파크라인 SVG
 function sparkline(history,color){
-  if(!Array.isArray(history)||history.length<2)return h("div",{style:{width:"58px"}});
-  const w=58,ht=26,pad=2;
-  const min=Math.min(...history),max=Math.max(...history),rng=(max-min)||1;
-  const pts=history.map((v,i)=>{
-    const x=pad+(i/(history.length-1))*(w-pad*2);
-    const y=pad+(1-(v-min)/rng)*(ht-pad*2);
-    return `${x.toFixed(1)},${y.toFixed(1)}`;
-  }).join(" ");
-  const ns="http://www.w3.org/2000/svg";
-  const svg=document.createElementNS(ns,"svg");
-  svg.setAttribute("width",w);svg.setAttribute("height",ht);svg.setAttribute("viewBox",`0 0 ${w} ${ht}`);
-  svg.style.flexShrink="0";
-  const pl=document.createElementNS(ns,"polyline");
-  pl.setAttribute("points",pts);pl.setAttribute("fill","none");
-  pl.setAttribute("stroke",color);pl.setAttribute("stroke-width","1.6");
-  pl.setAttribute("stroke-linejoin","round");pl.setAttribute("stroke-linecap","round");
-  svg.appendChild(pl);
-  return svg;
+  const box=h("div",{style:{width:"72px",height:"34px",flexShrink:"0"}});
+  if(!Array.isArray(history)||history.length<2)return box;
+  const cv=document.createElement("canvas");box.append(cv);
+  setTimeout(()=>{
+    if(!window.Chart)return;
+    const ctx=cv.getContext("2d");
+    const grad=ctx.createLinearGradient(0,0,0,34);
+    const rgb=color===C.brand?"30,110,82":color===C.over?"194,85,61":"140,133,122";
+    grad.addColorStop(0,`rgba(${rgb},.28)`);grad.addColorStop(1,`rgba(${rgb},0)`);
+    new window.Chart(cv,{type:"line",data:{labels:history.map((_,i)=>i),datasets:[{data:history,borderColor:color,backgroundColor:grad,borderWidth:1.8,fill:true,tension:.4,pointRadius:0}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:{enabled:false}},scales:{x:{display:false},y:{display:false}},animation:{duration:400},elements:{line:{capBezierPoints:true}}}});
+  },50);
+  return box;
 }
 // 종목 글자 아이콘 (이름 첫 글자 + 색)
 const ICON_COLORS=["#D85A30","#2E7D32","#2F6D9B","#8B4FB2","#B23A5C","#16747B","#8A5A39","#405AA3","#247A68","#A43E57","#4169B1","#B44A73"];
@@ -1846,7 +1840,8 @@ function buildInvest(){
   }else hero=empty("투자 스냅샷이 없어요.");
 
   // ── 시장 한눈에 보기 ──
-  const marketSec=sec("📈 시장 한눈에 보기",h("span",{style:{fontSize:"11px",color:C.faint}},"실시간"));
+  const mktStamp=h("span",{style:{fontSize:"11px",color:C.faint}},"불러오는 중…");
+  const marketSec=sec("📈 시장 한눈에 보기",mktStamp);
   const marketGrid=h("div",{style:{display:"grid",gridTemplateColumns:"repeat(2,1fr)",gap:"8px"}});
   MARKET_SYMBOLS.forEach(m=>{
     marketGrid.append(h("div",{id:`mkt-${m.sym}`,style:{background:"#F6F4EF",borderRadius:"12px",padding:"11px 13px"}},
@@ -1857,7 +1852,8 @@ function buildInvest(){
   marketSec.append(marketGrid);
  // 비동기로 채우기 (미니차트 포함)
   (async()=>{
-    const q=await loadMarketSpark();
+    const q=await loadMarketSpark(true);
+    const now=new Date();mktStamp.textContent=`${String(now.getHours()).padStart(2,"0")}:${String(now.getMinutes()).padStart(2,"0")} 기준`;
     MARKET_SYMBOLS.forEach(m=>{
       const box=document.getElementById(`mkt-${m.sym}`);if(!box)return;
       const d=q[m.sym];
