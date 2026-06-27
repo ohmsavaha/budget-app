@@ -1694,17 +1694,24 @@ async function loadMarketSpark(force){
   return S.marketSpark;
 }
 // 미니 스파크라인 SVG
-function sparkline(history,color){
-  const box=h("div",{style:{width:"72px",height:"34px",flexShrink:"0"}});
+function sparkline(history,color,stamps,currency){
+  const box=h("div",{style:{width:"120px",height:"38px",flexShrink:"0"}});
   if(!Array.isArray(history)||history.length<2)return box;
+  // 1주일치만 (마지막 7개)
+  const hist=history.slice(-7);
+  const stmp=Array.isArray(stamps)?stamps.slice(-7):null;
   const cv=document.createElement("canvas");box.append(cv);
+  const fmtV=v=>currency==="USD"?("$"+Number(v).toLocaleString("en-US",{minimumFractionDigits:2,maximumFractionDigits:2})):("₩"+Math.round(v).toLocaleString());
   setTimeout(()=>{
     if(!window.Chart)return;
     const ctx=cv.getContext("2d");
-    const grad=ctx.createLinearGradient(0,0,0,34);
+    const grad=ctx.createLinearGradient(0,0,0,38);
     const rgb=color===C.brand?"30,110,82":color===C.over?"194,85,61":"140,133,122";
     grad.addColorStop(0,`rgba(${rgb},.28)`);grad.addColorStop(1,`rgba(${rgb},0)`);
-    new window.Chart(cv,{type:"line",data:{labels:history.map((_,i)=>i),datasets:[{data:history,borderColor:color,backgroundColor:grad,borderWidth:1.8,fill:true,tension:.4,pointRadius:0}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:{enabled:false}},scales:{x:{display:false},y:{display:false}},animation:{duration:400},elements:{line:{capBezierPoints:true}}}});
+    // 끝점만 점 찍기
+    const lastIdx=hist.length-1;
+    const radii=hist.map((_,i)=>i===lastIdx?2.5:0);
+    new window.Chart(cv,{type:"line",data:{labels:hist.map((_,i)=>i),datasets:[{data:hist,borderColor:color,backgroundColor:grad,borderWidth:1.8,fill:true,tension:.4,pointRadius:radii,pointHoverRadius:4,pointBackgroundColor:color}]},options:{responsive:true,maintainAspectRatio:false,interaction:{mode:"index",intersect:false},plugins:{legend:{display:false},tooltip:{enabled:true,displayColors:false,padding:7,backgroundColor:"rgba(40,37,31,.92)",titleFont:{size:10},bodyFont:{size:11,weight:"700"},callbacks:{title:(items)=>{if(!stmp)return "";const t=stmp[items[0].dataIndex];if(!t)return "";const d=new Date(t*1000);return `${d.getMonth()+1}/${d.getDate()}`;},label:(c)=>" "+fmtV(c.parsed.y)}}},scales:{x:{display:false},y:{display:false}},animation:{duration:400}}});
   },50);
   return box;
 }
@@ -1939,7 +1946,7 @@ function buildInvest(){
           h("div",{class:"num",style:{fontSize:"15px",fontWeight:"800"}},val),
           cp!=null?h("div",{class:"num",style:{fontSize:"11px",fontWeight:"700",marginTop:"2px",color:col}},`${cp>=0?"+":""}${cp}%`):""
         ),
-        sparkline(d.history,col)
+        sparkline(d.history,col,d.stamps,m.sym==="USDKRW=X"?"KRW":null)
       );
       box.append(top);
     });
@@ -1983,7 +1990,7 @@ function buildInvest(){
             h("div",{style:{fontSize:"10.5px",color:C.faint,fontWeight:"600",marginTop:"1px"}},x.ticker||""),
             h("div",{style:{fontSize:"10.5px",color:C.sub,marginTop:"2px",whiteSpace:"nowrap"}},(x.quantity!=null?`${(+x.quantity).toFixed(2)}주`:"")+(tot>0?` · ${Math.round(ev/tot*100)}%`:""))
           ),
-          h("div",{style:{flex:"1",display:"flex",justifyContent:"center",alignItems:"center"}},spk?sparkline(spk,spkCol):h("div",{style:{fontSize:"10px",color:C.faint}},x.ticker?"…":"")),
+          h("div",{style:{flex:"1",display:"flex",justifyContent:"center",alignItems:"center"}},spk?sparkline(spk,spkCol,(S.holdSpark&&x.ticker&&S.holdSpark[x.ticker]&&S.holdSpark[x.ticker].stamps)||null,x.currency==="KRW"?"KRW":"USD"):h("div",{style:{fontSize:"10px",color:C.faint}},x.ticker?"…":"")),
           h("div",{style:{textAlign:"right",flexShrink:"0"}},
             h("div",{class:"num",style:{fontSize:"14px",fontWeight:"700"}},fmtMoney(ev,curMode)),
             h("div",{class:"num",style:{fontSize:"11px",fontWeight:"700",marginTop:"2px",color:pl>=0?C.brand:C.over}},(pl>=0?"+":"−")+fmtMoney(Math.abs(pl),curMode).replace(/^[₩$]/,m=>m)+(rr!=null?` (${rr}%)`:"")),
