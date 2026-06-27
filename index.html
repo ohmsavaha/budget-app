@@ -2116,18 +2116,21 @@ function ensureReorderStyle(){
   if(document.getElementById("reorder-style"))return;
   const st=document.createElement("style");st.id="reorder-style";
   st.textContent="@keyframes rwiggle{0%{transform:rotate(-.5deg)}50%{transform:rotate(.5deg)}100%{transform:rotate(-.5deg)}}"
-    +"#ct.cardgrid{display:grid;grid-template-columns:repeat(2,1fr);gap:12px;align-items:start}"
+    +"#ct.cardgrid{display:grid;grid-template-columns:repeat(12,1fr);gap:12px;align-items:start}"
     +"#ct.cardgrid>*{grid-column:1 / -1}"
     +"#ct.cardgrid>.rcard{margin-top:0;margin-bottom:0}"
-    +"#ct.cardgrid>.rcard.half{grid-column:auto}"
-    +".rcard.half{font-size:12.5px}"
-    +".rcard.half canvas{max-width:100%!important;height:auto!important}"
+    +".rcard.sp4{font-size:11.5px}.rcard.sp6{font-size:12.5px}.rcard.sp8{font-size:13px}"
+    +".rcard.sp4 canvas,.rcard.sp6 canvas,.rcard.sp8 canvas{max-width:100%!important;height:auto!important}"
+    +".rsz{position:absolute;top:0;right:0;width:20px;height:100%;display:none;cursor:ew-resize;z-index:4;align-items:center;justify-content:center;touch-action:none}"
+    +".reorder-editing .rcard .rsz{display:flex}"
+    +".rsz::before{content:'';width:4px;height:36px;border-radius:3px;background:rgba(120,110,95,.55)}"
+    +".rcard.rresizing{transition:none!important}"
     +".rcard.collapsed>*:not(:first-child):not(.rctl){display:none!important}"
     +".rcard.collapsed{padding-bottom:14px!important}"
     +".rcard,.rtab{transition:transform .22s cubic-bezier(.2,.8,.2,1),box-shadow .18s ease}"
     +".reorder-editing .rcard,.tabedit .rtab{animation:rwiggle .3s ease-in-out infinite}"
     +".reorder-editing .rcard>*{pointer-events:none}"
-    +".reorder-editing .rcard .rctl,.reorder-editing .rcard .rctl *{pointer-events:auto}"
+    +".reorder-editing .rcard .rctl,.reorder-editing .rcard .rctl *,.reorder-editing .rcard .rsz{pointer-events:auto}"
     +".rcard.rdrag,.rtab.rdrag{animation:none!important;transition:box-shadow .18s ease;z-index:60;box-shadow:0 14px 32px rgba(0,0,0,.20);opacity:.98}"
     +".rctl{position:absolute;top:6px;right:8px;display:none;gap:4px;z-index:5}"
     +".reorder-editing .rcard .rctl{display:flex}"
@@ -2169,7 +2172,7 @@ function attachDrag(el,opts){
   const{scope,axis,onDrop,inEdit}=opts;
   let pressTimer=null,sx=0,sy=0,dragging=false;
   const onDown=(e)=>{
-    if(e.target&&e.target.closest&&e.target.closest(".rctl"))return;
+    if(e.target&&e.target.closest&&e.target.closest(".rctl,.rsz"))return;
     const pt=e.touches?e.touches[0]:e;sx=pt.clientX;sy=pt.clientY;
     if(REORDER.editing&&inEdit()){beginDrag(e);return;}
     pressTimer=setTimeout(()=>{pressTimer=null;if("vibrate"in navigator){try{navigator.vibrate(14);}catch{}}enterReorder(scope);beginDrag(e);},450);
@@ -2195,7 +2198,7 @@ function attachDrag(el,opts){
     ph.style.width=rect.width+"px";ph.style.height=rect.height+"px";
     ph.style.margin=cs.margin;ph.style.boxSizing="border-box";ph.style.flex="0 0 auto";
     ph.style.borderRadius="16px";ph.style.background="rgba(120,110,95,.07)";
-    ph.style.gridColumn=el.classList.contains("half")?"auto":"1 / -1";
+    ph.style.gridColumn=el.style.gridColumn||"span 12";
     ct.insertBefore(ph,el);
     // 잡은 카드를 body로 띄움(레이아웃 분리)
     document.body.appendChild(el);
@@ -2256,10 +2259,35 @@ function flipMove(nodes,mutate){
   });
 }
 
+function applySpan(el,sp){el.style.gridColumn="span "+sp;["sp4","sp6","sp8","sp12"].forEach(c=>el.classList.remove(c));el.classList.add("sp"+sp);}
+function currentSpan(el){for(const c of["sp4","sp6","sp8","sp12"])if(el.classList.contains(c))return +c.slice(2);return 12;}
+function attachResize(el,tab,key){
+  const handle=h("div",{class:"rsz",title:"크기 조절"});
+  const snapOf=(clientX)=>{
+    const ct=el.parentNode;if(!ct)return currentSpan(el);
+    const col=ct.getBoundingClientRect().width/12;
+    const left=el.getBoundingClientRect().left;
+    let n=Math.round((clientX-left)/col);n=Math.max(3,Math.min(12,n));
+    const snaps=[4,6,8,12];let best=4,bd=99;snaps.forEach(sv=>{const d=Math.abs(sv-n);if(d<bd){bd=d;best=sv;}});return best;
+  };
+  const down=(e)=>{
+    if(!(REORDER.editing&&REORDER.scope==="card"))return;
+    if(e.cancelable)e.preventDefault();e.stopPropagation();
+    el.classList.add("rresizing");
+    const move=(ev)=>{if(ev.cancelable)ev.preventDefault();const p=ev.touches?ev.touches[0]:ev;applySpan(el,snapOf(p.clientX));};
+    const up=()=>{el.classList.remove("rresizing");
+      document.removeEventListener("touchmove",move);document.removeEventListener("mousemove",move);
+      document.removeEventListener("touchend",up);document.removeEventListener("mouseup",up);
+      setCardStateFor(tab,key,{sp:currentSpan(el)});try{window.dispatchEvent(new Event("resize"));}catch{}};
+    document.addEventListener("touchmove",move,{passive:false});document.addEventListener("mousemove",move);
+    document.addEventListener("touchend",up);document.addEventListener("mouseup",up);
+  };
+  handle.addEventListener("mousedown",down);handle.addEventListener("touchstart",down,{passive:false});
+  el.appendChild(handle);
+}
 function addCardControls(el,tab,key){
   const mk=(txt,title,fn)=>h("button",{title,onclick:(ev)=>{ev.stopPropagation();ev.preventDefault();fn(ev.currentTarget);}},txt);
   const bar=h("div",{class:"rctl"},
-    mk(el.classList.contains("half")?"▭":"◻","크기 전환",(b)=>{const half=el.classList.toggle("half");setCardStateFor(tab,key,{sz:half?1:0});b.textContent=half?"▭":"◻";const ct=el.parentNode;if(ct){const ph=ct.querySelector(":scope > .rhidden");}try{window.dispatchEvent(new Event("resize"));}catch{}}),
     mk(el.classList.contains("collapsed")?"▾":"▴","접기/펼치기",(b)=>{const c=el.classList.toggle("collapsed");setCardStateFor(tab,key,{col:c?1:0});b.textContent=c?"▾":"▴";}),
     mk("✕","숨기기",()=>{setCardStateFor(tab,key,{hid:1});const ct=el.parentNode;el.style.transition="transform .2s ease,opacity .2s ease";el.style.transform="scale(.8)";el.style.opacity="0";setTimeout(()=>{el.remove();if(ct)ensureHiddenChip(ct,tab);},200);})
   );
@@ -2302,9 +2330,10 @@ function reorderCards(tab,cards){
     const key=autoKey(el);el.dataset.rkey=key;el.classList.add("rcard");
     if(!el.style.position)el.style.position="relative";
     const cs=st[key]||{};
-    if(cs.sz)el.classList.add("half");
+    applySpan(el,cs.sp||(cs.sz?6:12));
     if(cs.col)el.classList.add("collapsed");
     addCardControls(el,tab,key);
+    attachResize(el,tab,key);
     attachDrag(el,{scope:"card",axis:"y",inEdit:()=>REORDER.scope==="card",onDrop:()=>persistOrder(tab)});
     if(!cs.hid)visible.push({el,key,i});
   });
