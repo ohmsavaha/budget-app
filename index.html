@@ -392,6 +392,12 @@ async function loadMonth(){
   S.nextTxns=ntx.data||[];
   S.sharedFixed=[];
 }
+  async function loadAllSnapshots(force){
+  if(S.allSnaps&&!force)return S.allSnaps;
+  const{data}=await sb.from("investment_snapshots").select("snapshot_date,total_value_krw,total_invested_krw,total_pl_krw,return_rate_krw,return_rate_usd,cash_krw,exchange_rate").eq("user_id",S.session.user.id).order("snapshot_date",{ascending:true});
+  S.allSnaps=data||[];
+  return S.allSnaps;
+}
 async function loadInvest(){
   const[s,e]=mRange(S.curYm);
   const{data}=await sb.from("investment_snapshots").select("*").gte("snapshot_date",s).lte("snapshot_date",e).order("snapshot_date",{ascending:false});
@@ -483,7 +489,7 @@ function renderDash(){
   } else if(S.tab==="yearly"){
     loadYear().then(()=>setCt(...buildYearly()));
   } else {
-    loadInvest().then(()=>setCt(...buildInvest()));
+    Promise.all([loadInvest(),loadAllSnapshots(true)]).then(()=>setCt(...buildInvest()));
   }
 }
 
@@ -1718,7 +1724,7 @@ function stockIcon(name,ticker){
   return h("div",{style:{width:"34px",height:"34px",borderRadius:"10px",background:color+"1A",color:color,display:"flex",alignItems:"center",justifyContent:"center",fontSize:"15px",fontWeight:"800",flexShrink:"0"}},ch);
 }
   function buildTrend(){
-  const rows=(S.invRows||[]).slice().sort((a,b)=>(a.snapshot_date||"").localeCompare(b.snapshot_date||""));
+  const rows=(S.allSnaps&&S.allSnaps.length?S.allSnaps:(S.invRows||[])).slice().sort((a,b)=>(a.snapshot_date||"").localeCompare(b.snapshot_date||""));
   // 전체 기간 스냅샷 필요 → 별도 로드된 게 없으면 이번 달 것만
   const sec_=sec("📈 누적 수익률 추이",rows.length<2?"기록이 쌓이면 그려져요":`${rows.length}개 기록`);
   if(rows.length<2){
