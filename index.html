@@ -432,6 +432,7 @@ async function loadShared(){
   SHARED_FC=fc||[];
 }
 function renderDash(){
+  exitReorder();
   const isCur=S.curYm===ym(td());
   const prevBtn=h("button",{style:{width:"30px",height:"30px",borderRadius:"999px",color:C.sub,fontSize:"18px"},onclick:()=>{S.curYm=shYm(S.curYm,-1);renderDash();}},"‹");
   const todayBtn=h("button",{style:{fontSize:"12px",fontWeight:"700",color:isCur?C.brand:C.sub,padding:"4px 8px"},onclick:()=>{S.curYm=ym(td());renderDash();}},"오늘");
@@ -598,7 +599,7 @@ function buildHome(){
   const billSec=buildNextMonthBill();
   const sharedSec=buildSharedSection(st,cfg);
   const insightSec=buildInsight(st,prevSt);
-  return[hero,chips,insightSec,sharedSec,compSec,billSec,catSec,recSec];
+  return reorderCards("home",[hero,chips,insightSec,sharedSec,compSec,billSec,catSec,recSec]);
 }
 
 
@@ -848,7 +849,7 @@ function buildCalendarView(){
     h("div",{style:{display:"flex",alignItems:"center",gap:"4px"}},h("span",{style:{background:C.brand,width:"10px",height:"10px",borderRadius:"50%",display:"inline-block"}}),"오늘")
   );
 
-  return[summary,cal,legend];
+  return reorderCards("calendar",[summary,cal,legend]);
 }
 
 // ── 하루 상세 시트 ──
@@ -1487,7 +1488,7 @@ function buildFixed(){
       sugList.append(card);
     });
     emptySec.append(sugList);
-    return[hero,emptySec];
+    return reorderCards("fixed",[hero,emptySec]);
   }
 
   // 고정비 있을 때도 추가 안 된 추천 항목 보여주기
@@ -1567,7 +1568,7 @@ function buildFixed(){
     moreSec.append(moreList);
     sections.push(moreSec);
   }
-  return[hero,...sections];
+  return reorderCards("fixed",[hero,...sections]);
 }
 
 // ── 고정비 추가 시트 ──
@@ -2096,6 +2097,88 @@ function showHoldingManage(snapshotDate){
   ov.append(sh);document.body.append(ov);
 }
 
+// ════════ 카드 순서 재배치 (롱프레스 편집모드 + 드래그) ════════
+const getCardOrder=(tab)=>{try{return JSON.parse(localStorage.getItem("cardorder:"+tab)||"[]");}catch{return[];}};
+const setCardOrder=(tab,arr)=>{try{localStorage.setItem("cardorder:"+tab,JSON.stringify(arr));}catch{}};
+let REORDER={editing:false,tab:null,doneBar:null};
+function autoKey(el){return((el.textContent||"").replace(/\s+/g,"").slice(0,10))||("k"+Math.random());}
+function ensureReorderStyle(){
+  if(document.getElementById("reorder-style"))return;
+  const st=document.createElement("style");st.id="reorder-style";
+  st.textContent="@keyframes rwiggle{0%{transform:rotate(-.55deg)}50%{transform:rotate(.55deg)}100%{transform:rotate(-.55deg)}}"
+    +".rcard{transition:box-shadow .12s ease}"
+    +".reorder-editing .rcard{animation:rwiggle .26s ease-in-out infinite}"
+    +".reorder-editing .rcard>*{pointer-events:none}"
+    +".rcard.rdrag{animation:none!important;z-index:50;box-shadow:0 12px 30px rgba(0,0,0,.18);opacity:.97}"
+    +".reorder-editing .rcard::after{content:'≡';position:absolute;top:8px;right:13px;font-size:17px;color:#B7B0A4;pointer-events:none;z-index:2}";
+  document.head.append(st);
+}
+function enterReorder(tab){
+  ensureReorderStyle();REORDER.editing=true;REORDER.tab=tab;
+  const ct=document.getElementById("ct");if(ct)ct.classList.add("reorder-editing");
+  if(!REORDER.doneBar){
+    const bar=h("button",{style:{position:"fixed",bottom:"24px",left:"50%",transform:"translateX(-50%)",background:C.ink,color:C.w,fontSize:"14px",fontWeight:"700",padding:"12px 26px",borderRadius:"999px",border:"none",boxShadow:"0 6px 22px rgba(0,0,0,.28)",zIndex:"60",cursor:"pointer"},onclick:()=>exitReorder()},"✓ 순서 편집 완료");
+    document.body.append(bar);REORDER.doneBar=bar;
+  }
+}
+function exitReorder(){
+  REORDER.editing=false;REORDER.tab=null;
+  const ct=document.getElementById("ct");if(ct)ct.classList.remove("reorder-editing");
+  if(REORDER.doneBar){REORDER.doneBar.remove();REORDER.doneBar=null;}
+}
+function persistOrder(tab){
+  const ct=document.getElementById("ct");if(!ct)return;
+  const keys=[...ct.querySelectorAll(":scope > .rcard")].map(el=>el.dataset.rkey).filter(Boolean);
+  setCardOrder(tab,keys);
+}
+function attachReorderHandlers(el,tab){
+  if(el._rbound)return;el._rbound=true;
+  let pressTimer=null,startY=0,startX=0;
+  const onDown=(e)=>{
+    const pt=e.touches?e.touches[0]:e;startY=pt.clientY;startX=pt.clientX;
+    if(REORDER.editing&&REORDER.tab===tab){beginDrag(e);return;}
+    pressTimer=setTimeout(()=>{pressTimer=null;if("vibrate"in navigator){try{navigator.vibrate(15);}catch{}}enterReorder(tab);beginDrag(e);},450);
+  };
+  const onMoveWait=(e)=>{if(pressTimer){const pt=e.touches?e.touches[0]:e;if(Math.abs(pt.clientY-startY)>10||Math.abs(pt.clientX-startX)>10){clearTimeout(pressTimer);pressTimer=null;}}};
+  const onUpWait=()=>{if(pressTimer){clearTimeout(pressTimer);pressTimer=null;}};
+  el.addEventListener("touchstart",onDown,{passive:true});
+  el.addEventListener("mousedown",onDown);
+  el.addEventListener("touchmove",onMoveWait,{passive:true});
+  el.addEventListener("mousemove",onMoveWait);
+  el.addEventListener("touchend",onUpWait);
+  el.addEventListener("mouseup",onUpWait);
+  function beginDrag(e){
+    const ct=el.parentNode;if(!ct)return;
+    el.classList.add("rdrag");
+    const move=(ev)=>{
+      if(ev.cancelable)ev.preventDefault();
+      const p=ev.touches?ev.touches[0]:ev;const y=p.clientY;
+      const sibs=[...ct.querySelectorAll(":scope > .rcard")].filter(s=>s!==el);
+      let placed=false;
+      for(const s of sibs){const r=s.getBoundingClientRect();if(y<r.top+r.height/2){ct.insertBefore(el,s);placed=true;break;}}
+      if(!placed)ct.append(el);
+    };
+    const up=()=>{
+      el.classList.remove("rdrag");
+      document.removeEventListener("touchmove",move);document.removeEventListener("mousemove",move);
+      document.removeEventListener("touchend",up);document.removeEventListener("mouseup",up);
+      persistOrder(tab);
+    };
+    document.addEventListener("touchmove",move,{passive:false});
+    document.addEventListener("mousemove",move);
+    document.addEventListener("touchend",up);document.addEventListener("mouseup",up);
+  }
+}
+function reorderCards(tab,cards){
+  const list=(cards||[]).filter(Boolean);
+  if(list.length<2)return list;
+  ensureReorderStyle();
+  list.forEach(el=>{el.dataset.rkey=autoKey(el);el.classList.add("rcard");if(!el.style.position)el.style.position="relative";attachReorderHandlers(el,tab);});
+  const saved=getCardOrder(tab);
+  const idxOf=k=>{const i=saved.indexOf(k);return i<0?9999:i;};
+  return list.map((el,i)=>({el,k:el.dataset.rkey,i})).sort((a,b)=>(idxOf(a.k)-idxOf(b.k))||(a.i-b.i)).map(o=>o.el);
+}
+
 function buildInvest(){
   const rows=S.invRows,lt=rows[0];
 
@@ -2268,7 +2351,7 @@ function buildInvest(){
   const sectorSec=hold.length?buildSectorDonut(latestForDonut):null;
   const calSec=buildReturnCalendar();
   const trendSec=buildTrend();
-  return[hero,marketSec,trendSec,calSec,donutSec,sectorSec,holdSec,hist,addBtn].filter(Boolean);
+  return reorderCards("invest",[hero,marketSec,trendSec,calSec,donutSec,sectorSec,holdSec,hist,addBtn]);
 }
 // ── ADD SHEET ──
 function showAdd(preset){
@@ -2942,7 +3025,7 @@ function buildShared(){
     });
   }
   out.push(txSec);
-  return out;
+  return reorderCards("shared",out);
 }
 
 // ── 정산 도우미 (개인이 낸 것만) ──
@@ -3347,7 +3430,7 @@ function buildAssets(){
   if(S.savings.length)savSec.append(h("div",{style:{display:"flex",justifyContent:"space-between",padding:"11px 4px 2px",fontSize:"13px",fontWeight:"800"}},h("span",{style:{color:C.sub}},"저축 합계"),h("span",{class:"num"},W(savTotal))));
   out.push(savSec);
 
-  return out;
+  return reorderCards("assets",out);
 }
 function assetMini(lbl,v){return h("div",{style:{background:"rgba(255,255,255,.15)",borderRadius:"11px",padding:"10px 11px"}},h("div",{style:{fontSize:"10.5px",opacity:".85",marginBottom:"3px"}},lbl),h("div",{class:"num",style:{fontSize:"14px",fontWeight:"800"}},W(v)));}
 
