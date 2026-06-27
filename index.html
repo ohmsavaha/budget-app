@@ -1845,6 +1845,15 @@ async function showAssetDetail(symbol,displayName,holding){
   const cv=document.createElement("canvas");chartBox.append(cv);
   const tipBox=h("div",{style:{fontSize:"12.5px",color:C.sub,marginTop:"10px",minHeight:"40px",padding:"10px 12px",background:"#F6F4EF",borderRadius:"10px",lineHeight:"1.6"}},"차트 위에 마우스를 올리면 그 시점 주가가 표시돼요.");
   const infoPanel=h("div",{style:{marginTop:"14px"}});
+  // 종목 메모 (종목일 때만)
+  let memoBox=null;
+  if(holding&&symbol){
+    const ta=h("textarea",{placeholder:"이 종목을 왜 샀는지, 목표가 등 메모…",style:{width:"100%",minHeight:"60px",border:`1px solid ${C.line}`,borderRadius:"10px",padding:"10px 12px",fontSize:"13px",resize:"vertical",lineHeight:"1.5"}});
+    ta.value=getStockMemo(symbol);
+    const saveM=h("button",{style:{marginTop:"6px",fontSize:"12.5px",fontWeight:"700",color:C.brand,background:C.soft,border:`1px solid ${C.brand}`,borderRadius:"9px",padding:"8px 14px",cursor:"pointer"}},"메모 저장");
+    saveM.onclick=()=>{setStockMemo(symbol,ta.value.trim());saveM.textContent="✅ 저장됨";setTimeout(()=>{saveM.textContent="메모 저장";},1200);};
+    memoBox=h("div",{style:{marginTop:"16px"}},h("div",{style:{fontSize:"13px",fontWeight:"800",color:C.sub,marginBottom:"8px"}},"📝 내 메모"),ta,saveM);
+  }
   // 내 보유 정보 (종목일 때만)
   let myBox=null;
   if(holding){
@@ -1868,7 +1877,7 @@ async function showAssetDetail(symbol,displayName,holding){
       )
     );
   }
-  box.append(head,priceLine);if(myBox)box.append(myBox);box.append(periodRow,chartBox,tipBox,infoPanel);
+  box.append(head,priceLine);if(myBox)box.append(myBox);box.append(periodRow,chartBox,tipBox,infoPanel);if(memoBox)box.append(memoBox);
   ov.append(box);document.body.append(ov);
 
   const periods=[["1주","5d"],["1개월","1mo"],["3개월","3mo"],["1년","1y"],["5년","5y"]];
@@ -1967,6 +1976,126 @@ async function showAssetDetail(symbol,displayName,holding){
   };
   drawPeriods();draw();
 }
+// ══════════ 종목 메모 (localStorage) ══════════
+const getStockMemo=(tk)=>{try{return localStorage.getItem("stockmemo:"+(tk||""))||"";}catch{return"";}};
+const setStockMemo=(tk,v)=>{try{if(v)localStorage.setItem("stockmemo:"+tk,v);else localStorage.removeItem("stockmemo:"+tk);}catch{}};
+
+// ══════════ 업종 분류 ══════════
+const SECTORS={NVDA:"반도체",TSM:"반도체",INTC:"반도체",AMD:"반도체",AVGO:"반도체",ASML:"반도체",JOBY:"우주항공·모빌리티",RKLB:"우주항공·모빌리티",SPCX:"우주항공·모빌리티",XOVR:"우주항공·모빌리티",ACHR:"우주항공·모빌리티",IONQ:"양자·AI",QBTS:"양자·AI",RGTI:"양자·AI",PLTR:"양자·AI",GOOGL:"빅테크",GOOG:"빅테크",AAPL:"빅테크",MSFT:"빅테크",AMZN:"빅테크",META:"빅테크",TSLA:"빅테크",NFLX:"빅테크",VOO:"ETF·지수",QQQ:"ETF·지수",SPY:"ETF·지수",DXYZ:"ETF·지수",SCHD:"ETF·지수",VTI:"ETF·지수"};
+const sectorOf=(ticker)=>{const t=(ticker||"").toUpperCase().split(".")[0];return SECTORS[t]||"기타";};
+
+// ══════════ 업종 비중 도넛 ══════════
+function buildSectorDonut(latest){
+  if(!latest||!latest.length)return null;
+  const agg={};
+  latest.forEach(x=>{const s=sectorOf(x.ticker),v=Number(x.eval_value_krw)||0;if(v>0)agg[s]=(agg[s]||0)+v;});
+  const items=Object.entries(agg).map(([name,val])=>({name,val})).sort((a,b)=>b.val-a.val);
+  if(items.length<2)return null;
+  const total=items.reduce((s,x)=>s+x.val,0);
+  const sec_=sec("🏭 업종 비중","평가액 기준");
+  const wrap=h("div",{style:{display:"flex",gap:"16px",alignItems:"center",flexWrap:"wrap"}});
+  const canvasBox=h("div",{style:{position:"relative",width:"150px",height:"150px",flexShrink:"0"}});
+  const cv=document.createElement("canvas");cv.width=150;cv.height=150;canvasBox.append(cv);
+  const colors=["#D85A30","#2E7D32","#2F6D9B","#8B4FB2","#B23A5C","#16747B","#8A5A39","#405AA3"];
+  const legend=h("div",{style:{flex:"1",minWidth:"160px",display:"flex",flexDirection:"column",gap:"6px"}});
+  items.forEach((x,i)=>{
+    const pct=Math.round(x.val/total*100);
+    legend.append(h("div",{style:{display:"flex",alignItems:"center",gap:"7px",fontSize:"12px"}},
+      h("span",{style:{width:"9px",height:"9px",borderRadius:"3px",background:colors[i%colors.length],flexShrink:"0"}}),
+      h("span",{style:{flex:"1",whiteSpace:"nowrap",overflow:"hidden",textOverflow:"ellipsis"}},x.name),
+      h("span",{class:"num",style:{fontWeight:"700",color:C.sub}},W(x.val)+" · "+pct+"%")
+    ));
+  });
+  wrap.append(canvasBox,legend);sec_.append(wrap);
+  setTimeout(()=>{if(!window.Chart)return;new window.Chart(cv,{type:"doughnut",data:{labels:items.map(x=>x.name),datasets:[{data:items.map(x=>x.val),backgroundColor:items.map((x,i)=>colors[i%colors.length]),borderWidth:2,borderColor:"#fff"}]},options:{cutout:"66%",plugins:{legend:{display:false},tooltip:{callbacks:{label:(c)=>` ${c.label}: ${Math.round(c.parsed/total*100)}%`}}},animation:{duration:600}}});},50);
+  return sec_;
+}
+
+// ══════════ 월간 수익률 달력 ══════════
+function buildReturnCalendar(){
+  const snaps=(S.allSnaps||[]).slice().sort((a,b)=>(a.snapshot_date||"").localeCompare(b.snapshot_date||""));
+  if(snaps.length<1)return null;
+  const[yr,mo]=S.curYm.split("-").map(Number);
+  const byDate={};
+  snaps.forEach((r,i)=>{
+    const prev=i>0?snaps[i-1]:null;
+    let pct=null;
+    if(prev&&Number(prev.total_value_krw)>0)pct=(Number(r.total_value_krw)-Number(prev.total_value_krw))/Number(prev.total_value_krw)*100;
+    else if(r.return_rate_krw!=null)pct=Number(r.return_rate_krw);
+    byDate[r.snapshot_date]={pct,val:Number(r.total_value_krw)||0};
+  });
+  const monthDays=Object.keys(byDate).filter(d=>d.slice(0,7)===S.curYm);
+  if(!monthDays.length)return null;
+  const sec_=sec("📅 월간 수익률 달력",`${monthDays.length}일 기록 · 전일比`);
+  const firstDay=new Date(yr,mo-1,1).getDay();
+  const lastDate=new Date(yr,mo,0).getDate();
+  const cal=h("div",{style:{background:C.w}});
+  const hdr=h("div",{style:{display:"grid",gridTemplateColumns:"repeat(7,1fr)",gap:"3px",marginBottom:"4px"}});
+  ["월","화","수","목","금","토","일"].forEach((d,i)=>hdr.append(h("div",{style:{textAlign:"center",fontSize:"10.5px",color:i>=5?"#B23A5C":C.faint,fontWeight:"700"}},d)));
+  const grid=h("div",{style:{display:"grid",gridTemplateColumns:"repeat(7,1fr)",gap:"3px"}});
+  const offset=(firstDay===0?6:firstDay-1);
+  for(let i=0;i<offset;i++)grid.append(h("div",{}));
+  for(let d=1;d<=lastDate;d++){
+    const ds=`${yr}-${String(mo).padStart(2,"0")}-${String(d).padStart(2,"0")}`;
+    const data=byDate[ds];
+    let bg="transparent",col=C.faint,pctTxt="";
+    if(data&&data.pct!=null){
+      const p=data.pct,a=Math.min(.30,Math.abs(p)/15+.07);
+      bg=p>=0?`rgba(30,110,82,${a})`:`rgba(194,85,61,${a})`;
+      col=p>=0?C.brand:C.over;pctTxt=(p>=0?"+":"")+p.toFixed(1);
+    }
+    grid.append(h("div",{style:{minHeight:"42px",borderRadius:"8px",background:bg,display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",gap:"1px",padding:"2px"}},
+      h("div",{style:{fontSize:"11px",fontWeight:"600",color:data?C.ink:C.faint}},d),
+      pctTxt?h("div",{class:"num",style:{fontSize:"9px",fontWeight:"700",color:col}},pctTxt):""
+    ));
+  }
+  cal.append(hdr,grid);sec_.append(cal);
+  return sec_;
+}
+
+// ══════════ 종목 직접 추가·삭제 ══════════
+function showHoldingManage(snapshotDate){
+  const ov=h("div",{style:{position:"fixed",inset:"0",background:"rgba(40,37,31,.42)",display:"flex",alignItems:"flex-end",justifyContent:"center",zIndex:"60"},onclick:e=>{if(e.target===ov)ov.remove();}});
+  const sh=h("div",{style:{width:"100%",maxWidth:"520px",background:C.w,borderRadius:"20px 20px 0 0",padding:"18px 20px 26px",maxHeight:"90vh",overflowY:"auto"}});
+  const lbl=t=>h("div",{style:{fontSize:"13px",fontWeight:"800",color:C.sub,marginBottom:"6px"}},t);
+  let holdings=(S.holdings||[]).filter(x=>x.snapshot_date===snapshotDate);
+  const listEl=h("div",{style:{display:"flex",flexDirection:"column",gap:"6px",marginBottom:"16px"}});
+  const reload=async()=>{await loadInvest();const ct=document.getElementById("ct");if(ct){ct.innerHTML="";buildInvest().forEach(n=>ct.append(n));}};
+  const drawList=()=>{
+    listEl.innerHTML="";
+    if(!holdings.length){listEl.append(h("div",{style:{fontSize:"12.5px",color:C.faint,textAlign:"center",padding:"10px"}},"이 날짜에 종목이 없어요."));return;}
+    holdings.forEach(x=>{
+      const del=h("button",{style:{color:C.over,fontSize:"15px",padding:"6px",flexShrink:"0"},onclick:async()=>{if(!confirm(`'${x.name}' 종목을 삭제할까요?`))return;await sb.from("investment_holdings").delete().eq("id",x.id);holdings=holdings.filter(y=>y.id!==x.id);drawList();}},"🗑️");
+      listEl.append(h("div",{style:{display:"flex",alignItems:"center",gap:"10px",padding:"9px 4px",borderBottom:`1px solid ${C.line}`}},
+        h("div",{style:{flex:"1",minWidth:"0"}},h("div",{style:{fontSize:"13.5px",fontWeight:"600"}},x.name),h("div",{style:{fontSize:"11px",color:C.sub,marginTop:"1px"}},(x.ticker||"")+(x.eval_value_krw?" · "+W(x.eval_value_krw):""))),
+        del
+      ));
+    });
+  };
+  drawList();
+  const inp=(ph,t)=>h("input",{type:t||"text",placeholder:ph,style:{flex:"1",minWidth:"0",border:`1px solid ${C.line}`,borderRadius:"8px",padding:"9px 10px",fontSize:"12.5px"}});
+  const nmEl=inp("종목명*"),tkEl=inp("심볼"),qEl=inp("수량","number"),evEl=inp("평가액(원)","number"),avEl=inp("평단($)","number");
+  const addBtn=h("button",{style:{width:"100%",marginTop:"10px",background:C.brand,color:C.w,fontSize:"14px",fontWeight:"700",padding:"12px",borderRadius:"11px",border:"none",cursor:"pointer"}},"＋ 이 종목 추가");
+  addBtn.onclick=async()=>{
+    if(!nmEl.value.trim()){alert("종목명을 입력해주세요.");return;}
+    addBtn.disabled=true;addBtn.textContent="저장 중…";
+    const row={user_id:S.session.user.id,snapshot_date:snapshotDate,name:nmEl.value.trim(),ticker:tkEl.value.trim().toUpperCase()||null,quantity:Number(qEl.value)||null,eval_value_krw:Number(evEl.value)||null,avg_price:Number(avEl.value)||null,avg_price_currency:"USD",currency:"USD"};
+    const{error}=await sb.from("investment_holdings").insert(row);
+    if(error){alert("저장 실패: "+error.message);addBtn.disabled=false;addBtn.textContent="＋ 이 종목 추가";return;}
+    ov.remove();await reload();
+  };
+  sh.append(
+    h("div",{style:{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:"4px"}},h("span",{style:{fontSize:"17px",fontWeight:"800"}},"📊 종목 직접 추가·삭제"),h("button",{style:{fontSize:"20px",color:C.sub},onclick:()=>ov.remove()},"✕")),
+    h("div",{style:{fontSize:"11.5px",color:C.faint,marginBottom:"14px",lineHeight:"1.6"}},`${(snapshotDate||"").slice(5)} 스냅샷 기준`),
+    lbl("등록된 종목 (🗑️로 삭제)"),listEl,
+    lbl("새 종목 추가"),
+    h("div",{style:{display:"flex",gap:"5px",marginBottom:"5px"}},nmEl,tkEl),
+    h("div",{style:{display:"flex",gap:"5px"}},qEl,evEl,avEl),
+    addBtn
+  );
+  ov.append(sh);document.body.append(ov);
+}
+
 function buildInvest(){
   const rows=S.invRows,lt=rows[0];
 
@@ -2131,11 +2260,15 @@ function buildInvest(){
       await loadInvest();
       const ct=document.getElementById("ct");if(ct){ct.innerHTML="";buildInvest().forEach(n=>ct.append(n));}
     };
-    holdSec.append(refreshBtn,toggle,listWrap);
+    const manageBtn=h("button",{style:{width:"100%",marginBottom:"10px",fontSize:"13px",fontWeight:"700",padding:"10px",borderRadius:"10px",border:`1px solid ${C.line}`,background:C.w,color:C.sub,cursor:"pointer"},onclick:()=>showHoldingManage(latestDate)},"✏️ 종목 직접 추가·삭제");
+    holdSec.append(refreshBtn,manageBtn,toggle,listWrap);
   }
-  const donutSec=hold.length?buildDonut(hold.filter(x=>x.snapshot_date===hold[0].snapshot_date)):null;
+  const latestForDonut=hold.length?hold.filter(x=>x.snapshot_date===hold[0].snapshot_date):[];
+  const donutSec=hold.length?buildDonut(latestForDonut):null;
+  const sectorSec=hold.length?buildSectorDonut(latestForDonut):null;
+  const calSec=buildReturnCalendar();
   const trendSec=buildTrend();
-  return[hero,marketSec,trendSec,donutSec,holdSec,hist,addBtn].filter(Boolean);
+  return[hero,marketSec,trendSec,calSec,donutSec,sectorSec,holdSec,hist,addBtn].filter(Boolean);
 }
 // ── ADD SHEET ──
 function showAdd(preset){
