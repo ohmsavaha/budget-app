@@ -2150,7 +2150,7 @@ function persistTabs(){
 function attachDrag(el,opts){
   if(el._rbound)return;el._rbound=true;
   const{scope,axis,onDrop,inEdit}=opts;
-  let pressTimer=null,sx=0,sy=0;
+  let pressTimer=null,sx=0,sy=0,dragging=false;
   const onDown=(e)=>{
     const pt=e.touches?e.touches[0]:e;sx=pt.clientX;sy=pt.clientY;
     if(REORDER.editing&&inEdit()){beginDrag(e);return;}
@@ -2163,48 +2163,80 @@ function attachDrag(el,opts){
   el.addEventListener("touchmove",onMoveWait,{passive:true});
   el.addEventListener("mousemove",onMoveWait);
   el.addEventListener("touchend",onUpWait);el.addEventListener("mouseup",onUpWait);
+  const cls=axis==="xy"?"rtab":"rcard";
+  const sibsOf=(ct)=>[...ct.children].filter(c=>c.classList&&c.classList.contains(cls)&&!c._ph);
   function beginDrag(e){
-    const ct=el.parentNode;if(!ct)return;
+    if(dragging)return;
+    const ct=el.parentNode;if(!ct)return;dragging=true;
     const pt0=e.touches?e.touches[0]:e;
-    const r0=el.getBoundingClientRect();
-    const grabX=pt0.clientX-r0.left, grabY=pt0.clientY-r0.top;
+    const rect=el.getBoundingClientRect();
+    const grabX=pt0.clientX-rect.left, grabY=pt0.clientY-rect.top;
+    const cs=getComputedStyle(el);
+    // 빈자리 플레이스홀더
+    const ph=document.createElement("div");ph._ph=true;
+    ph.style.width=rect.width+"px";ph.style.height=rect.height+"px";
+    ph.style.margin=cs.margin;ph.style.boxSizing="border-box";ph.style.flex="0 0 auto";
+    ph.style.borderRadius="16px";ph.style.background="rgba(120,110,95,.07)";
+    ct.insertBefore(ph,el);
+    // 잡은 카드를 body로 띄움(레이아웃 분리)
+    document.body.appendChild(el);
     el.classList.add("rdrag");
-    const sel=axis==="xy"?":scope > .rtab":":scope > .rcard";
+    Object.assign(el.style,{position:"fixed",zIndex:"80",margin:"0",width:rect.width+"px",height:rect.height+"px",left:rect.left+"px",top:rect.top+"px",transition:"transform .12s ease,box-shadow .18s ease",transform:axis==="xy"?"scale(1.06)":"scale(1.03)",pointerEvents:"none"});
     const move=(ev)=>{
       if(ev.cancelable)ev.preventDefault();
-      const p=ev.touches?ev.touches[0]:ev;
-      // 잡은 요소를 손가락에 부드럽게 추적
-      const rNow=el.getBoundingClientRect();
-      if(axis==="xy"){
-        const dx=p.clientX-(rNow.left+grabX), dy=p.clientY-(rNow.top+grabY);
-        el.style.transform=`translate(${dx}px,${dy}px) scale(1.05)`;
-      }else{
-        const dy=p.clientY-(rNow.top+grabY);
-        el.style.transform=`translateY(${dy}px) scale(1.03)`;
-      }
-      // 삽입 위치 계산 (형제 중심 기준)
-      const sibs=[...ct.querySelectorAll(sel)].filter(s=>s!==el);
+      const p=ev.touches?ev.touches[0]:ev,px=p.clientX,py=p.clientY;
+      el.style.left=(px-grabX)+"px";el.style.top=(py-grabY)+"px";
+      const sibs=sibsOf(ct);
       let target=null;
       for(const s of sibs){
-        const r=s.getBoundingClientRect();
-        const cx=r.left+r.width/2, cy=r.top+r.height/2;
-        const before = axis==="xy" ? (p.clientY<cy-8?true:(Math.abs(p.clientY-cy)<=r.height/2&&p.clientX<cx)) : (p.clientY<cy);
+        const r=s.getBoundingClientRect(),cx=r.left+r.width/2,cy=r.top+r.height/2;
+        const before=axis==="xy"?(py<r.top?true:(py>r.bottom?false:px<cx)):(py<cy);
         if(before){target=s;break;}
       }
-      if(target){if(el.nextSibling!==target)ct.insertBefore(el,target);}
-      else ct.append(el);
+      if(target){if(ph.nextElementSibling!==target)flipMove(sibs,()=>ct.insertBefore(ph,target));}
+      else{if(ct.lastElementChild!==ph)flipMove(sibs,()=>ct.appendChild(ph));}
     };
     const up=()=>{
-      el.classList.remove("rdrag");el.style.transform="";
       document.removeEventListener("touchmove",move);document.removeEventListener("mousemove",move);
       document.removeEventListener("touchend",up);document.removeEventListener("mouseup",up);
-      onDrop();
+      const slot=ph.getBoundingClientRect();
+      el.style.transition="left .2s cubic-bezier(.2,.8,.2,1),top .2s cubic-bezier(.2,.8,.2,1),transform .2s ease,box-shadow .2s ease";
+      el.style.left=slot.left+"px";el.style.top=slot.top+"px";el.style.transform="scale(1)";
+      let done=false;
+      const finish=()=>{
+        if(done)return;done=true;
+        el.removeEventListener("transitionend",finish);
+        ct.insertBefore(el,ph);ph.remove();
+        el.classList.remove("rdrag");
+        ["position","zIndex","margin","width","height","left","top","transform","transition","pointerEvents"].forEach(k=>el.style[k]="");
+        el.style.position="relative";
+        dragging=false;onDrop();
+      };
+      el.addEventListener("transitionend",finish);
+      setTimeout(finish,260);
     };
     document.addEventListener("touchmove",move,{passive:false});
     document.addEventListener("mousemove",move);
     document.addEventListener("touchend",up);document.addEventListener("mouseup",up);
   }
 }
+// FLIP: DOM 변경 전후 좌표 비교 → 이동량만큼 거꾸로 걸었다가 0으로 풀어 슬라이드
+function flipMove(nodes,mutate){
+  const first=new Map();
+  nodes.forEach(n=>first.set(n,n.getBoundingClientRect()));
+  mutate();
+  nodes.forEach(n=>{
+    const a=first.get(n);if(!a)return;
+    const b=n.getBoundingClientRect();
+    const dx=a.left-b.left,dy=a.top-b.top;
+    if(dx||dy){
+      n.style.transition="none";
+      n.style.transform=`translate(${dx}px,${dy}px)`;
+      requestAnimationFrame(()=>{n.style.transition="transform .22s cubic-bezier(.2,.8,.2,1)";n.style.transform="";});
+    }
+  });
+}
+
 function reorderCards(tab,cards){
   const list=(cards||[]).filter(Boolean);
   if(list.length<2)return list;
