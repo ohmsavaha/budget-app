@@ -1792,7 +1792,8 @@ function buildFixed(){
 
   // 고정비 있을 때도 추가 안 된 추천 항목 보여주기
   const existingNames=withStatus.map(f=>f.name);
-  const remainingSug=SUGGESTED_FC.filter(sg=>!existingNames.includes(sg.name));
+  const inactiveNames=(S.fixedInactive||[]).map(f=>f.name);
+  const remainingSug=SUGGESTED_FC.filter(sg=>!existingNames.includes(sg.name)&&!inactiveNames.includes(sg.name));
 
   const reloadFixed=async()=>{
     await Promise.all([loadFixed(),loadMonth()]);
@@ -1924,7 +1925,10 @@ function buildFixed(){
           h("div",{style:{fontSize:"13px",fontWeight:"600"}},sg.name),
           h("div",{style:{fontSize:"11.5px",color:C.sub,marginTop:"1px"}},W(sg.amount)+" · "+sg.account)
         ),
-        h("span",{style:{fontSize:"12px",fontWeight:"700",color:C.brand,padding:"4px 9px",borderRadius:"7px",background:C.soft}},"＋")
+        h("div",{style:{display:"flex",gap:"6px",flexShrink:"0",alignItems:"center"}},
+          h("button",{title:"보관함(비활성)에 바로 등록",style:{fontSize:"15px",lineHeight:"1",padding:"5px 8px",borderRadius:"7px",background:"transparent",border:`1px solid ${C.line}`,color:C.faint,cursor:"pointer"},onclick:async(e)=>{e.stopPropagation();await sb.from("fixed_costs").insert({user_id:S.session.user.id,name:sg.name,category:sg.category,amount:Number(sg.amount),account:sg.account,billing_day:sg.billing_day??null,payment_method:sg.payment_method||null,memo:sg.memo||null,is_active:false});await reloadFixed();}},"💤"),
+          h("span",{style:{fontSize:"12px",fontWeight:"700",color:C.brand,padding:"5px 9px",borderRadius:"7px",background:C.soft}},"＋")
+        )
       ));
     });
     moreSec.append(moreList);
