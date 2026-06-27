@@ -5,6 +5,7 @@
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"/>
 <meta name="theme-color" content="#1E6E52"/>
 <title>나의 가계부</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
 <link rel="manifest" href="./manifest.webmanifest"/>
 <link rel="apple-touch-icon" href="./apple-touch-icon.png"/>
 <meta name="apple-mobile-web-app-capable" content="yes"/>
@@ -1716,6 +1717,41 @@ function stockIcon(name,ticker){
   const ch=(ticker||name||"?").trim().charAt(0).toUpperCase();
   return h("div",{style:{width:"34px",height:"34px",borderRadius:"10px",background:color+"1A",color:color,display:"flex",alignItems:"center",justifyContent:"center",fontSize:"15px",fontWeight:"800",flexShrink:"0"}},ch);
 }
+  function buildDonut(latest){
+  if(!latest||!latest.length)return null;
+  const items=latest.map(x=>({name:x.name,val:Number(x.eval_value_krw)||0})).filter(x=>x.val>0).sort((a,b)=>b.val-a.val);
+  if(!items.length)return null;
+  const total=items.reduce((s,x)=>s+x.val,0);
+  const sec_=sec("🍩 자산 배분","평가액 기준");
+  const wrap=h("div",{style:{display:"flex",gap:"16px",alignItems:"center",flexWrap:"wrap"}});
+  const canvasBox=h("div",{style:{position:"relative",width:"150px",height:"150px",flexShrink:"0"}});
+  const cv=document.createElement("canvas");cv.width=150;cv.height=150;canvasBox.append(cv);
+  const centerLbl=h("div",{style:{position:"absolute",inset:"0",display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",pointerEvents:"none"}},
+    h("div",{style:{fontSize:"10px",color:C.sub}},"총 자산"),
+    h("div",{class:"num",style:{fontSize:"13px",fontWeight:"800"}},W(total).length>9?(Math.round(total/10000)+"만"):W(total))
+  );
+  canvasBox.append(centerLbl);
+  // 범례
+  const legend=h("div",{style:{flex:"1",minWidth:"180px",display:"flex",flexDirection:"column",gap:"5px"}});
+  const colors=items.map(x=>{let hash=0;const k=x.name;for(let i=0;i<k.length;i++)hash=k.charCodeAt(i)+((hash<<5)-hash);return ICON_COLORS[Math.abs(hash)%ICON_COLORS.length];});
+  items.slice(0,8).forEach((x,i)=>{
+    const pct=Math.round(x.val/total*100);
+    legend.append(h("div",{style:{display:"flex",alignItems:"center",gap:"7px",fontSize:"12px"}},
+      h("span",{style:{width:"9px",height:"9px",borderRadius:"3px",background:colors[i],flexShrink:"0"}}),
+      h("span",{style:{flex:"1",whiteSpace:"nowrap",overflow:"hidden",textOverflow:"ellipsis"}},x.name),
+      h("span",{class:"num",style:{fontWeight:"700",color:C.sub}},pct+"%")
+    ));
+  });
+  if(items.length>8)legend.append(h("div",{style:{fontSize:"11px",color:C.faint,paddingLeft:"16px"}},`외 ${items.length-8}개`));
+  wrap.append(canvasBox,legend);
+  sec_.append(wrap);
+  // Chart.js 렌더 (비동기로 캔버스가 DOM에 붙은 뒤)
+  setTimeout(()=>{
+    if(!window.Chart)return;
+    new window.Chart(cv,{type:"doughnut",data:{labels:items.map(x=>x.name),datasets:[{data:items.map(x=>x.val),backgroundColor:colors,borderWidth:2,borderColor:"#fff"}]},options:{cutout:"68%",plugins:{legend:{display:false},tooltip:{callbacks:{label:(c)=>` ${c.label}: ${Math.round(c.parsed/total*100)}%`}}},animation:{duration:600}}});
+  },50);
+  return sec_;
+}
 function buildInvest(){
   const rows=S.invRows,lt=rows[0];
 
@@ -1859,7 +1895,8 @@ function buildInvest(){
     };
     holdSec.append(refreshBtn,toggle,listWrap);
   }
-  return[hero,marketSec,holdSec,hist,addBtn].filter(Boolean);
+  const donutSec=hold.length?buildDonut(hold.filter(x=>x.snapshot_date===hold[0].snapshot_date)):null;
+  return[hero,marketSec,donutSec,holdSec,hist,addBtn].filter(Boolean);
 }
 // ── ADD SHEET ──
 function showAdd(preset){
