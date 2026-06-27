@@ -437,10 +437,16 @@ function renderDash(){
   const prevBtn=h("button",{style:{width:"30px",height:"30px",borderRadius:"999px",color:C.sub,fontSize:"18px"},onclick:()=>{S.curYm=shYm(S.curYm,-1);renderDash();}},"‹");
   const todayBtn=h("button",{style:{fontSize:"12px",fontWeight:"700",color:isCur?C.brand:C.sub,padding:"4px 8px"},onclick:()=>{S.curYm=ym(td());renderDash();}},"오늘");
   const nextBtn=h("button",{style:{width:"30px",height:"30px",borderRadius:"999px",color:C.sub,fontSize:"18px"},onclick:()=>{S.curYm=shYm(S.curYm,1);renderDash();}},"›");
-  const tabBtn=(lbl,key)=>h("button",{
-    style:{fontSize:"13px",fontWeight:"700",padding:"8px 16px",borderRadius:"999px",border:`1px solid ${S.tab===key?C.ink:C.line}`,background:S.tab===key?C.ink:C.w,color:S.tab===key?C.w:C.sub,cursor:"pointer"},
-    onclick:()=>{S.tab=key;renderDash();}
+  const TAB_DEFS=[["home","대시보드"],["shared","🤝 공용"],["assets","💰 자산"],["calendar","달력"],["fixed","고정비"],["invest","투자"],["yearly","연간"]];
+  const tabBtn=(key,lbl)=>h("button",{
+    style:{fontSize:"13px",fontWeight:"700",padding:"8px 16px",borderRadius:"999px",border:`1px solid ${S.tab===key?C.ink:C.line}`,background:S.tab===key?C.ink:C.w,color:S.tab===key?C.w:C.sub,cursor:"pointer",whiteSpace:"nowrap"},
+    onclick:()=>{if(REORDER.editing)return;S.tab=key;renderDash();}
   },lbl);
+  const _tabOrder=getTabOrder();
+  const _orderedDefs=TAB_DEFS.slice().sort((a,b)=>{const ia=_tabOrder.indexOf(a[0]),ib=_tabOrder.indexOf(b[0]);return(ia<0?99:ia)-(ib<0?99:ib);});
+  const _tabBtns=_orderedDefs.map(([key,lbl])=>({key,el:tabBtn(key,lbl)}));
+  const tabbar=h("div",{id:"tabbar",style:{display:"flex",gap:"6px",flexWrap:"wrap",alignItems:"center"}},..._tabBtns.map(b=>b.el));
+  reorderTabs(tabbar,_tabBtns);
   const settingsBtn=h("button",{style:{fontSize:"12px",color:C.faint,padding:"8px 10px"},onclick:()=>showApiKeySetting()},"⚙️");
   const logoutBtn=h("button",{style:{fontSize:"12px",color:C.faint,marginLeft:"auto",padding:"8px 10px"},onclick:()=>sb.auth.signOut()},"로그아웃");
   const ct=h("div",{id:"ct"});
@@ -452,8 +458,8 @@ function renderDash(){
       ),
       h("div",{style:{display:"flex",alignItems:"center",gap:"4px",background:C.w,border:`1px solid ${C.line}`,borderRadius:"999px",padding:"3px 4px"}},prevBtn,todayBtn,nextBtn)
     ),
-    h("div",{style:{display:"flex",gap:"6px",marginBottom:"14px",flexWrap:"wrap"}},
-      tabBtn("대시보드","home"),tabBtn("🤝 공용","shared"),tabBtn("💰 자산","assets"),tabBtn("달력","calendar"),tabBtn("고정비","fixed"),tabBtn("투자","invest"),tabBtn("연간","yearly"),
+    h("div",{style:{display:"flex",gap:"6px",marginBottom:"14px",flexWrap:"wrap",alignItems:"center"}},
+      tabbar,
       h("button",{style:{fontSize:"13px",padding:"8px 14px",borderRadius:"999px",border:`1px solid ${C.line}`,background:C.w,color:C.sub,cursor:"pointer"},onclick:()=>showSearch()},"🔍"),
       h("button",{style:{fontSize:"13px",padding:"8px 14px",borderRadius:"999px",border:`1px solid ${C.line}`,background:C.w,color:C.sub,cursor:"pointer"},onclick:()=>showImport()},"📥 가져오기"),
       settingsBtn,logoutBtn
@@ -2097,72 +2103,102 @@ function showHoldingManage(snapshotDate){
   ov.append(sh);document.body.append(ov);
 }
 
-// ════════ 카드 순서 재배치 (롱프레스 편집모드 + 드래그) ════════
+// ════════ 순서 재배치 엔진 (롱프레스 편집모드 + 부드러운 드래그) ════════
 const getCardOrder=(tab)=>{try{return JSON.parse(localStorage.getItem("cardorder:"+tab)||"[]");}catch{return[];}};
 const setCardOrder=(tab,arr)=>{try{localStorage.setItem("cardorder:"+tab,JSON.stringify(arr));}catch{}};
-let REORDER={editing:false,tab:null,doneBar:null};
+const getTabOrder=()=>{try{return JSON.parse(localStorage.getItem("taborder")||"[]");}catch{return[];}};
+const setTabOrder=(arr)=>{try{localStorage.setItem("taborder",JSON.stringify(arr));}catch{}};
+let REORDER={editing:false,scope:null,doneBar:null};
 function autoKey(el){return((el.textContent||"").replace(/\s+/g,"").slice(0,10))||("k"+Math.random());}
 function ensureReorderStyle(){
   if(document.getElementById("reorder-style"))return;
   const st=document.createElement("style");st.id="reorder-style";
-  st.textContent="@keyframes rwiggle{0%{transform:rotate(-.55deg)}50%{transform:rotate(.55deg)}100%{transform:rotate(-.55deg)}}"
-    +".rcard{transition:box-shadow .12s ease}"
-    +".reorder-editing .rcard{animation:rwiggle .26s ease-in-out infinite}"
+  st.textContent="@keyframes rwiggle{0%{transform:rotate(-.5deg)}50%{transform:rotate(.5deg)}100%{transform:rotate(-.5deg)}}"
+    +".rcard,.rtab{transition:transform .22s cubic-bezier(.2,.8,.2,1),box-shadow .18s ease}"
+    +".reorder-editing .rcard,.tabedit .rtab{animation:rwiggle .3s ease-in-out infinite}"
     +".reorder-editing .rcard>*{pointer-events:none}"
-    +".rcard.rdrag{animation:none!important;z-index:50;box-shadow:0 12px 30px rgba(0,0,0,.18);opacity:.97}"
+    +".rcard.rdrag,.rtab.rdrag{animation:none!important;transition:box-shadow .18s ease;z-index:60;box-shadow:0 14px 32px rgba(0,0,0,.20);opacity:.98}"
     +".reorder-editing .rcard::after{content:'≡';position:absolute;top:8px;right:13px;font-size:17px;color:#B7B0A4;pointer-events:none;z-index:2}";
   document.head.append(st);
 }
-function enterReorder(tab){
-  ensureReorderStyle();REORDER.editing=true;REORDER.tab=tab;
-  const ct=document.getElementById("ct");if(ct)ct.classList.add("reorder-editing");
-  if(!REORDER.doneBar){
-    const bar=h("button",{style:{position:"fixed",bottom:"24px",left:"50%",transform:"translateX(-50%)",background:C.ink,color:C.w,fontSize:"14px",fontWeight:"700",padding:"12px 26px",borderRadius:"999px",border:"none",boxShadow:"0 6px 22px rgba(0,0,0,.28)",zIndex:"60",cursor:"pointer"},onclick:()=>exitReorder()},"✓ 순서 편집 완료");
-    document.body.append(bar);REORDER.doneBar=bar;
-  }
+function showDoneBar(){
+  if(REORDER.doneBar)return;
+  const bar=h("button",{style:{position:"fixed",bottom:"24px",left:"50%",transform:"translateX(-50%)",background:C.ink,color:C.w,fontSize:"14px",fontWeight:"700",padding:"12px 26px",borderRadius:"999px",border:"none",boxShadow:"0 6px 22px rgba(0,0,0,.28)",zIndex:"70",cursor:"pointer"},onclick:()=>exitReorder()},"✓ 순서 편집 완료");
+  document.body.append(bar);REORDER.doneBar=bar;
+}
+function enterReorder(scope){
+  ensureReorderStyle();REORDER.editing=true;REORDER.scope=scope;
+  if(scope==="tab"){const tb=document.getElementById("tabbar");if(tb)tb.classList.add("tabedit");}
+  else{const ct=document.getElementById("ct");if(ct)ct.classList.add("reorder-editing");}
+  showDoneBar();
 }
 function exitReorder(){
-  REORDER.editing=false;REORDER.tab=null;
+  REORDER.editing=false;REORDER.scope=null;
   const ct=document.getElementById("ct");if(ct)ct.classList.remove("reorder-editing");
+  const tb=document.getElementById("tabbar");if(tb)tb.classList.remove("tabedit");
   if(REORDER.doneBar){REORDER.doneBar.remove();REORDER.doneBar=null;}
 }
 function persistOrder(tab){
   const ct=document.getElementById("ct");if(!ct)return;
-  const keys=[...ct.querySelectorAll(":scope > .rcard")].map(el=>el.dataset.rkey).filter(Boolean);
-  setCardOrder(tab,keys);
+  setCardOrder(tab,[...ct.querySelectorAll(":scope > .rcard")].map(el=>el.dataset.rkey).filter(Boolean));
 }
-function attachReorderHandlers(el,tab){
+function persistTabs(){
+  const tb=document.getElementById("tabbar");if(!tb)return;
+  setTabOrder([...tb.querySelectorAll(":scope > .rtab")].map(el=>el.dataset.tkey).filter(Boolean));
+}
+// 공통 드래그(부드러운 추적 + 슬라이드) — axis:"y"(카드) | "xy"(탭)
+function attachDrag(el,opts){
   if(el._rbound)return;el._rbound=true;
-  let pressTimer=null,startY=0,startX=0;
+  const{scope,axis,onDrop,inEdit}=opts;
+  let pressTimer=null,sx=0,sy=0;
   const onDown=(e)=>{
-    const pt=e.touches?e.touches[0]:e;startY=pt.clientY;startX=pt.clientX;
-    if(REORDER.editing&&REORDER.tab===tab){beginDrag(e);return;}
-    pressTimer=setTimeout(()=>{pressTimer=null;if("vibrate"in navigator){try{navigator.vibrate(15);}catch{}}enterReorder(tab);beginDrag(e);},450);
+    const pt=e.touches?e.touches[0]:e;sx=pt.clientX;sy=pt.clientY;
+    if(REORDER.editing&&inEdit()){beginDrag(e);return;}
+    pressTimer=setTimeout(()=>{pressTimer=null;if("vibrate"in navigator){try{navigator.vibrate(14);}catch{}}enterReorder(scope);beginDrag(e);},450);
   };
-  const onMoveWait=(e)=>{if(pressTimer){const pt=e.touches?e.touches[0]:e;if(Math.abs(pt.clientY-startY)>10||Math.abs(pt.clientX-startX)>10){clearTimeout(pressTimer);pressTimer=null;}}};
+  const onMoveWait=(e)=>{if(pressTimer){const pt=e.touches?e.touches[0]:e;if(Math.abs(pt.clientX-sx)>10||Math.abs(pt.clientY-sy)>10){clearTimeout(pressTimer);pressTimer=null;}}};
   const onUpWait=()=>{if(pressTimer){clearTimeout(pressTimer);pressTimer=null;}};
   el.addEventListener("touchstart",onDown,{passive:true});
   el.addEventListener("mousedown",onDown);
   el.addEventListener("touchmove",onMoveWait,{passive:true});
   el.addEventListener("mousemove",onMoveWait);
-  el.addEventListener("touchend",onUpWait);
-  el.addEventListener("mouseup",onUpWait);
+  el.addEventListener("touchend",onUpWait);el.addEventListener("mouseup",onUpWait);
   function beginDrag(e){
     const ct=el.parentNode;if(!ct)return;
+    const pt0=e.touches?e.touches[0]:e;
+    const r0=el.getBoundingClientRect();
+    const grabX=pt0.clientX-r0.left, grabY=pt0.clientY-r0.top;
     el.classList.add("rdrag");
+    const sel=axis==="xy"?":scope > .rtab":":scope > .rcard";
     const move=(ev)=>{
       if(ev.cancelable)ev.preventDefault();
-      const p=ev.touches?ev.touches[0]:ev;const y=p.clientY;
-      const sibs=[...ct.querySelectorAll(":scope > .rcard")].filter(s=>s!==el);
-      let placed=false;
-      for(const s of sibs){const r=s.getBoundingClientRect();if(y<r.top+r.height/2){ct.insertBefore(el,s);placed=true;break;}}
-      if(!placed)ct.append(el);
+      const p=ev.touches?ev.touches[0]:ev;
+      // 잡은 요소를 손가락에 부드럽게 추적
+      const rNow=el.getBoundingClientRect();
+      if(axis==="xy"){
+        const dx=p.clientX-(rNow.left+grabX), dy=p.clientY-(rNow.top+grabY);
+        el.style.transform=`translate(${dx}px,${dy}px) scale(1.05)`;
+      }else{
+        const dy=p.clientY-(rNow.top+grabY);
+        el.style.transform=`translateY(${dy}px) scale(1.03)`;
+      }
+      // 삽입 위치 계산 (형제 중심 기준)
+      const sibs=[...ct.querySelectorAll(sel)].filter(s=>s!==el);
+      let target=null;
+      for(const s of sibs){
+        const r=s.getBoundingClientRect();
+        const cx=r.left+r.width/2, cy=r.top+r.height/2;
+        const before = axis==="xy" ? (p.clientY<cy-8?true:(Math.abs(p.clientY-cy)<=r.height/2&&p.clientX<cx)) : (p.clientY<cy);
+        if(before){target=s;break;}
+      }
+      if(target){if(el.nextSibling!==target)ct.insertBefore(el,target);}
+      else ct.append(el);
     };
     const up=()=>{
-      el.classList.remove("rdrag");
+      el.classList.remove("rdrag");el.style.transform="";
       document.removeEventListener("touchmove",move);document.removeEventListener("mousemove",move);
       document.removeEventListener("touchend",up);document.removeEventListener("mouseup",up);
-      persistOrder(tab);
+      onDrop();
     };
     document.addEventListener("touchmove",move,{passive:false});
     document.addEventListener("mousemove",move);
@@ -2173,10 +2209,16 @@ function reorderCards(tab,cards){
   const list=(cards||[]).filter(Boolean);
   if(list.length<2)return list;
   ensureReorderStyle();
-  list.forEach(el=>{el.dataset.rkey=autoKey(el);el.classList.add("rcard");if(!el.style.position)el.style.position="relative";attachReorderHandlers(el,tab);});
+  list.forEach(el=>{el.dataset.rkey=autoKey(el);el.classList.add("rcard");if(!el.style.position)el.style.position="relative";attachDrag(el,{scope:"card",axis:"y",inEdit:()=>REORDER.scope==="card",onDrop:()=>persistOrder(tab)});});
   const saved=getCardOrder(tab);
   const idxOf=k=>{const i=saved.indexOf(k);return i<0?9999:i;};
   return list.map((el,i)=>({el,k:el.dataset.rkey,i})).sort((a,b)=>(idxOf(a.k)-idxOf(b.k))||(a.i-b.i)).map(o=>o.el);
+}
+// 탭 바 재배치: defs=[[key,labelNode/btn],...] 이미 만들어진 버튼들에 핸들러+순서적용
+function reorderTabs(barEl,btns){
+  ensureReorderStyle();
+  btns.forEach(({key,el})=>{el.dataset.tkey=key;el.classList.add("rtab");if(!el.style.position)el.style.position="relative";attachDrag(el,{scope:"tab",axis:"xy",inEdit:()=>REORDER.scope==="tab",onDrop:()=>persistTabs()});});
+  return btns;
 }
 
 function buildInvest(){
