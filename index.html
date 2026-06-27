@@ -2116,7 +2116,7 @@ function ensureReorderStyle(){
   if(document.getElementById("reorder-style"))return;
   const st=document.createElement("style");st.id="reorder-style";
   st.textContent="@keyframes rwiggle{0%{transform:rotate(-.5deg)}50%{transform:rotate(.5deg)}100%{transform:rotate(-.5deg)}}"
-    +"#ct.cardgrid{display:grid;grid-template-columns:repeat(12,1fr);gap:12px;align-items:start}"
+    +"#ct.cardgrid{display:grid;grid-template-columns:repeat(12,1fr);gap:12px;align-items:stretch}"
     +"#ct.cardgrid>*{grid-column:1 / -1}"
     +"#ct.cardgrid>.rcard{margin-top:0;margin-bottom:0}"
     +".rcard.sp4{font-size:11.5px}.rcard.sp6{font-size:12.5px}.rcard.sp8{font-size:13px}"
