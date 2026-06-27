@@ -1812,7 +1812,7 @@ function stockIcon(name,ticker){
   return sec_;
 }
   // ── 종목/지수 상세 차트 팝업 ──
-async function showAssetDetail(symbol,displayName){
+async function showAssetDetail(symbol,displayName,holding){
   const ov=h("div",{style:{position:"fixed",inset:"0",background:"rgba(40,37,31,.5)",display:"flex",alignItems:"center",justifyContent:"center",zIndex:"80",padding:"20px"},onclick:e=>{if(e.target===ov)ov.remove();}});
   const box=h("div",{style:{width:"100%",maxWidth:"560px",background:C.w,borderRadius:"20px",padding:"22px",maxHeight:"90vh",overflowY:"auto"}});
   const head=h("div",{style:{display:"flex",justifyContent:"space-between",alignItems:"flex-start",marginBottom:"6px"}},
@@ -1825,7 +1825,30 @@ async function showAssetDetail(symbol,displayName){
   const cv=document.createElement("canvas");chartBox.append(cv);
   const tipBox=h("div",{style:{fontSize:"12.5px",color:C.sub,marginTop:"10px",minHeight:"40px",padding:"10px 12px",background:"#F6F4EF",borderRadius:"10px",lineHeight:"1.6"}},"차트 위에 마우스를 올리면 그 시점 주가가 표시돼요.");
   const infoPanel=h("div",{style:{marginTop:"14px"}});
-  box.append(head,priceLine,periodRow,chartBox,tipBox,infoPanel);
+  // 내 보유 정보 (종목일 때만)
+  let myBox=null;
+  if(holding){
+    const cur=holding.currency==="KRW"?"KRW":"USD";
+    const fmK=(v)=>v==null?"-":"₩"+Math.round(v).toLocaleString();
+    const fmA=(v)=>v==null?"-":(cur==="USD"?("$"+Number(v).toLocaleString("en-US",{minimumFractionDigits:2,maximumFractionDigits:2})):("₩"+Math.round(v).toLocaleString()));
+    const ev=Number(holding.eval_value_krw)||0;
+    const inv=holding.invested_krw!=null?Number(holding.invested_krw):(holding.pl_krw!=null?ev-Number(holding.pl_krw):null);
+    const pl=Number(holding.pl_krw)||0;
+    const rr=holding.return_rate;
+    const cell=(lb,val,col)=>h("div",{style:{background:"#F6F4EF",borderRadius:"10px",padding:"10px 12px"}},h("div",{style:{fontSize:"10.5px",color:C.sub,marginBottom:"3px"}},lb),h("div",{class:"num",style:{fontSize:"13.5px",fontWeight:"800",color:col||C.ink}},val));
+    myBox=h("div",{style:{marginTop:"4px",marginBottom:"4px"}},
+      h("div",{style:{fontSize:"13px",fontWeight:"800",color:C.sub,marginBottom:"8px"}},"💼 내 보유 현황"),
+      h("div",{style:{display:"grid",gridTemplateColumns:"1fr 1fr",gap:"7px"}},
+        cell("보유 수량",(holding.quantity!=null?(+holding.quantity).toLocaleString(undefined,{maximumFractionDigits:6})+"주":"-")),
+        cell("평균 단가",fmA(holding.avg_price)),
+        cell("평가 금액",fmK(ev)),
+        cell("매수 원금",fmK(inv)),
+        cell("평가 손익",(pl>=0?"+":"−")+fmK(Math.abs(pl)).slice(1),pl>=0?C.brand:C.over),
+        cell("수익률",rr!=null?((rr>=0?"+":"")+rr+"%"):"-",rr>=0?C.brand:C.over)
+      )
+    );
+  }
+  box.append(head,priceLine,myBox,periodRow,chartBox,tipBox,infoPanel);
   ov.append(box);document.body.append(ov);
 
   const periods=[["1주","5d"],["1개월","1mo"],["3개월","3mo"],["1년","1y"],["5년","5y"]];
@@ -2013,13 +2036,12 @@ function buildInvest(){
         const ev=evalIn(x,curMode),pl=plIn(x,curMode),rr=x.return_rate,dc=x.day_change_pct;
         const spk=(S.holdSpark&&x.ticker&&S.holdSpark[x.ticker]&&S.holdSpark[x.ticker].history)||null;
         const spkCol=spk&&spk.length>1?(spk[spk.length-1]>=spk[0]?C.brand:C.over):C.faint;
-        listWrap.append(h("div",{style:{display:"flex",alignItems:"center",gap:"11px",padding:"12px 2px",borderBottom:`1px solid ${C.line}`,cursor:x.ticker?"pointer":"default",transition:"background .12s"},onmouseenter:e=>{if(x.ticker)e.currentTarget.style.background="#F6F4EF";},onmouseleave:e=>{e.currentTarget.style.background="transparent";},onclick:()=>{if(x.ticker)showAssetDetail(x.ticker,x.name);}},
+        listWrap.append(h("div",{style:{display:"flex",alignItems:"center",gap:"11px",padding:"12px 2px",borderBottom:`1px solid ${C.line}`,cursor:x.ticker?"pointer":"default",transition:"background .12s"},onmouseenter:e=>{if(x.ticker)e.currentTarget.style.background="#F6F4EF";},onmouseleave:e=>{e.currentTarget.style.background="transparent";},onclick:()=>{if(x.ticker)showAssetDetail(x.ticker,x.name,x);}},
           stockIcon(x.name,x.ticker),
           h("div",{style:{width:"94px",minWidth:"0",flexShrink:"0"}},
             h("div",{style:{fontSize:"13.5px",fontWeight:"700",whiteSpace:"nowrap",overflow:"hidden",textOverflow:"ellipsis"}},x.name),
             h("div",{style:{fontSize:"10.5px",color:C.faint,fontWeight:"600",marginTop:"1px"}},x.ticker||""),
-            h("div",{style:{fontSize:"10.5px",color:C.sub,marginTop:"2px",whiteSpace:"nowrap"}},(x.quantity!=null?`${(+x.quantity).toFixed(2)}주`:"")+(tot>0?` · ${Math.round(ev/tot*100)}%`:""))
-          ),
+            h("div",{style:{fontSize:"10.5px",color:C.sub,marginTop:"2px",whiteSpace:"nowrap"}},(x.quantity!=null?`${(+x.quantity).toFixed(2)}주`:"")+(tot>0?` · ${Math.round(ev/tot*100)}%`:"")+(x.avg_price!=null?` · 평단 ${x.avg_price_currency==="KRW"?"₩"+Math.round(x.avg_price).toLocaleString():"$"+Number(x.avg_price).toFixed(2)}`:"")),
           h("div",{style:{flex:"1",display:"flex",justifyContent:"center",alignItems:"center"}},spk?sparkline(spk,spkCol,(S.holdSpark&&x.ticker&&S.holdSpark[x.ticker]&&S.holdSpark[x.ticker].stamps)||null,x.currency==="KRW"?"KRW":"USD"):h("div",{style:{fontSize:"10px",color:C.faint}},x.ticker?"…":"")),
           h("div",{style:{textAlign:"right",flexShrink:"0"}},
             h("div",{class:"num",style:{fontSize:"14px",fontWeight:"700"}},fmtMoney(ev,curMode)),
