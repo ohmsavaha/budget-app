@@ -1988,7 +1988,12 @@ function showInvest(){
       const toUsd=(v,cur)=>{const n=Number(v);if(n==null||isNaN(n))return null;return(cur==="KRW")?Math.round(n/fxRate*100)/100:Math.round(n*100)/100;};
       const hrows=parsedHoldings.filter(hd=>hd.name).map(hd=>({user_id:S.session.user.id,snapshot_date:dtEl.value,broker:brEl.value,name:hd.name,ticker:hd.ticker||null,quantity:hd.quantity??null,eval_value_krw:toKrw(hd.eval_value,hd.currency),pl_krw:toKrw(hd.pl,hd.currency),eval_value_usd:toUsd(hd.eval_value,hd.currency),pl_usd:toUsd(hd.pl,hd.currency),fx_rate:fxRate,return_rate:hd.return_rate??null,currency:hd.currency||"USD"}));
      console.log("[종목저장시도]",hrows);
-      if(hrows.length){const{error:hErr}=await sb.from("investment_holdings").insert(hrows);if(hErr){console.log("[종목저장에러]",hErr);alert("종목 저장 실패: "+hErr.message);}else console.log("[종목저장성공]",hrows.length+"개");}
+      if(hrows.length){
+        // 같은 날짜 종목 먼저 삭제 → 중복 방지 (항상 최신만 유지)
+        await sb.from("investment_holdings").delete().eq("user_id",S.session.user.id).eq("snapshot_date",dtEl.value);
+        const{error:hErr}=await sb.from("investment_holdings").insert(hrows);
+        if(hErr){console.log("[종목저장에러]",hErr);alert("종목 저장 실패: "+hErr.message);}else console.log("[종목저장성공]",hrows.length+"개");
+      }
     }
     ov.remove();await loadInvest();const ct=document.getElementById("ct");if(ct){ct.innerHTML="";buildInvest().forEach(n=>ct.append(n));}
   };
