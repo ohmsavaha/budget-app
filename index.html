@@ -1811,6 +1811,26 @@ function stockIcon(name,ticker){
   },50);
   return sec_;
 }
+  // ── 차트용 OHLC 배열 추출 (프록시 응답 키가 뭐든 방어적으로) ──
+function extractOHLC(d,closeArr){
+  if(!d)return null;
+  const pick=(...names)=>{for(const n of names){const v=d[n];if(Array.isArray(v)&&v.length)return v;}return null;};
+  const o=pick("opens","open_arr","openHistory","o");
+  const hi=pick("highs","high_arr","highHistory","h");
+  const lo=pick("lows","low_arr","lowHistory","l");
+  const c=pick("closes","close_arr","closeHistory","c")||closeArr;
+  if(o&&hi&&lo&&c)return{o,h:hi,l:lo,c};
+  const arr=Array.isArray(d.ohlc)?d.ohlc:Array.isArray(d.candles)?d.candles:Array.isArray(d.quotes)?d.quotes:null;
+  if(arr&&arr.length){
+    const O=[],H=[],L=[],Cc=[];
+    for(const it of arr){
+      if(Array.isArray(it)){O.push(it[0]);H.push(it[1]);L.push(it[2]);Cc.push(it[3]);}
+      else{O.push(it.o??it.open);H.push(it.h??it.high);L.push(it.l??it.low);Cc.push(it.c??it.close);}
+    }
+    return{o:O,h:H,l:L,c:Cc};
+  }
+  return null;
+}
   // ── 종목/지수 상세 차트 팝업 ──
 async function showAssetDetail(symbol,displayName,holding){
   const ov=h("div",{style:{position:"fixed",inset:"0",background:"rgba(40,37,31,.5)",display:"flex",alignItems:"center",justifyContent:"center",zIndex:"80",padding:"20px"},onclick:e=>{if(e.target===ov)ov.remove();}});
@@ -1848,7 +1868,7 @@ async function showAssetDetail(symbol,displayName,holding){
       )
     );
   }
-  box.append(head,priceLine,myBox,periodRow,chartBox,tipBox,infoPanel);
+  box.append(head,priceLine);if(myBox)box.append(myBox);box.append(periodRow,chartBox,tipBox,infoPanel);
   ov.append(box);document.body.append(ov);
 
   const periods=[["1주","5d"],["1개월","1mo"],["3개월","3mo"],["1년","1y"],["5년","5y"]];
@@ -1868,6 +1888,8 @@ async function showAssetDetail(symbol,displayName,holding){
     const d=await fetchRange(range);
     if(!d||!d.history||!d.history.length){tipBox.textContent="데이터를 불러오지 못했어요.";return;}
     curPrice=d.price;curCurrency=d.currency;
+    const ohlc=extractOHLC(d,d.history);
+    if(!window._ohlcLogged){window._ohlcLogged=1;console.log("[OHLC keys]",Object.keys(d),"→",ohlc?("o/h/l/c "+ohlc.o.length+"개"):"없음");}
     // 정보 패널 (받아온 모든 데이터)
     if(infoPanel){
       infoPanel.innerHTML="";
@@ -1915,15 +1937,25 @@ async function showAssetDetail(symbol,displayName,holding){
     grad.addColorStop(1,"rgba(0,0,0,0)");
     chart=new window.Chart(cv,{type:"line",data:{labels,datasets:[{data:hist,borderColor:col,backgroundColor:grad,borderWidth:2,fill:true,tension:.25,pointRadius:0,pointHoverRadius:5,pointHoverBackgroundColor:col}]},options:{responsive:true,maintainAspectRatio:false,interaction:{mode:"index",intersect:false},plugins:{legend:{display:false},tooltip:{enabled:false,external:(ctx2)=>{
       const tp=ctx2.tooltip;if(!tp||!tp.dataPoints||!tp.dataPoints.length){return;}
-      const dp=tp.dataPoints[0];const price=dp.raw;const lbl=dp.label;
+      const dp=tp.dataPoints[0];const idx=dp.dataIndex;const price=dp.raw;const lbl=dp.label;
       const diff=curPrice!=null&&curPrice?((price-curPrice)/curPrice*100):null;
-      const vs=diff!=null?(diff>0?`현재가보다 ${diff.toFixed(1)}% 높았음`:diff<0?`현재가보다 ${Math.abs(diff).toFixed(1)}% 낮았음`:"현재가와 동일"):"";
+      const vs=diff!=null?(diff>0?`지금보다 ${diff.toFixed(1)}% 높았던 날`:diff<0?`지금보다 ${Math.abs(diff).toFixed(1)}% 낮았던 날`:"현재가와 동일"):"";
       tipBox.innerHTML="";
-      tipBox.append(
+      tipBox.append(h("div",{style:{display:"flex",justifyContent:"space-between",alignItems:"baseline",gap:"8px"}},
         h("div",{style:{fontWeight:"700",color:C.ink}},`📅 ${lbl}`),
-        h("div",{class:"num",style:{fontSize:"14px",fontWeight:"800",margin:"2px 0"}},fmt(price,curCurrency)),
-        h("div",{style:{color:diff>0?C.over:diff<0?C.brand:C.sub,fontWeight:"600"}},vs)
-      );
+        h("div",{class:"num",style:{fontSize:"14px",fontWeight:"800",color:C.ink}},fmt(price,curCurrency))
+      ));
+      if(ohlc&&ohlc.o&&ohlc.o[idx]!=null){
+        const o=ohlc.o[idx],hi=ohlc.h[idx],lo=ohlc.l[idx],cl=ohlc.c[idx];
+        const cell=(lb,v,col)=>h("div",{style:{display:"flex",flexDirection:"column",alignItems:"center",flex:"1"}},
+          h("span",{style:{fontSize:"10px",color:C.faint}},lb),
+          h("span",{class:"num",style:{fontSize:"11.5px",fontWeight:"700",color:col||C.ink}},v!=null?fmt(v,curCurrency):"-")
+        );
+        tipBox.append(h("div",{style:{display:"flex",gap:"4px",margin:"6px 0 2px"}},
+          cell("시",o),cell("고",hi,C.brand),cell("저",lo,C.over),cell("종",cl)
+        ));
+      }
+      if(vs)tipBox.append(h("div",{style:{color:diff>0?C.over:diff<0?C.brand:C.sub,fontWeight:"600",marginTop:"2px"}},vs));
     }}},scales:{y:{position:"right",ticks:{callback:(v)=>curCurrency==="USD"?"$"+v:Math.round(v).toLocaleString(),font:{size:10}},grid:{color:"#F0ECE3"}},x:{ticks:{font:{size:9},maxTicksLimit:6},grid:{display:false}}},animation:{duration:400}}});
   };
   const drawPeriods=()=>{
