@@ -1410,12 +1410,20 @@ function showCatDetail(catName){
 
 // ── 고정비 탭 ──
 // ══════════ 고정비 납부 판정 + 증빙 (정확 매칭 + 수동 조정) ══════════
-const isVariableFc=(fc)=>{try{const v=localStorage.getItem("fcvar:"+(fc.id||fc.name));if(v==="1")return true;if(v==="0")return false;}catch{}return /(변동|관리비|월별|가변)/.test((fc.memo||"")+(fc.name||""));};
-const setVariableFc=(fc,on)=>{try{localStorage.setItem("fcvar:"+(fc.id||fc.name),on?"1":"0");}catch{}};
-const isSubscriptionFc=(fc)=>{try{const v=localStorage.getItem("fcsub:"+(fc.id||fc.name));if(v==="1")return true;if(v==="0")return false;}catch{}return /(구독|멤버십|멤버쉽|프라임|와우|밀리|flo|뮤직|music|membership|넷플릭스|netflix|유튜브|youtube|디즈니|disney|왓챠|티빙|웨이브|spotify)/i.test((fc.name||"")+(fc.memo||""));};
-const setSubscriptionFc=(fc,on)=>{try{localStorage.setItem("fcsub:"+(fc.id||fc.name),on?"1":"0");}catch{}};
-const getFcShare=(fc)=>{if(fc.account!=="공용")return 100;try{const v=localStorage.getItem("fcshare:"+(fc.id||fc.name));if(v!=null&&v!=="")return Math.max(0,Math.min(100,Number(v)));}catch{}return 50;};
-const setFcShare=(fc,p)=>{try{localStorage.setItem("fcshare:"+(fc.id||fc.name),String(Math.max(0,Math.min(100,Math.round(p)))));}catch{}};
+// fixed_costs.meta (jsonb) 활용 — 설정을 DB에 저장(기기/사람 공유), 없으면 localStorage에서 자동 이관
+function fcMeta(fc){let m=fc&&fc.meta;if(typeof m==="string"){try{m=JSON.parse(m);}catch{m=null;}}return m&&typeof m==="object"?m:{};}
+async function setFcMeta(fc,patch){
+  const m=Object.assign({},fcMeta(fc),patch);
+  fc.meta=m;
+  try{const o=(S.fixedCosts||[]).find(x=>x.id===fc.id);if(o)o.meta=m;}catch{}
+  if(fc.id){try{await sb.from("fixed_costs").update({meta:m}).eq("id",fc.id);}catch(e){dlog("[meta저장실패]",e);}}
+}
+const isVariableFc=(fc)=>{const m=fcMeta(fc);if(typeof m.is_variable==="boolean")return m.is_variable;try{const v=localStorage.getItem("fcvar:"+(fc.id||fc.name));if(v==="1")return true;if(v==="0")return false;}catch{}return /(변동|관리비|월별|가변)/.test((fc.memo||"")+(fc.name||""));};
+const setVariableFc=(fc,on)=>setFcMeta(fc,{is_variable:!!on});
+const isSubscriptionFc=(fc)=>{const m=fcMeta(fc);if(typeof m.is_subscription==="boolean")return m.is_subscription;try{const v=localStorage.getItem("fcsub:"+(fc.id||fc.name));if(v==="1")return true;if(v==="0")return false;}catch{}return /(구독|멤버십|멤버쉽|프라임|와우|밀리|flo|뮤직|music|membership|넷플릭스|netflix|유튜브|youtube|디즈니|disney|왓챠|티빙|웨이브|spotify)/i.test((fc.name||"")+(fc.memo||""));};
+const setSubscriptionFc=(fc,on)=>setFcMeta(fc,{is_subscription:!!on});
+const getFcShare=(fc)=>{if(fc.account!=="공용")return 100;const m=fcMeta(fc);if(m.share_ratio!=null)return Math.max(0,Math.min(100,Number(m.share_ratio)));try{const v=localStorage.getItem("fcshare:"+(fc.id||fc.name));if(v!=null&&v!=="")return Math.max(0,Math.min(100,Number(v)));}catch{}return 50;};
+const setFcShare=(fc,p)=>setFcMeta(fc,{share_ratio:Math.max(0,Math.min(100,Math.round(p)))});
 const myShareAmount=(fc)=>Number(fc.amount||0)*getFcShare(fc)/100;
 const fcTol=(fc)=>isVariableFc(fc)?0.6:0.18;
 function fcDueInfo(fc){
@@ -1438,8 +1446,8 @@ function sortFcList(list){
 }
 const isIncomeType=(t)=>["수입","정산환급","환불/취소","공용입금"].includes(t);
 const FCKEY=(fc,ym)=>`fcpay:${fc.id||fc.name}:${ym}`;
-function getFcOverride(fc,ym){try{return JSON.parse(localStorage.getItem(FCKEY(fc,ym))||"null");}catch{return null;}}
-function setFcOverride(fc,ym,o){try{if(o)localStorage.setItem(FCKEY(fc,ym),JSON.stringify(o));else localStorage.removeItem(FCKEY(fc,ym));}catch{}}
+function getFcOverride(fc,ym){const m=fcMeta(fc);if(m.payments&&m.payments[ym])return m.payments[ym];try{const v=localStorage.getItem(FCKEY(fc,ym));if(v)return JSON.parse(v);}catch{}return null;}
+function setFcOverride(fc,ym,o){const m=fcMeta(fc);const payments=Object.assign({},m.payments||{});if(o)payments[ym]=o;else delete payments[ym];return setFcMeta(fc,{payments});}
 
 // 거래 1건 → 고정비 1개 1:1 배정 (수동 override 우선)
 function assignFixedPayments(fcs,txns,ym){
@@ -1535,7 +1543,7 @@ function showFixedDetail(fc,reload){
     pickerWrap.append(h("div",{style:{fontSize:"11.5px",color:C.sub,margin:"8px 0 6px",fontWeight:"700"}},"이번 달 거래에서 선택 (같은 계정)"));
     if(!cands.length)pickerWrap.append(h("div",{style:{fontSize:"12px",color:C.faint,padding:"8px 0"}},"이번 달 거래가 없어요."));
     cands.slice(0,40).forEach(t=>{
-      pickerWrap.append(h("div",{style:{display:"flex",justifyContent:"space-between",alignItems:"center",padding:"10px 4px",borderBottom:`1px solid ${C.line}`,cursor:"pointer"},onclick:()=>{setFcOverride(fc,ym,{status:"paid",txId:t.id});close();reload();}},
+      pickerWrap.append(h("div",{style:{display:"flex",justifyContent:"space-between",alignItems:"center",padding:"10px 4px",borderBottom:`1px solid ${C.line}`,cursor:"pointer"},onclick:async()=>{await setFcOverride(fc,ym,{status:"paid",txId:t.id});close();reload();}},
         h("div",{style:{minWidth:"0"}},h("div",{style:{fontSize:"12.5px",fontWeight:"600",whiteSpace:"nowrap",overflow:"hidden",textOverflow:"ellipsis"}},t.merchant||t.category||"거래"),
           h("div",{style:{fontSize:"10.5px",color:C.faint,marginTop:"1px"}},(t.date||"")+" · "+(t.category||""))),
         h("div",{class:"num",style:{fontSize:"13px",fontWeight:"700",flexShrink:"0",marginLeft:"8px"}},W(t.amount))
@@ -1543,13 +1551,13 @@ function showFixedDetail(fc,reload){
     });
   };
   if(paid){
-    ctrl.append(btn("✕ 이 거래 아님 (미납 처리)",()=>{setFcOverride(fc,ym,{status:"unpaid"});close();reload();}));
+    ctrl.append(btn("✕ 이 거래 아님 (미납 처리)",async()=>{await setFcOverride(fc,ym,{status:"unpaid"});close();reload();}));
     ctrl.append(btn("🔄 다른 거래로 연결",openPicker));
   }else{
-    ctrl.append(btn("✅ 납부함으로 표시",()=>{setFcOverride(fc,ym,{status:"paid"});close();reload();},true));
+    ctrl.append(btn("✅ 납부함으로 표시",async()=>{await setFcOverride(fc,ym,{status:"paid"});close();reload();},true));
     ctrl.append(btn("🔗 거래 연결",openPicker));
   }
-  if(ov)ctrl.append(btn("↺ 자동 판정으로 초기화",()=>{setFcOverride(fc,ym,null);close();reload();}));
+  if(ov)ctrl.append(btn("↺ 자동 판정으로 초기화",async()=>{await setFcOverride(fc,ym,null);close();reload();}));
   monthBox.append(ctrl,pickerWrap);
   sh.append(monthBox);
 
@@ -1598,7 +1606,7 @@ function showFixedDetail(fc,reload){
     const shareRow=h("div",{style:{display:"flex",gap:"5px",flexWrap:"wrap"}});
     [0,25,50,75,100].forEach(p=>{
       const on=curShare===p;
-      shareRow.append(h("button",{style:{flex:"1",minWidth:"50px",fontSize:"12px",fontWeight:"700",padding:"9px 4px",borderRadius:"9px",border:`1px solid ${on?C.brand:C.line}`,background:on?C.soft:C.w,color:on?C.brand:C.sub,cursor:"pointer"},onclick:()=>{setFcShare(fc,p);close();reload();}},p+"%"));
+      shareRow.append(h("button",{style:{flex:"1",minWidth:"50px",fontSize:"12px",fontWeight:"700",padding:"9px 4px",borderRadius:"9px",border:`1px solid ${on?C.brand:C.line}`,background:on?C.soft:C.w,color:on?C.brand:C.sub,cursor:"pointer"},onclick:async()=>{await setFcShare(fc,p);close();reload();}},p+"%"));
     });
     sh.append(shareRow);
   }
@@ -1606,8 +1614,8 @@ function showFixedDetail(fc,reload){
   const tgl=(label,active,fn)=>h("button",{style:{flex:"1",fontSize:"11.5px",fontWeight:"700",padding:"10px",borderRadius:"9px",border:`1px solid ${active?C.brand:C.line}`,background:active?C.soft:C.w,color:active?C.brand:C.sub,cursor:"pointer"},onclick:fn},label);
   sh.append(h("div",{style:{fontSize:"11.5px",color:C.faint,marginTop:"20px",marginBottom:"7px"}},"이 고정비 설정"),
     h("div",{style:{display:"flex",gap:"6px"}},
-      tgl((isVariableFc(fc)?"☑️":"⬜")+" 매달 금액 변동",isVariableFc(fc),()=>{setVariableFc(fc,!isVariableFc(fc));close();reload();}),
-      tgl((isSubscriptionFc(fc)?"☑️":"⬜")+" 구독 서비스",isSubscriptionFc(fc),()=>{setSubscriptionFc(fc,!isSubscriptionFc(fc));close();reload();})
+      tgl((isVariableFc(fc)?"☑️":"⬜")+" 매달 금액 변동",isVariableFc(fc),async()=>{await setVariableFc(fc,!isVariableFc(fc));close();reload();}),
+      tgl((isSubscriptionFc(fc)?"☑️":"⬜")+" 구독 서비스",isSubscriptionFc(fc),async()=>{await setSubscriptionFc(fc,!isSubscriptionFc(fc));close();reload();})
     ));
   sh.append(h("button",{style:{width:"100%",marginTop:"12px",fontSize:"13.5px",fontWeight:"700",padding:"12px",borderRadius:"11px",border:`1px solid ${C.line}`,background:C.w,color:C.sub,cursor:"pointer"},onclick:()=>{close();showEditFixed(fc,reload);}},"✏️ 고정비 정보 수정"));
 
