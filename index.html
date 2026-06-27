@@ -1934,6 +1934,14 @@ function showInvest(){
       sv.textContent="저장 중…";
     }
     const nm=v=>v===""||v===undefined?null:Number(v);
+    // (A) 스크린샷 우선 + 빈 칸만 자동계산
+    {
+      const val=nm(flds.val.value),inv=nm(flds.inv.value),pl=nm(flds.pl.value);
+      if(val!=null&&inv==null&&pl!=null)flds.inv.value=Math.round(val-pl);      // 투자원금 = 평가액 - 손익
+      if(val!=null&&pl==null&&inv!=null)flds.pl.value=Math.round(val-inv);       // 손익 = 평가액 - 원금
+      const inv2=nm(flds.inv.value);
+      if(nm(flds.rkrw.value)==null&&inv2&&pl!=null)flds.rkrw.value=Math.round(pl/inv2*10000)/100; // 수익률 = 손익/원금
+    }
     const row={user_id:S.session.user.id,snapshot_date:dtEl.value,broker:brEl.value,total_value_krw:nm(flds.val.value),total_invested_krw:nm(flds.inv.value),cash_krw:nm(flds.cash.value),total_pl_krw:nm(flds.pl.value),return_rate_krw:nm(flds.rkrw.value),return_rate_usd:nm(flds.rusd.value),exchange_rate:nm(flds.fx.value),deposit:nm(flds.dep.value)||0,withdrawal:nm(flds.wd.value)||0,memo:flds.memo.value||null};
     const{error}=await sb.from("investment_snapshots").upsert(row,{onConflict:"user_id,snapshot_date"});
     if(error){alert("저장 실패: "+error.message);sv.disabled=false;sv.textContent="저장하기";return;}
