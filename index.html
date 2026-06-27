@@ -1717,6 +1717,49 @@ function stockIcon(name,ticker){
   const ch=(ticker||name||"?").trim().charAt(0).toUpperCase();
   return h("div",{style:{width:"34px",height:"34px",borderRadius:"10px",background:color+"1A",color:color,display:"flex",alignItems:"center",justifyContent:"center",fontSize:"15px",fontWeight:"800",flexShrink:"0"}},ch);
 }
+  function buildTrend(){
+  const rows=(S.invRows||[]).slice().sort((a,b)=>(a.snapshot_date||"").localeCompare(b.snapshot_date||""));
+  // 전체 기간 스냅샷 필요 → 별도 로드된 게 없으면 이번 달 것만
+  const sec_=sec("📈 누적 수익률 추이",rows.length<2?"기록이 쌓이면 그려져요":`${rows.length}개 기록`);
+  if(rows.length<2){
+    sec_.append(h("div",{style:{textAlign:"center",padding:"24px 10px",color:C.faint}},
+      h("div",{style:{fontSize:"26px",marginBottom:"8px"}},"📉"),
+      h("div",{style:{fontSize:"13px",lineHeight:"1.6"}},"아직 기록이 적어요.",h("br"),"투자현황을 며칠 기록하면",h("br"),"수익률 그래프가 그려져요!")
+    ));
+    return sec_;
+  }
+  let period="전체";
+  const periods=[["1주",7],["1개월",30],["3개월",90],["6개월",180],["1년",365],["전체",99999]];
+  const toggle=h("div",{style:{display:"flex",gap:"5px",marginBottom:"12px",flexWrap:"wrap"}});
+  const canvasBox=h("div",{style:{position:"relative",height:"180px"}});
+  const cv=document.createElement("canvas");canvasBox.append(cv);
+  let chart=null;
+  const draw=()=>{
+    const days=periods.find(p=>p[0]===period)[1];
+    const cutoff=new Date();cutoff.setDate(cutoff.getDate()-days);
+    const cutStr=cutoff.toISOString().slice(0,10);
+    const data=rows.filter(r=>period==="전체"||r.snapshot_date>=cutStr);
+    const labels=data.map(r=>(r.snapshot_date||"").slice(5));
+    const vals=data.map(r=>Number(r.return_rate_krw)||0);
+    if(chart)chart.destroy();
+    if(!window.Chart)return;
+    const ctx=cv.getContext("2d");
+    const grad=ctx.createLinearGradient(0,0,0,180);
+    grad.addColorStop(0,"rgba(30,110,82,.22)");grad.addColorStop(1,"rgba(30,110,82,0)");
+    chart=new window.Chart(cv,{type:"line",data:{labels,datasets:[{data:vals,borderColor:C.brand,backgroundColor:grad,borderWidth:2,fill:true,tension:.35,pointRadius:data.length>30?0:3,pointBackgroundColor:C.brand}]},options:{plugins:{legend:{display:false},tooltip:{callbacks:{label:(c)=>` 수익률 ${c.parsed.y>=0?"+":""}${c.parsed.y}%`}}},scales:{y:{ticks:{callback:(v)=>v+"%",font:{size:10}},grid:{color:"#F0ECE3"}},x:{ticks:{font:{size:10},maxTicksLimit:6},grid:{display:false}}},animation:{duration:500}}});
+  };
+  const drawToggle=()=>{
+    toggle.innerHTML="";
+    periods.forEach(([lb])=>{
+      const on=period===lb;
+      toggle.append(h("button",{style:{fontSize:"11.5px",fontWeight:"700",padding:"6px 11px",borderRadius:"8px",border:`1px solid ${on?C.brand:C.line}`,background:on?C.soft:C.w,color:on?C.brand:C.sub,cursor:"pointer"},onclick:()=>{period=lb;drawToggle();draw();}},lb));
+    });
+  };
+  drawToggle();
+  sec_.append(toggle,canvasBox);
+  setTimeout(draw,50);
+  return sec_;
+}
   function buildDonut(latest){
   if(!latest||!latest.length)return null;
   const items=latest.map(x=>({name:x.name,val:Number(x.eval_value_krw)||0})).filter(x=>x.val>0).sort((a,b)=>b.val-a.val);
@@ -1896,7 +1939,8 @@ function buildInvest(){
     holdSec.append(refreshBtn,toggle,listWrap);
   }
   const donutSec=hold.length?buildDonut(hold.filter(x=>x.snapshot_date===hold[0].snapshot_date)):null;
-  return[hero,marketSec,donutSec,holdSec,hist,addBtn].filter(Boolean);
+  const trendSec=buildTrend();
+  return[hero,marketSec,trendSec,donutSec,holdSec,hist,addBtn].filter(Boolean);
 }
 // ── ADD SHEET ──
 function showAdd(preset){
