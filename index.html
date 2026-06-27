@@ -1735,7 +1735,9 @@ function stockIcon(name,ticker){
     return sec_;
   }
   let period="전체";
+  let curMode="KRW"; // KRW | USD
   const periods=[["1주",7],["1개월",30],["3개월",90],["6개월",180],["1년",365],["전체",99999]];
+  const curToggle=h("div",{style:{display:"flex",gap:"5px",marginBottom:"8px"}});
   const toggle=h("div",{style:{display:"flex",gap:"5px",marginBottom:"12px",flexWrap:"wrap"}});
   const canvasBox=h("div",{style:{position:"relative",height:"180px"}});
   const cv=document.createElement("canvas");canvasBox.append(cv);
@@ -1746,7 +1748,7 @@ function stockIcon(name,ticker){
     const cutStr=cutoff.toISOString().slice(0,10);
     const data=rows.filter(r=>period==="전체"||r.snapshot_date>=cutStr);
     const labels=data.map(r=>(r.snapshot_date||"").slice(5));
-    const vals=data.map(r=>Number(r.return_rate_krw)||0);
+    const vals=data.map(r=>Number(curMode==="USD"?r.return_rate_usd:r.return_rate_krw)||0);
     if(chart)chart.destroy();
     if(!window.Chart)return;
     const ctx=cv.getContext("2d");
@@ -1761,8 +1763,15 @@ function stockIcon(name,ticker){
       toggle.append(h("button",{style:{fontSize:"11.5px",fontWeight:"700",padding:"6px 11px",borderRadius:"8px",border:`1px solid ${on?C.brand:C.line}`,background:on?C.soft:C.w,color:on?C.brand:C.sub,cursor:"pointer"},onclick:()=>{period=lb;drawToggle();draw();}},lb));
     });
   };
-  drawToggle();
-  sec_.append(toggle,canvasBox);
+  const drawCurToggle=()=>{
+    curToggle.innerHTML="";
+    [["KRW","₩ 원화 수익률"],["USD","$ 달러 수익률"]].forEach(([m,lb])=>{
+      const on=curMode===m;
+      curToggle.append(h("button",{style:{flex:"1",fontSize:"12px",fontWeight:"700",padding:"7px",borderRadius:"8px",border:`1px solid ${on?C.brand:C.line}`,background:on?C.soft:C.w,color:on?C.brand:C.sub,cursor:"pointer"},onclick:()=>{curMode=m;drawCurToggle();draw();}},lb));
+    });
+  };
+  drawCurToggle();drawToggle();
+  sec_.append(curToggle,toggle,canvasBox);
   setTimeout(draw,50);
   return sec_;
 }
