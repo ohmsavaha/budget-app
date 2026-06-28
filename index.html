@@ -1122,6 +1122,15 @@ function buildCalendarView(){
     byDate[t.date].txns.push(t);
   }
 
+  // 고정비 납부 예정일 (월 주기 활성 고정비)
+  const fcByDay={};
+  (S.fixedCosts||[]).forEach(fc=>{
+    if(fc.is_active===false)return;
+    try{if(getFcFreq(fc)!=="월")return;}catch{}
+    const day=Number(fc.payment_day||fc.billing_day||0);
+    if(day>=1&&day<=31)(fcByDay[day]=fcByDay[day]||[]).push(fc);
+  });
+
   // 월간 요약
   const totalSpend=Object.values(byDate).reduce((s,d)=>s+d.spend,0);
   const totalIncome=Object.values(byDate).reduce((s,d)=>s+d.income,0);
@@ -1167,21 +1176,22 @@ function buildCalendarView(){
     const cell=h("div",{
       style:{
         padding:"3px 2px",borderRadius:"8px",textAlign:"center",
-        cursor:data?"pointer":"default",
+        cursor:(data||fcByDay[d])?"pointer":"default",
         background:isToday?C.brand:"transparent",
         minHeight:"55px",display:"flex",flexDirection:"column",
         alignItems:"center",justifyContent:"flex-start",gap:"2px"
       },
-      onclick:data?()=>showDayDetail(dateStr,data.txns):null
+      onclick:(data||fcByDay[d])?()=>showDayDetail(dateStr,data?data.txns:[],fcByDay[d]||[]):null
     },
       h("div",{style:{
         fontSize:"13px",fontWeight:isToday?"800":"500",lineHeight:"1.6",
         color:isToday?C.w:isSun?"#B23A5C":isSat?"#4169B1":C.ink
       }},d),
       data&&data.spend>0?h("div",{class:"num",style:{fontSize:"9px",color:isToday?"rgba(255,255,255,.85)":C.over,lineHeight:"1.2",fontWeight:"600"}},"-"+shortNum(data.spend)):"",
-      data&&data.income>0?h("div",{class:"num",style:{fontSize:"9px",color:isToday?"rgba(255,255,255,.85)":C.brand,lineHeight:"1.2",fontWeight:"600"}},"+"+shortNum(data.income)):""
+      data&&data.income>0?h("div",{class:"num",style:{fontSize:"9px",color:isToday?"rgba(255,255,255,.85)":C.brand,lineHeight:"1.2",fontWeight:"600"}},"+"+shortNum(data.income)):"",
+      fcByDay[d]?h("div",{style:{width:"5px",height:"5px",borderRadius:"50%",background:isToday?"rgba(255,255,255,.9)":"#9B7BD4",marginTop:"1px"}}):""
     );
-    if(!isToday&&data){
+    if(!isToday&&(data||fcByDay[d])){
       cell.addEventListener("mouseenter",e=>{e.currentTarget.style.background="#F0EDE5";});
       cell.addEventListener("mouseleave",e=>{e.currentTarget.style.background="transparent";});
     }
@@ -1193,14 +1203,15 @@ function buildCalendarView(){
   const legend=h("div",{style:{display:"flex",gap:"16px",justifyContent:"center",marginTop:"10px",fontSize:"11.5px",color:C.sub}},
     h("div",{style:{display:"flex",alignItems:"center",gap:"4px"}},h("span",{style:{color:C.over,fontWeight:"700"}},"-"),"지출"),
     h("div",{style:{display:"flex",alignItems:"center",gap:"4px"}},h("span",{style:{color:C.brand,fontWeight:"700"}},"+"),"수입"),
-    h("div",{style:{display:"flex",alignItems:"center",gap:"4px"}},h("span",{style:{background:C.brand,width:"10px",height:"10px",borderRadius:"50%",display:"inline-block"}}),"오늘")
+    h("div",{style:{display:"flex",alignItems:"center",gap:"4px"}},h("span",{style:{background:C.brand,width:"10px",height:"10px",borderRadius:"50%",display:"inline-block"}}),"오늘"),
+    h("div",{style:{display:"flex",alignItems:"center",gap:"4px"}},h("span",{style:{background:"#9B7BD4",width:"8px",height:"8px",borderRadius:"50%",display:"inline-block"}}),"고정비")
   );
 
   return reorderCards("calendar",[summary,cal,legend]);
 }
 
 // ── 하루 상세 시트 ──
-function showDayDetail(dateStr,txns){
+function showDayDetail(dateStr,txns,fcs){
   const ov=h("div",{style:{position:"fixed",inset:"0",background:"rgba(40,37,31,.42)",display:"flex",alignItems:"center",justifyContent:"center",padding:"16px",zIndex:"50"}});
   const sh=h("div",{style:{width:"100%",maxWidth:"520px",background:C.w,borderRadius:"20px",padding:"18px 20px 26px",maxHeight:"85vh",overflowY:"auto"}});
   const[,mo,d]=dateStr.split("-");
@@ -1221,6 +1232,17 @@ function showDayDetail(dateStr,txns){
     ),
     h("div",{style:{fontSize:"11.5px",color:C.faint,marginBottom:"10px",textAlign:"right"}},"탭하면 수정")
   );
+  if(fcs&&fcs.length){
+    const fcTotal=fcs.reduce((a,fc)=>a+Number(fc.amount||fc.expected_amount||0),0);
+    const fcBox=h("div",{style:{background:"#F4F0FB",border:"1px solid #C9B8E8",borderRadius:"12px",padding:"12px 14px",marginBottom:"12px"}},
+      h("div",{style:{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:"7px"}},
+        h("span",{style:{fontSize:"12px",fontWeight:"800",color:"#7A5BC0"}},"📌 이 날 빠지는 고정비"),
+        h("span",{class:"num",style:{fontSize:"12px",fontWeight:"800",color:"#7A5BC0"}},W(fcTotal))));
+    fcs.forEach(fc=>fcBox.append(h("div",{style:{display:"flex",justifyContent:"space-between",padding:"4px 0",fontSize:"12.5px"}},
+      h("span",{style:{color:C.ink}},fc.name),
+      h("span",{class:"num",style:{fontWeight:"700",color:C.ink}},W(Number(fc.amount||fc.expected_amount||0))))));
+    sh.append(fcBox);
+  }
 
   txns.sort((a,b)=>Number(b.amount)-Number(a.amount)).forEach(t=>{
     const c=CM[t.category]||CM["기타"],k=kindOf(t.type);
