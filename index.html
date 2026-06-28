@@ -226,6 +226,26 @@ async function fetchPrice(ticker){
 
 // ── 보유종목 localStorage ──
 const getHoldings=()=>{try{return JSON.parse(localStorage.getItem("portfolio_holdings")||"[]");}catch{return[];}};
+const getInvJournal=()=>{try{return JSON.parse(localStorage.getItem("invest_journal")||"[]");}catch{return[];}};
+const setInvJournal=(a)=>{try{localStorage.setItem("invest_journal",JSON.stringify(a));}catch{}};
+const INVEST_TIPS=[
+  "한 종목에 몰빵하지 말고 나눠 담으세요. 분산은 가장 싸고 확실한 위험 관리예요.",
+  "시간이 복리를 만듭니다. 짧게 보지 말고 길게 보세요.",
+  "쌀 때 두려워 말고, 비쌀 때 욕심내지 마세요.",
+  "내가 이해한 만큼만 투자하세요. 모르는 곳엔 담지 않는 게 원칙이에요.",
+  "시장은 예측보다 대응. 떨어질 때 팔지 말고 미리 정한 계획대로 움직이세요.",
+  "수수료·세금도 수익률입니다. 잦은 매매는 수익을 갉아먹어요.",
+  "현금도 하나의 포지션이에요. 살 기회를 위해 일부는 비워두세요.",
+  "물타기(평단 낮추기)는 신중히. 떨어지는 칼날을 함부로 잡지 마세요.",
+  "비상금 먼저, 투자는 그다음. 잃어도 되는 돈으로만 투자하세요.",
+  "매수·매도 이유를 메모해두면 흔들릴 때 기준이 돼요.",
+  "적립식(매달 일정액)이 타이밍 맞히기보다 강할 때가 많아요.",
+  "빚내서 하는 투자는 변동성을 키웁니다. 감당 가능한 선만 지키세요.",
+  "해외주식은 환율도 수익률의 일부예요. 환율 변동을 함께 보세요.",
+  "배당은 재투자할 때 복리가 커집니다.",
+  "폭락장은 바겐세일일 수 있어요. 공포에 휩쓸려 팔지 마세요.",
+  "목표 수익률과 손절선을 미리 정해두면 감정 매매를 줄일 수 있어요."
+];
 const saveHoldings=h=>{try{localStorage.setItem("portfolio_holdings",JSON.stringify(h));}catch{}};
 
 // ── API키 설정 모달 ──
@@ -534,7 +554,7 @@ async function downloadFullBackup(setStatus){
   const out={exported_at:new Date().toISOString(),version:"v28",app:"나의 가계부"};
   for(const tb of tables){try{const{data}=await sb.from(tb).select("*");out[tb]=data||[];}catch(e){out[tb]=[];}}
   const ls={};
-  ["spend_exclude","spend_fixed","cat_budgets","classify_rules","shared_cfg","excl_suggest_dismiss","taborder","nw_history","month_close"].forEach(k=>{try{const v=localStorage.getItem(k);if(v!=null)ls[k]=v;}catch{}});
+  ["spend_exclude","spend_fixed","cat_budgets","goal_pots","quick_favs","invest_journal","classify_rules","shared_cfg","excl_suggest_dismiss","taborder","nw_history","month_close"].forEach(k=>{try{const v=localStorage.getItem(k);if(v!=null)ls[k]=v;}catch{}});
   try{for(let i=0;i<localStorage.length;i++){const k=localStorage.key(i);if(k&&(k.startsWith("odraft:")||k.startsWith("savext:")||k.startsWith("cardstate:")))ls[k]=localStorage.getItem(k);}}catch{}
   out.local_settings=ls;
   try{out.rules=getUserRules();}catch{}
@@ -648,6 +668,8 @@ function showBudgetBreakdown(){
 }
 const getCatBudgets=()=>{try{return JSON.parse(localStorage.getItem("cat_budgets")||"{}");}catch{return{};}};
 const setCatBudget=(cat,amt)=>{try{const b=getCatBudgets();if(amt>0)b[cat]=amt;else delete b[cat];localStorage.setItem("cat_budgets",JSON.stringify(b));}catch{}};
+const getGoalPots=()=>{try{return JSON.parse(localStorage.getItem("goal_pots")||"[]");}catch{return[];}};
+const setGoalPots=(a)=>{try{localStorage.setItem("goal_pots",JSON.stringify(a));}catch{}};
 function homeReload(){const ct=document.getElementById("ct");if(ct&&S.tab==="home"){ct.innerHTML="";buildHome().forEach(n=>ct.append(n));}}
 
 // ① 예산 페이스
@@ -1486,6 +1508,26 @@ function buildYearly(){
   const container=h("div",{style:{display:"flex",flexDirection:"column",gap:"12px"}});
   const draw=()=>{
     container.innerHTML="";
+    // 🗓️ 올해 한눈에 (컬러풀 하이라이트)
+    {
+      const mSpend=Array(12).fill(0),mInc=Array(12).fill(0);
+      for(const t of (S.yearTxns||[])){const mm=parseInt(t.date.slice(5,7))-1;if(mm<0||mm>11)continue;const k=kindOf(t.type);if(k==="spend"&&t.account==="개인")mSpend[mm]+=Number(t.amount)||0;else if(k==="income")mInc[mm]+=Number(t.amount)||0;}
+      let maxS=-1,maxSi=-1,minS=Infinity,minSi=-1,maxI=-1,maxIi=-1;
+      for(let i=0;i<12;i++){if(mSpend[i]>maxS){maxS=mSpend[i];maxSi=i;}if(mSpend[i]>0&&i<=curM&&mSpend[i]<minS){minS=mSpend[i];minSi=i;}if(mInc[i]>maxI){maxI=mInc[i];maxIi=i;}}
+      const ys0=calcStatsFor(S.yearTxns||[]),yc0=getSharedCfg();const ySh0=Math.round(ys0.cNet*(yc0.ratio||50)/100);const ySp0=ys0.pNet+ySh0;
+      const hchip=(emo,txt,bg,col)=>h("div",{style:{display:"flex",alignItems:"center",gap:"5px",background:bg,borderRadius:"999px",padding:"6px 11px"}},h("span",{style:{fontSize:"13px"}},emo),h("span",{style:{fontSize:"11.5px",fontWeight:"700",color:col}},txt));
+      const chips=h("div",{style:{display:"flex",gap:"7px",flexWrap:"wrap",marginTop:"14px"}});
+      if(maxSi>=0&&maxS>0)chips.append(hchip("🔥",`최고 지출 ${maxSi+1}월`,"#FFF1EC",C.over));
+      if(minSi>=0&&minS<Infinity)chips.append(hchip("💚",`가장 아낀 ${minSi+1}월`,"#EAF7F0",C.brand));
+      if(maxIi>=0&&maxI>0)chips.append(hchip("💰",`최고 수입 ${maxIi+1}월`,"#FEF6E0","#B8860B"));
+      const catImg=["🐈","🐈‍⬛"][Math.floor(Math.random()*2)];
+      container.append(h("div",{style:{background:"linear-gradient(135deg,#F5F0E7 0%,#E8F2EC 100%)",border:`1px solid ${C.line}`,borderRadius:"18px",padding:"19px 19px 17px",position:"relative",overflow:"hidden"}},
+        h("div",{style:{fontSize:"13px",fontWeight:"800",color:C.sub}},`🗓️ ${yr}년 한눈에`),
+        h("div",{style:{fontSize:"13.5px",lineHeight:"1.75",marginTop:"9px",color:C.ink,maxWidth:"88%"}},ys0.income>0||ySp0>0?`지금까지 ${W(ys0.income)} 벌어서 ${W(ySp0)} 쓰고 ${W(ys0.save)} 모았어요 ${catImg}`:`${yr}년 기록을 쌓아가는 중이에요 ${catImg}`),
+        chips,
+        h("div",{style:{position:"absolute",right:"-6px",bottom:"-10px",fontSize:"60px",opacity:".10",transform:"rotate(-8deg)"}},"🗓️")
+      ));
+    }
     // 📊 연간 현금 흐름 (모드 무관, 항상 표시)
     {
       const ys=calcStatsFor(S.yearTxns||[]),ycfg=getSharedCfg();
@@ -3394,6 +3436,54 @@ function reorderTabs(barEl,btns){
   return btns;
 }
 
+function showGoalPotEdit(pot0){
+  const ov=h("div",{style:{position:"fixed",inset:"0",background:"rgba(40,37,31,.42)",display:"flex",alignItems:"center",justifyContent:"center",padding:"16px",zIndex:"60"}});
+  const sh=h("div",{style:{width:"100%",maxWidth:"520px",background:C.w,borderRadius:"20px",padding:"18px 20px 24px",maxHeight:"88vh",overflowY:"auto"}});
+  const EMO=["🎯","✈️","🏖️","🚗","🏠","💍","🎁","📱","💻","🎓","🐾","🎄","💰","🍼","🏥","🎮"];
+  let selEmo=(pot0&&pot0.emoji)||"🎯";
+  const nameEl=h("input",{type:"text",value:(pot0&&pot0.name)||"",placeholder:"예: 제주 여행",style:{width:"100%",border:`1px solid ${C.line}`,borderRadius:"10px",padding:"11px 12px",fontSize:"14px"}});
+  const tgtEl=h("input",{type:"number",inputmode:"numeric",value:(pot0&&pot0.target)||"",placeholder:"목표 금액 (원)",class:"num",style:{width:"100%",border:`1px solid ${C.line}`,borderRadius:"10px",padding:"11px 12px",fontSize:"14px"}});
+  const savEl=h("input",{type:"number",inputmode:"numeric",value:(pot0&&pot0.saved)||"",placeholder:"현재 모은 금액 (원)",class:"num",style:{width:"100%",border:`1px solid ${C.line}`,borderRadius:"10px",padding:"11px 12px",fontSize:"14px"}});
+  const emoWrap=h("div",{style:{display:"flex",flexWrap:"wrap",gap:"7px"}});
+  const drawEmo=()=>{emoWrap.innerHTML="";EMO.forEach(e=>{const on=selEmo===e;emoWrap.append(h("button",{style:{fontSize:"19px",width:"40px",height:"40px",borderRadius:"10px",border:`1px solid ${on?C.brand:C.line}`,background:on?C.soft:C.w,cursor:"pointer"},onclick:()=>{selEmo=e;drawEmo();}},e));});};
+  drawEmo();
+  const lbl=t=>h("div",{style:{fontSize:"13px",fontWeight:"800",color:C.sub,marginBottom:"6px",marginTop:"14px"}},t);
+  const sv=h("button",{style:{width:"100%",background:C.brand,color:C.w,fontSize:"15px",fontWeight:"700",padding:"14px",borderRadius:"13px",border:"none",cursor:"pointer",marginTop:"18px"}},"저장");
+  sv.onclick=()=>{const name=nameEl.value.trim();if(!name){alert("이름을 입력해주세요.");return;}const ps=getGoalPots();
+    if(pot0){const it=ps.find(x=>x.id===pot0.id);if(it){it.name=name;it.emoji=selEmo;it.target=Math.max(0,Number(tgtEl.value)||0);it.saved=Math.max(0,Number(savEl.value)||0);}}
+    else{ps.push({id:(crypto.randomUUID&&crypto.randomUUID())||("p"+Date.now()),name,emoji:selEmo,target:Math.max(0,Number(tgtEl.value)||0),saved:Math.max(0,Number(savEl.value)||0),created:td()});}
+    setGoalPots(ps);ov.remove();reloadAssets();};
+  sh.append(
+    h("div",{style:{display:"flex",justifyContent:"space-between",alignItems:"center"}},h("span",{style:{fontSize:"17px",fontWeight:"800"}},pot0?"목표 저금통 수정":"목표 저금통 추가"),h("button",{style:{fontSize:"20px",color:C.sub},onclick:()=>ov.remove()},"✕")),
+    lbl("아이콘"),emoWrap,lbl("이름"),nameEl,lbl("목표 금액 (선택)"),tgtEl,lbl("현재 모은 금액"),savEl,sv
+  );
+  if(pot0)sh.append(h("button",{style:{width:"100%",marginTop:"10px",fontSize:"13px",color:C.over,fontWeight:"700",padding:"11px",border:`1px solid ${C.over}`,borderRadius:"11px",background:C.w,cursor:"pointer"},onclick:()=>{if(!confirm("이 저금통을 삭제할까요?"))return;setGoalPots(getGoalPots().filter(x=>x.id!==pot0.id));ov.remove();reloadAssets();}},"🗑️ 이 저금통 삭제"));
+  ov.append(sh);document.body.append(ov);
+}
+function reloadInvest(){const ct=document.getElementById("ct");if(ct){ct.innerHTML="";buildInvest().forEach(n=>ct.append(n));}}
+function buildInvestTip(){
+  const idx=(Math.floor(Date.now()/86400000)+(S.tipOffset||0))%INVEST_TIPS.length;
+  const tip=INVEST_TIPS[(idx+INVEST_TIPS.length)%INVEST_TIPS.length];
+  const s=sec("💡 오늘의 투자 원칙",h("button",{style:{fontSize:"11.5px",color:C.brand,fontWeight:"700",background:"transparent",border:"none",cursor:"pointer"},onclick:()=>{S.tipOffset=(S.tipOffset||0)+1;reloadInvest();}},"다른 원칙 ↻"));
+  s.append(h("div",{style:{background:"#EEF6F1",border:`1px solid ${C.brand}`,borderRadius:"13px",padding:"15px 16px"}},
+    h("div",{style:{fontSize:"14px",fontWeight:"600",lineHeight:"1.6",color:C.ink}},tip),
+    h("div",{style:{fontSize:"10.5px",color:C.faint,marginTop:"9px",lineHeight:"1.5"}},"참고용 원칙이에요. 투자 결정은 본인 책임이며, 저는 재무상담사가 아니에요.")));
+  return s;
+}
+function buildInvestJournal(){
+  const jr=getInvJournal();
+  const addBtn=h("button",{style:{fontSize:"11.5px",color:C.brand,fontWeight:"700",background:"transparent",border:"none",cursor:"pointer"},onclick:()=>{const v=prompt("투자 메모를 남겨보세요.\n예: 엔비디아 추가매수 — AI 수요 지속 판단, 6개월 보유 계획");if(v===null)return;const t=v.trim();if(!t)return;const a=getInvJournal();a.unshift({id:(crypto.randomUUID&&crypto.randomUUID())||("j"+Date.now()),date:td(),text:t});setInvJournal(a);reloadInvest();}},"＋ 메모");
+  const s=sec("📝 투자 일지",addBtn);
+  if(!jr.length){s.append(empty("매수·매도 이유나 시장에 대한 생각을 기록해보세요.\n나중에 복기할 때 큰 도움이 돼요."));return s;}
+  jr.slice(0,30).forEach(j=>{
+    s.append(h("div",{style:{padding:"11px 2px",borderBottom:`1px solid ${C.line}`,display:"flex",gap:"10px",alignItems:"flex-start"}},
+      h("div",{style:{flex:"1",minWidth:"0"}},
+        h("div",{style:{fontSize:"10.5px",color:C.faint,fontWeight:"600",marginBottom:"3px"}},j.date),
+        h("div",{style:{fontSize:"13px",lineHeight:"1.6",color:C.ink,whiteSpace:"pre-wrap",wordBreak:"break-word"}},j.text)),
+      h("button",{style:{fontSize:"12px",color:C.faint,background:"transparent",border:"none",cursor:"pointer",flexShrink:"0",padding:"2px 4px"},onclick:()=>{if(!confirm("이 메모를 삭제할까요?"))return;setInvJournal(getInvJournal().filter(x=>x.id!==j.id));reloadInvest();}},"✕")));
+  });
+  return s;
+}
 function buildInvest(){
   const rows=S.invRows,lt=rows[0];
 
@@ -3566,7 +3656,7 @@ function buildInvest(){
   const sectorSec=hold.length?buildSectorDonut(latestForDonut):null;
   const calSec=buildReturnCalendar();
   const trendSec=buildTrend();
-  return reorderCards("invest",[hero,marketSec,trendSec,calSec,donutSec,sectorSec,holdSec,hist,addBtn]);
+  return reorderCards("invest",[hero,buildInvestTip(),marketSec,trendSec,calSec,donutSec,sectorSec,holdSec,buildInvestJournal(),hist,addBtn]);
 }
 // ── ADD SHEET ──
 function showAdd(preset){
