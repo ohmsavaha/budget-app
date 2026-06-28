@@ -616,6 +616,120 @@ function showBudgetBreakdown(){
   };
   render();ov.append(sh);document.body.append(ov);
 }
+const getCatBudgets=()=>{try{return JSON.parse(localStorage.getItem("cat_budgets")||"{}");}catch{return{};}};
+const setCatBudget=(cat,amt)=>{try{const b=getCatBudgets();if(amt>0)b[cat]=amt;else delete b[cat];localStorage.setItem("cat_budgets",JSON.stringify(b));}catch{}};
+function homeReload(){const ct=document.getElementById("ct");if(ct&&S.tab==="home"){ct.innerHTML="";buildHome().forEach(n=>ct.append(n));}}
+
+// ① 예산 페이스
+function buildPaceCard(){
+  if(S.curYm!==ym(td())||!(S.budget>0))return null;
+  const st=calcStatsFor(S.txns);
+  const now=new Date(),dom=now.getDate(),dim=new Date(now.getFullYear(),now.getMonth()+1,0).getDate();
+  if(dom<1)return null;
+  const proj=Math.round(st.pNet/dom*dim),projPct=Math.round(proj/S.budget*100),over=proj>S.budget;
+  const left=Math.max(1,dim-dom),col=over?C.over:projPct>=85?C.warn:C.brand;
+  return h("div",{style:{background:C.w,border:`1px solid ${C.line}`,borderRadius:"16px",padding:"15px 17px",marginTop:"12px"}},
+    h("div",{style:{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:"9px"}},
+      h("div",{style:{fontSize:"12.5px",fontWeight:"700",color:C.sub}},`📊 예산 페이스 · ${dom}일차`),
+      h("div",{style:{fontSize:"11px",color:C.faint}},`하루 평균 ${W(Math.round(st.pNet/dom))}`)),
+    h("div",{style:{display:"flex",alignItems:"baseline",gap:"7px",flexWrap:"wrap"}},
+      h("span",{style:{fontSize:"12px",color:C.sub}},"이 속도면 월말"),
+      h("span",{class:"num",style:{fontSize:"22px",fontWeight:"800",color:col}},W(proj)),
+      h("span",{style:{fontSize:"12.5px",fontWeight:"700",color:col}},`예산의 ${projPct}%`)),
+    h("div",{style:{height:"8px",borderRadius:"999px",background:"#F0ECE3",overflow:"hidden",marginTop:"10px"}},
+      h("div",{style:{width:`${Math.min(100,projPct)}%`,height:"100%",background:col,borderRadius:"999px"}})),
+    h("div",{style:{fontSize:"11.5px",color:over?C.over:C.sub,marginTop:"8px",lineHeight:"1.5"}},
+      over?`이대로면 예산을 ${W(proj-S.budget)} 넘을 것 같아요. 남은 ${left}일 동안 하루 ${W(Math.max(0,Math.round((S.budget-st.pNet)/left)))} 이하로 쓰면 맞출 수 있어요.`:`좋아요 👍 남은 ${left}일 동안 하루 ${W(Math.round((S.budget-st.pNet)/left))}까지 여유가 있어요.`)
+  );
+}
+
+// ② 소비 아닌 것 같은 거래 자동 감지
+function buildExcludeSuggest(){
+  const pat=/이자|충전|송금|이체|atm|출금|상환|보증금|예치|카드대금|환전|인출/i;
+  const cand=(S.txns||[]).filter(t=>kindOf(t.type)==="spend"&&!isExcludedSpend(t)&&pat.test((t.merchant||"")+" "+(t.category||"")));
+  if(!cand.length)return null;
+  const byKw={};
+  cand.forEach(t=>{const k=(t.merchant||t.category||"").trim();if(!k)return;const g=byKw[k]||(byKw[k]={sum:0,cnt:0});g.sum+=Number(t.amount)||0;g.cnt++;});
+  const rows=Object.entries(byKw).sort((a,b)=>b[1].sum-a[1].sum).slice(0,6);
+  if(!rows.length)return null;
+  const card=h("div",{style:{background:"#FFFBEE",border:`1px solid ${C.warn}`,borderRadius:"16px",padding:"15px 17px",marginTop:"12px"}},
+    h("div",{style:{fontSize:"13px",fontWeight:"800",color:C.warn,marginBottom:"4px"}},"🔁 소비가 아닌 것 같은 거래"),
+    h("div",{style:{fontSize:"11.5px",color:C.sub,marginBottom:"6px",lineHeight:"1.6"}},"계좌충전·이체·대출이자처럼 보이는 거래예요. 제외하면 예산·순소비에서 빠지고, 앞으로도 자동 제외돼요."));
+  rows.forEach(([kw,d])=>{
+    card.append(h("div",{style:{display:"flex",alignItems:"center",gap:"9px",padding:"8px 0",borderTop:"1px solid #EFE7CF"}},
+      h("div",{style:{flex:"1",minWidth:"0"}},h("div",{style:{fontSize:"12.5px",fontWeight:"600",whiteSpace:"nowrap",overflow:"hidden",textOverflow:"ellipsis"}},kw),
+        h("div",{style:{fontSize:"10.5px",color:C.faint}},`${d.cnt}건 · ${W(d.sum)}`)),
+      h("button",{style:{fontSize:"11.5px",fontWeight:"700",color:C.w,background:C.warn,border:"none",borderRadius:"7px",padding:"6px 10px",cursor:"pointer",flexShrink:"0"},onclick:async()=>{addSpendExclude(kw);await loadMonth();homeReload();}},"🚫 제외")));
+  });
+  return card;
+}
+
+// ③ 이번 달 요약
+function buildMonthSummary(){
+  const st=calcStatsFor(S.txns),prev=calcStatsFor(S.prevTxns),cfg=getSharedCfg();
+  const myShared=Math.round(st.cNet*(cfg.ratio||50)/100),totalSpend=st.pNet+myShared;
+  const prevSpend=prev.pNet+Math.round(prev.cNet*(cfg.ratio||50)/100);
+  const net=st.income-totalSpend-st.save;
+  const delta=(c,p)=>{if(!p)return"";const d=c-p,pct=Math.round(Math.abs(d)/p*100);if(pct<1)return"";return`${d>0?"▲":"▼"}${pct}%`;};
+  const cell=(lbl,v,col,dl)=>h("div",{style:{background:C.soft,borderRadius:"12px",padding:"12px 13px"}},
+    h("div",{style:{fontSize:"11px",color:C.sub,marginBottom:"5px"}},lbl),
+    h("div",{class:"num",style:{fontSize:"17px",fontWeight:"800",color:col||C.ink}},v),
+    dl?h("div",{style:{fontSize:"10px",marginTop:"3px",color:C.faint}},`전월 ${dl}`):"");
+  const s=sec(`📅 ${Number(S.curYm.slice(5,7))}월 요약`);
+  s.append(h("div",{style:{display:"grid",gridTemplateColumns:"1fr 1fr",gap:"9px"}},
+    cell("수입",W(st.income),C.brand,delta(st.income,prev.income)),
+    cell("총지출",W(totalSpend),C.ink,delta(totalSpend,prevSpend)),
+    cell("저축·투자",W(st.save),C.ink,delta(st.save,prev.save)),
+    cell(net>=0?"순잉여":"순적자",W(Math.abs(net)),net>=0?C.brand:C.over,"")));
+  return s;
+}
+
+// ④ 이번 달 카드별 사용액
+function buildCardSpend(){
+  const sp=(S.txns||[]).filter(t=>kindOf(t.type)==="spend"&&!isExcludedSpend(t));
+  const byCard={};
+  sp.forEach(t=>{const pm=t.payment_method||"";if(!/카드|페이|국민|삼성|현대|롯데|신한|우리|하나|비씨|bc|kb|토스|카카오/i.test(pm))return;byCard[pm]=(byCard[pm]||0)+(Number(t.amount)||0);});
+  const rows=Object.entries(byCard).sort((a,b)=>b[1]-a[1]);
+  if(!rows.length)return null;
+  const tot=rows.reduce((x,[,v])=>x+v,0);
+  const s=sec("💳 이번 달 카드별 사용액",`${rows.length}개`);
+  rows.forEach(([pm,v])=>{
+    s.append(h("div",{style:{display:"flex",justifyContent:"space-between",alignItems:"center",padding:"9px 2px",borderBottom:`1px solid ${C.line}`}},
+      h("div",{style:{display:"flex",alignItems:"center",gap:"9px",minWidth:"0"}},h("span",{style:{fontSize:"15px"}},"💳"),h("span",{style:{fontSize:"13px",fontWeight:"600",whiteSpace:"nowrap",overflow:"hidden",textOverflow:"ellipsis"}},pm)),
+      h("div",{class:"num",style:{fontSize:"13.5px",fontWeight:"700"}},W(v))));
+  });
+  s.append(h("div",{style:{display:"flex",justifyContent:"space-between",padding:"10px 2px 2px",fontSize:"13px",fontWeight:"800"}},h("span",{style:{color:C.sub}},"합계"),h("span",{class:"num",style:{color:C.brand}},W(tot))));
+  s.append(h("div",{style:{fontSize:"10.5px",color:C.faint,marginTop:"7px",lineHeight:"1.6"}},"이번 달 카드로 결제한 금액이에요. 실제 청구일·청구액은 카드사마다 달라요."));
+  return s;
+}
+
+// ⑤ 카테고리별 미니 예산
+function buildCatBudgets(){
+  const budgets=getCatBudgets();
+  const cagg={};for(const t of (S.txns||[]))if(kindOf(t.type)==="spend"&&t.account==="개인"&&!isExcludedSpend(t))cagg[t.category]=(cagg[t.category]||0)+(Number(t.amount)||0);
+  const addBtn=h("button",{style:{fontSize:"11.5px",color:C.brand,fontWeight:"700",cursor:"pointer",background:"transparent",border:"none"},onclick:()=>{
+    const cat=prompt("카테고리 이름 (예: 외식, 쇼핑, 카페)");if(!cat)return;
+    const v=prompt(`'${cat.trim()}' 월 한도 (원):`,"");if(v===null)return;
+    setCatBudget(cat.trim(),Math.max(0,Number(v)||0));homeReload();
+  }},"＋ 추가");
+  const keys=Object.keys(budgets);
+  const s=sec("🎯 카테고리 예산",addBtn);
+  if(!keys.length){s.append(empty("외식·쇼핑처럼 카테고리별 한도를 정해 관리해보세요.\n＋ 추가로 시작하세요."));return s;}
+  keys.sort((a,b)=>budgets[b]-budgets[a]).forEach(cat=>{
+    const lim=budgets[cat],spent=cagg[cat]||0,pct=lim>0?Math.round(spent/lim*100):0,over=spent>lim,cm=CM[cat]||CM["기타"];
+    s.append(h("div",{style:{padding:"10px 2px",borderBottom:`1px solid ${C.line}`}},
+      h("div",{style:{display:"flex",alignItems:"center",gap:"9px",marginBottom:"7px"}},
+        h("span",{style:{fontSize:"15px"}},cm.i),
+        h("div",{style:{flex:"1",fontSize:"13px",fontWeight:"600"}},cat),
+        h("div",{class:"num",style:{fontSize:"12px",fontWeight:"700",color:over?C.over:C.ink}},`${W(spent)} / ${W(lim)}`),
+        h("button",{style:{fontSize:"12px",color:C.faint,background:"transparent",border:"none",cursor:"pointer",padding:"2px 4px"},onclick:()=>{const v=prompt(`'${cat}' 월 한도 수정 (0=삭제):`,lim);if(v===null)return;setCatBudget(cat,Math.max(0,Number(v)||0));homeReload();}},"✎")),
+      h("div",{style:{height:"7px",borderRadius:"999px",background:"#F0ECE3",overflow:"hidden"}},h("div",{style:{width:`${Math.min(100,pct)}%`,height:"100%",background:over?C.over:pct>=85?C.warn:C.brand,borderRadius:"999px"}})),
+      over?h("div",{style:{fontSize:"10.5px",color:C.over,marginTop:"5px"}},`한도 ${W(spent-lim)} 초과`):h("div",{style:{fontSize:"10.5px",color:C.faint,marginTop:"5px"}},`${pct}% · ${W(lim-spent)} 남음`)
+    ));
+  });
+  return s;
+}
+
 function buildHome(){
   const st=calcStatsFor(S.txns);
   const prevSt=calcStatsFor(S.prevTxns);
@@ -706,7 +820,8 @@ function buildHome(){
   const billSec=buildNextMonthBill();
   const sharedSec=buildSharedSection(st,cfg);
   const insightSec=buildInsight(st,prevSt);
-  return reorderCards("home",[hero,chips,insightSec,sharedSec,compSec,billSec,catSec,recSec]);
+  const homeCards=[hero,chips,buildPaceCard(),buildExcludeSuggest(),buildMonthSummary(),insightSec,sharedSec,compSec,billSec,buildCardSpend(),buildCatBudgets(),catSec,recSec].filter(Boolean);
+  return reorderCards("home",homeCards);
 }
 
 
