@@ -3610,18 +3610,49 @@ function showAdd(preset){
   const dlist=h("datalist",{id:"merOptions_add"});
   _allMerch.slice(0,500).forEach(m=>dlist.append(h("option",{value:m})));
   mer.setAttribute("list","merOptions_add");
+  const addAmt=(v)=>{amt.value=String((Number(amt.value)||0)+v);amt.dispatchEvent(new Event("input"));};
+  const amtQuick=h("div",{style:{display:"flex",flexWrap:"wrap",gap:"6px",marginTop:"8px"}},
+    ...[["+1천",1000],["+5천",5000],["+1만",10000],["+5만",50000],["+10만",100000]].map(([lb,v])=>h("button",{style:{fontSize:"12px",fontWeight:"700",padding:"6px 11px",borderRadius:"999px",border:`1px solid ${C.line}`,background:C.soft,color:C.ink,cursor:"pointer"},onclick:()=>addAmt(v)},lb)),
+    h("button",{style:{fontSize:"12px",fontWeight:"700",padding:"6px 11px",borderRadius:"999px",border:`1px solid ${C.line}`,background:C.w,color:C.sub,cursor:"pointer"},onclick:()=>{amt.value="";amt.focus();}},"지우기"));
+  const getQuickFavs=()=>{try{return JSON.parse(localStorage.getItem("quick_favs")||"[]");}catch{return[];}};
+  const setQuickFavs=(a)=>{try{localStorage.setItem("quick_favs",JSON.stringify(a));}catch{}};
+  const pinRow=h("div",{});
+  const drawPins=()=>{
+    pinRow.innerHTML="";
+    const fp=getQuickFavs();
+    if(!fp.length){pinRow.style.marginBottom="0";return;}
+    pinRow.style.marginBottom="14px";
+    pinRow.append(h("div",{style:{fontSize:"12px",fontWeight:"700",color:C.sub,marginBottom:"7px"}},"⭐ 즐겨찾기 · 탭하면 한 번에 채워져요"));
+    const chips=h("div",{style:{display:"flex",flexWrap:"wrap",gap:"7px"}});
+    fp.forEach((f,idx)=>{
+      const label=h("span",{style:{cursor:"pointer"},onclick:()=>{if(f.merchant)mer.value=f.merchant;if(f.cat)selCat=f.cat;if(f.acc)selAcc=f.acc;if(f.pay&&payList().includes(f.pay))selPay=f.pay;if(f.amount)amt.value=String(f.amount);if(f.type){typ.value=f.type;if(typ.onchange)typ.onchange();}drawCats();drawAcc();drawPay();autoHint.style.display="none";}},(f.name||f.merchant||"즐겨찾기")+(f.amount?` · ${shortNum(f.amount)}`:""));
+      const del=h("span",{style:{cursor:"pointer",color:C.faint,fontSize:"11px"},onclick:()=>{const a=getQuickFavs();a.splice(idx,1);setQuickFavs(a);drawPins();}},"✕");
+      chips.append(h("div",{style:{display:"flex",alignItems:"center",gap:"8px",fontSize:"12.5px",fontWeight:"600",padding:"7px 12px",borderRadius:"999px",border:`1px solid ${C.brand}`,background:C.soft,color:C.brand}},label,del));
+    });
+    pinRow.append(chips);
+  };
+  drawPins();
+  const pinSaveBtn=h("button",{style:{width:"100%",marginTop:"8px",fontSize:"13px",fontWeight:"700",padding:"11px",borderRadius:"11px",border:`1px solid ${C.line}`,background:C.w,color:C.sub,cursor:"pointer"},onclick:()=>{
+    const m=mer.value.trim();
+    if(!m){alert("사용처를 입력하면 즐겨찾기로 저장할 수 있어요.");return;}
+    const a=getQuickFavs();
+    if(a.some(x=>x.merchant===m&&(x.amount||0)===(Number(amt.value)||0))){alert("이미 즐겨찾기에 있어요.");return;}
+    a.unshift({name:m,merchant:m,cat:selCat,acc:selAcc,pay:selPay,amount:Number(amt.value)||0,type:typ.value});
+    setQuickFavs(a.slice(0,12));drawPins();
+    pinSaveBtn.textContent="⭐ 즐겨찾기에 저장됨!";setTimeout(()=>{pinSaveBtn.textContent="📌 현재 입력을 즐겨찾기로 저장";},1300);
+  }},"📌 현재 입력을 즐겨찾기로 저장");
   const lbl=t=>h("div",{style:{fontSize:"13px",fontWeight:"800",color:C.sub,marginBottom:"6px"}},t);
   sh.append(
     h("div",{style:{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:"16px"}},h("span",{style:{fontSize:"17px",fontWeight:"800"}},"빠른 입력"),h("button",{style:{fontSize:"20px",color:C.sub},onclick:()=>ov.remove()},"✕")),
-    favRow,dlist,
-    h("div",{style:{marginBottom:"14px"}},lbl("금액"),h("div",{style:{display:"flex",alignItems:"center",border:`1px solid ${C.line}`,borderRadius:"12px",padding:"10px 14px"}},h("span",{style:{fontSize:"22px",fontWeight:"700",color:C.faint,marginRight:"6px"}},"₩"),amt)),
+    pinRow,favRow,dlist,
+    h("div",{style:{marginBottom:"14px"}},lbl("금액"),h("div",{style:{display:"flex",alignItems:"center",border:`1px solid ${C.line}`,borderRadius:"12px",padding:"10px 14px"}},h("span",{style:{fontSize:"22px",fontWeight:"700",color:C.faint,marginRight:"6px"}},"₩"),amt),amtQuick),
     lbl("계정"),h("div",{style:{marginBottom:"13px"}},accRow),
     lbl("결제수단"),h("div",{style:{marginBottom:"13px"}},payWrap),
     lbl("유형"),h("div",{style:{marginBottom:"13px"}},typ,mSel,mHint),
     lbl("대분류"),h("div",{style:{marginBottom:"13px"}},catWrap),
     h("div",{style:{marginBottom:"13px"}},dutchToggle,dutchBox),
     h("div",{style:{display:"grid",gridTemplateColumns:"1fr 1fr",gap:"10px"}},h("div",{},lbl("사용처 (선택)"),mer,autoHint),h("div",{},lbl("날짜"),dt)),
-    h("div",{style:{marginTop:"13px"}},lbl("메모 (선택)"),mo),sv
+    h("div",{style:{marginTop:"13px"}},lbl("메모 (선택)"),mo),sv,pinSaveBtn
   );
   ov.append(sh);document.body.append(ov);amt.focus();
 }
