@@ -104,6 +104,10 @@ const BUILTIN_RULES={"백다방": {"category": "카페/간식", "account": "개�
 const getUserRules=()=>{try{return JSON.parse(localStorage.getItem("classify_rules")||"{}");}catch{return{};}};
 const saveUserRule=(kw,cat,acc)=>{try{const r=getUserRules();r[kw]={category:cat,account:acc};localStorage.setItem("classify_rules",JSON.stringify(r));}catch{}};
 const allRules=()=>({...BUILTIN_RULES,...getUserRules()});
+const getSpendExclude=()=>{try{return JSON.parse(localStorage.getItem("spend_exclude")||"[]");}catch{return[];}};
+const addSpendExclude=(kw)=>{try{const a=getSpendExclude();const k=(kw||"").trim();if(k&&!a.includes(k)){a.push(k);localStorage.setItem("spend_exclude",JSON.stringify(a));}}catch{}};
+const removeSpendExclude=(kw)=>{try{localStorage.setItem("spend_exclude",JSON.stringify(getSpendExclude().filter(x=>x!==kw)));}catch{}};
+const isExcludedSpend=(t)=>{const ex=getSpendExclude();if(!ex.length)return false;const m=((t.merchant||"")+" "+(t.category||"")).toLowerCase();return ex.some(kw=>kw&&m.includes(kw.toLowerCase()));};
 
 // 가맹점명으로 카테고리 자동 추론
 function autoClassify(merchant){
@@ -512,6 +516,7 @@ function renderDash(){
 function calcStatsFor(txns){
   let pS=0,pR=0,cS=0,cR=0,inc=0,sav=0;
   for(const t of txns){
+    if(isExcludedSpend(t))continue;
     const k=kindOf(t.type),a=Number(t.amount)||0;
     // 공용 우선: account가 공용이거나, 공용통장/공용카드로 결제했으면 공용으로 집계
     const isShared=t.account==="공용"||t.payment_method==="공용통장"||t.payment_method==="공용카드"||t.payment_method==="공용통장 자동출금"||t.payment_method==="공용통장 지로출금";
@@ -531,7 +536,7 @@ function showBudgetBreakdown(){
   const hd=(t,sub)=>h("div",{style:{fontSize:"11.5px",fontWeight:"800",color:C.faint,marginTop:"18px",marginBottom:"8px",letterSpacing:".02em"}},t+(sub?`  ·  ${sub}`:""));
   const render=()=>{
     sh.innerHTML="";
-    const psp=(S.txns||[]).filter(t=>kindOf(t.type)==="spend"&&!isSharedTx(t));
+    const psp=(S.txns||[]).filter(t=>kindOf(t.type)==="spend"&&!isSharedTx(t)&&!isExcludedSpend(t));
     const total=psp.reduce((s,t)=>s+(Number(t.amount)||0),0);
     const pct=S.budget>0?Math.round(total/S.budget*100):0;
     const over=S.budget>0&&total>S.budget;
@@ -585,17 +590,28 @@ function showBudgetBreakdown(){
       sh.append(hd("🔎 큰 거래 점검","탭하면 수정·삭제"));
       sh.append(h("div",{style:{fontSize:"11px",color:C.sub,marginBottom:"6px",lineHeight:"1.6"}},"혹시 카드대금이나 이체가 '소비'로 잘못 입력된 게 있나 확인하세요. (카드값은 소비가 아니라 카드대금 유형이어야 해요)"));
       big.forEach(t=>{
-        sh.append(h("div",{style:{display:"flex",alignItems:"center",gap:"10px",padding:"9px 2px",borderBottom:`1px solid ${C.line}`,cursor:"pointer"},onclick:()=>{ov.remove();showEditTxn(t,async()=>{await loadMonth();refreshHome();});}},
-          h("span",{style:{fontSize:"15px",flexShrink:"0"}},(CM[t.category]||CM["기타"]).i),
-          h("div",{style:{flex:"1",minWidth:"0"}},h("div",{style:{fontSize:"12.5px",fontWeight:"600",whiteSpace:"nowrap",overflow:"hidden",textOverflow:"ellipsis"}},t.merchant||t.category||t.type),
-            h("div",{style:{fontSize:"10.5px",color:C.faint,marginTop:"1px"}},`${t.date||""} · ${t.type} · ${t.payment_method||""}`)),
+        const exKw=(t.merchant||t.category||"").trim();
+        sh.append(h("div",{style:{display:"flex",alignItems:"center",gap:"9px",padding:"9px 2px",borderBottom:`1px solid ${C.line}`}},
+          h("div",{style:{display:"flex",alignItems:"center",gap:"10px",flex:"1",minWidth:"0",cursor:"pointer"},onclick:()=>{ov.remove();showEditTxn(t,async()=>{await loadMonth();refreshHome();});}},
+            h("span",{style:{fontSize:"15px",flexShrink:"0"}},(CM[t.category]||CM["기타"]).i),
+            h("div",{style:{flex:"1",minWidth:"0"}},h("div",{style:{fontSize:"12.5px",fontWeight:"600",whiteSpace:"nowrap",overflow:"hidden",textOverflow:"ellipsis"}},t.merchant||t.category||t.type),
+              h("div",{style:{fontSize:"10.5px",color:C.faint,marginTop:"1px"}},`${t.date||""} · ${t.type} · ${t.payment_method||""}`))),
           h("div",{class:"num",style:{fontSize:"13px",fontWeight:"700",flexShrink:"0"}},W(t.amount)),
-          h("span",{style:{fontSize:"12px",color:C.faint,flexShrink:"0"}},"›")));
+          exKw?h("button",{title:"앞으로 소비에서 제외",style:{fontSize:"11px",fontWeight:"700",color:C.sub,background:"transparent",border:`1px solid ${C.line}`,borderRadius:"7px",padding:"5px 7px",cursor:"pointer",flexShrink:"0"},onclick:async()=>{if(!confirm(`'${exKw}'(이)가 들어간 거래를 앞으로 '소비'에서 제외할까요?\n계좌충전·이체·대출이자처럼 실제 소비가 아닌 거래에 쓰세요.`))return;addSpendExclude(exKw);await loadMonth();render();refreshHome();}},"🚫"):""));
       });
     }
     // 점검 노트
     const noAcc=psp.filter(t=>!t.account);
     if(noAcc.length)sh.append(h("div",{style:{fontSize:"11.5px",color:C.warn,marginTop:"16px",background:"#FFFBEE",borderRadius:"10px",padding:"10px 12px",lineHeight:"1.6"}},`📌 계정(개인/공용)이 비어있는 거래가 ${noAcc.length}건 있어요. 이런 거래는 개인 소비로 잡혀요. 위 '큰 거래 점검'이나 거래 목록에서 계정을 지정하면 정확해져요.`));
+    const exList=getSpendExclude();
+    if(exList.length){
+      sh.append(hd("🚫 소비에서 제외 중","이 키워드가 들어간 거래는 소비·예산에서 자동으로 빠져요"));
+      exList.forEach(kw=>{
+        sh.append(h("div",{style:{display:"flex",alignItems:"center",justifyContent:"space-between",padding:"8px 2px",borderBottom:`1px solid ${C.line}`}},
+          h("span",{style:{fontSize:"12.5px",fontWeight:"600"}},"🚫 "+kw),
+          h("button",{style:{fontSize:"11.5px",color:C.brand,fontWeight:"700",background:"transparent",border:`1px solid ${C.line}`,borderRadius:"7px",padding:"5px 9px",cursor:"pointer"},onclick:async()=>{removeSpendExclude(kw);await loadMonth();render();refreshHome();}},"되돌리기")));
+      });
+    }
     sh.append(h("button",{style:{width:"100%",marginTop:"22px",padding:"13px",borderRadius:"12px",border:"none",background:C.ink,color:C.w,fontSize:"14px",fontWeight:"700",cursor:"pointer"},onclick:()=>ov.remove()},"닫기"));
   };
   render();ov.append(sh);document.body.append(ov);
