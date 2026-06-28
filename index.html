@@ -4176,6 +4176,31 @@ const LOAN_ICON={"신용대출":"💳","주택담보":"🏠","전세자금":"�
 const loanMeta=l=>{let m=l&&l.meta;if(typeof m==="string"){try{m=JSON.parse(m);}catch{m=null;}}return m&&typeof m==="object"?m:{};};
 const loanBal=l=>{const m=loanMeta(l);return m.balance!=null?Number(m.balance)||0:Number(l.principal)||0;};
 const loanKind=l=>loanMeta(l).kind||"신용대출";
+const getOD=(id)=>{try{return JSON.parse(localStorage.getItem("odraft:"+id)||"null");}catch{return null;}};
+const setOD=(id,o)=>{try{if(o&&o.on)localStorage.setItem("odraft:"+id,JSON.stringify(o));else localStorage.removeItem("odraft:"+id);}catch{}};
+const accUsed=(a)=>{const b=Number(a.balance)||0;return b<0?-b:0;};
+const accMonthlyInterest=(a)=>{const od=getOD(a.id);if(!od||!od.on)return 0;return accUsed(a)*(Number(od.rate)||0)/100/12;};
+function repayCalc(getBal,getRate,watch){
+  const wrap=h("div",{style:{background:C.soft,borderRadius:"12px",padding:"13px 15px",marginTop:"10px"}});
+  let months=12;
+  const btns=h("div",{style:{display:"flex",gap:"6px",flexWrap:"wrap"}});
+  const out=h("div",{style:{marginTop:"10px"}});
+  const periods=[["6개월",6],["1년",12],["2년",24],["3년",36],["5년",60]];
+  const calc=()=>{
+    const bal=Math.max(0,getBal()),rate=getRate()||0;
+    const avgInt=bal*(rate/100)*(months/12)/2,monthly=months>0?Math.round((bal+avgInt)/months):0;
+    out.innerHTML="";
+    out.append(
+      h("div",{style:{display:"flex",justifyContent:"space-between",fontSize:"13px",marginBottom:"4px"}},h("span",{style:{color:C.sub}},`${months>=12&&months%12===0?(months/12)+"년":months+"개월"}간 매월`),h("span",{class:"num",style:{fontWeight:"800",color:C.ink,fontSize:"15px"}},W(monthly))),
+      h("div",{style:{display:"flex",justifyContent:"space-between",fontSize:"11.5px",color:C.faint}},h("span",{},"이 기간 예상 이자(대략)"),h("span",{class:"num",style:{color:C.over}},"약 "+W(Math.round(avgInt))))
+    );
+  };
+  const draw=()=>{btns.innerHTML="";periods.forEach(([lb,m])=>{const on=months===m;btns.append(h("button",{style:{flex:"1",minWidth:"46px",fontSize:"12px",fontWeight:"700",padding:"8px 4px",borderRadius:"8px",border:`1px solid ${on?C.brand:C.line}`,background:on?C.w:"transparent",color:on?C.brand:C.sub,cursor:"pointer"},onclick:()=>{months=m;draw();calc();}},lb));});};
+  (watch||[]).forEach(el=>el&&el.addEventListener("input",calc));
+  wrap.append(h("div",{style:{fontSize:"12px",fontWeight:"800",color:C.sub,marginBottom:"8px"}},"📆 상환 계산기 — 얼마씩 모아야 할까?"),btns,out);
+  draw();calc();
+  return wrap;
+}
 const SAV_ICON={"적금":"🐷","예금":"🏦","비상금":"🚨","청약":"🏠","기타":"📁"};
 
 async function loadAssets(){
@@ -4220,7 +4245,7 @@ function buildAssets(){
       assetMini("🏦 계좌",accTotal),assetMini("🐷 저축",savTotal),assetMini("📈 투자",invTotal)
     ),
     debtTotal>0?h("div",{style:{marginTop:"10px",background:"rgba(0,0,0,.18)",borderRadius:"11px",padding:"10px 13px",fontSize:"12.5px",display:"flex",justifyContent:"space-between",alignItems:"center"}},h("span",{},"💳 대출 잔액 (부채)"),h("span",{class:"num",style:{fontWeight:"800"}},"−"+W(debtTotal).slice(1))):"",
-    toReceive>0?h("div",{style:{marginTop:"10px",background:"rgba(255,255,255,.16)",borderRadius:"11px",padding:"10px 13px",fontSize:"12.5px",display:"flex",justifyContent:"space-between",alignItems:"center"}},h("span",{},"📥 아직 받을 더치페이"),h("span",{class:"num",style:{fontWeight:"800"}},W(toReceive))):""
+    ""
   );
   out.push(hero);
 
@@ -4232,7 +4257,10 @@ function buildAssets(){
     accSec.append(h("div",{style:{display:"flex",alignItems:"center",gap:"12px",padding:"12px 4px",borderBottom:`1px solid ${C.line}`,cursor:"pointer",borderRadius:"6px"},onclick:()=>showAccountEdit(a)},
       h("div",{style:{width:"38px",height:"38px",borderRadius:"11px",background:C.soft,display:"flex",alignItems:"center",justifyContent:"center",fontSize:"18px",flexShrink:"0"}},ACC_ICON[a.kind]||"🏦"),
       h("div",{style:{flex:"1",minWidth:"0"}},h("div",{style:{fontSize:"14px",fontWeight:"600"}},a.name,shared?h("span",{style:{fontSize:"10.5px",color:C.brand,marginLeft:"6px",fontWeight:"700"}},"공유"):""),h("div",{style:{fontSize:"11.5px",color:C.sub,marginTop:"2px"}},a.kind)),
-      h("div",{class:"num",style:{fontSize:"15px",fontWeight:"700"}},W(a.balance)),
+      h("div",{style:{textAlign:"right",flexShrink:"0"}},
+        h("div",{class:"num",style:{fontSize:"15px",fontWeight:"700",color:Number(a.balance)<0?C.over:C.ink}},W(a.balance)),
+        (getOD(a.id)&&getOD(a.id).on&&accMonthlyInterest(a)>0)?h("div",{style:{fontSize:"10px",color:C.over,marginTop:"2px"}},`월 이자 약 ${W(Math.round(accMonthlyInterest(a)))}`):""
+      ),
       h("span",{style:{fontSize:"12px",color:C.faint,marginLeft:"4px"}},"›")
     ));
   });
@@ -4291,7 +4319,7 @@ function buildAssets(){
       });
     }
   }
-  out.push(dsSec);
+  // 더치페이는 자산 탭에서 숨김 (거래 입력에서만 사용)
 
   // ④ 저축
   const savSec=sec("🐷 저축",h("button",{style:{fontSize:"11.5px",color:C.brand,fontWeight:"700",cursor:"pointer"},onclick:()=>showSavingEdit(null)},"＋ 추가"));
@@ -4329,6 +4357,18 @@ function buildAssets(){
   if(loans.length)loanSec.append(h("div",{style:{display:"flex",justifyContent:"space-between",padding:"11px 4px 2px",fontSize:"13px",fontWeight:"800"}},h("span",{style:{color:C.sub}},"대출 잔액 합계"),h("span",{class:"num",style:{color:C.over}},W(debtTotal))));
   out.push(loanSec);
 
+  // 💸 이자 손해 요약 (대출 + 마이너스통장)
+  const loanInt=loans.reduce((s,l)=>s+(Number(l.interest_rate)>0?loanBal(l)*Number(l.interest_rate)/100/12:0),0);
+  const odInt=(S.accounts||[]).reduce((s,a)=>s+accMonthlyInterest(a),0);
+  const totMonthInt=loanInt+odInt;
+  if(totMonthInt>0){
+    out.push(h("div",{style:{background:"#FEF2EE",border:`1px solid ${C.over}`,borderRadius:"16px",padding:"16px 18px",marginTop:"12px"}},
+      h("div",{style:{fontSize:"12.5px",fontWeight:"800",color:C.over,marginBottom:"6px"}},"💸 빚으로 새는 이자"),
+      h("div",{style:{display:"flex",alignItems:"baseline",gap:"7px",flexWrap:"wrap"}},h("span",{style:{fontSize:"12px",color:C.sub}},"매달 약"),h("span",{class:"num",style:{fontSize:"24px",fontWeight:"800",color:C.over}},W(Math.round(totMonthInt))),h("span",{style:{fontSize:"12px",color:C.sub}},`· 연 ${W(Math.round(totMonthInt*12))}`)),
+      h("div",{style:{fontSize:"11px",color:C.sub,marginTop:"8px",lineHeight:"1.6"}},"아무것도 안 사고 빚 때문에 나가는 돈이에요. 빨리 갚을수록 이만큼 아껴요. 위 항목을 탭하면 상환 계산기가 있어요.")
+    ));
+  }
+
   return reorderCards("assets",out);
 }
 function assetMini(lbl,v){return h("div",{style:{background:"rgba(255,255,255,.15)",borderRadius:"11px",padding:"10px 11px"}},h("div",{style:{fontSize:"10.5px",opacity:".85",marginBottom:"3px"}},lbl),h("div",{class:"num",style:{fontSize:"14px",fontWeight:"800"}},W(v)));}
@@ -4343,6 +4383,20 @@ function showAccountEdit(acc){
   const nameEl=h("input",{type:"text",value:acc?.name||"",placeholder:"예: 카카오뱅크, 신한, 공용통장",style:{width:"100%",border:`1px solid ${C.line}`,borderRadius:"10px",padding:"11px 12px",fontSize:"14px"}});
   const balEl=h("input",{type:"number",inputmode:"numeric",value:acc?.balance??"",placeholder:"0",class:"num",style:{width:"100%",border:`1px solid ${C.line}`,borderRadius:"10px",padding:"11px 12px",fontSize:"14px"}});
   const kindWrap=h("div",{style:{display:"flex",gap:"7px",flexWrap:"wrap"}});
+  // 마이너스통장 설정
+  const odPrev=acc?getOD(acc.id):null;
+  let odOn=!!(odPrev&&odPrev.on);
+  const odLimitEl=h("input",{type:"number",inputmode:"numeric",value:odPrev?.limit??"",placeholder:"마이너스 한도 (예: 5000000)",class:"num",style:{width:"100%",border:`1px solid ${C.line}`,borderRadius:"10px",padding:"11px 12px",fontSize:"14px"}});
+  const odRateEl=h("input",{type:"number",inputmode:"numeric",value:odPrev?.rate??"",placeholder:"연 이율 % (예: 6.5)",class:"num",style:{width:"100%",border:`1px solid ${C.line}`,borderRadius:"10px",padding:"11px 12px",fontSize:"14px"}});
+  const odDayEl=h("input",{type:"number",inputmode:"numeric",value:odPrev?.payday??"",placeholder:"이자 내는 날 1~31",class:"num",style:{width:"100%",border:`1px solid ${C.line}`,borderRadius:"10px",padding:"11px 12px",fontSize:"14px"}});
+  const odFields=h("div",{style:{display:odOn?"block":"none",marginTop:"10px"}},
+    h("div",{style:{fontSize:"11px",color:C.sub,marginBottom:"10px",lineHeight:"1.6"}},"💡 사용 중이면 위 '현재 잔액'을 마이너스로 입력하세요 (예: -3400000). 그 금액이 빌린 돈이에요."),
+    h("div",{style:{marginBottom:"10px"}},lbl("마이너스 한도"),odLimitEl),
+    h("div",{style:{display:"grid",gridTemplateColumns:"1fr 1fr",gap:"10px"}},h("div",{},lbl("연 이율 %"),odRateEl),h("div",{},lbl("이자 내는 날"),odDayEl)),
+    repayCalc(()=>{const b=Number(balEl.value)||0;return b<0?-b:0;},()=>Number(odRateEl.value)||0,[balEl,odRateEl]));
+  const odToggle=h("button",{style:{width:"100%",fontSize:"13px",fontWeight:"700",padding:"11px",borderRadius:"11px",cursor:"pointer"}},"");
+  const drawOd=()=>{odToggle.textContent=odOn?"💳 마이너스통장이에요 ✓":"💳 마이너스통장으로 설정";odToggle.style.border=`1px solid ${odOn?C.brand:C.line}`;odToggle.style.background=odOn?C.soft:C.w;odToggle.style.color=odOn?C.brand:C.sub;odFields.style.display=odOn?"block":"none";};
+  drawOd();odToggle.onclick=()=>{odOn=!odOn;drawOd();};
   // 카드 전용: 결제일 + 연결계좌
   const cardBlock=h("div",{style:{display:"none"}});
   const lbl2=t=>h("div",{style:{fontSize:"13px",fontWeight:"800",color:C.sub,marginBottom:"6px"}},t);
@@ -4361,10 +4415,11 @@ function showAccountEdit(acc){
     if(!nameEl.value.trim()){alert("계좌 이름을 입력해주세요.");return;}
     sv.disabled=true;sv.textContent="저장 중…";
     const payload={name:nameEl.value.trim(),kind,balance:Number(balEl.value)||0,household_id:shared?S.householdId:null,billing_day:kind==="카드"&&dayEl.value?Number(dayEl.value):null,linked_account_id:kind==="카드"&&linkSel.value?linkSel.value:null};
-    let error;
+    let error,newId=acc?.id;
     if(isEdit)({error}=await sb.from("accounts").update(payload).eq("id",acc.id));
-    else({error}=await sb.from("accounts").insert({...payload,is_active:true}));
+    else{const{data:ins,error:e}=await sb.from("accounts").insert({...payload,is_active:true}).select("id").single();error=e;newId=ins?.id;}
     if(error){alert("저장 실패: "+error.message);sv.disabled=false;sv.textContent=isEdit?"수정 저장":"추가하기";return;}
+    if(newId)setOD(newId,{on:odOn,limit:Number(odLimitEl.value)||0,rate:Number(odRateEl.value)||0,payday:Number(odDayEl.value)||null});
     ov.remove();reloadAssets();
   };
   sh.append(
@@ -4373,6 +4428,7 @@ function showAccountEdit(acc){
     h("div",{style:{marginBottom:"13px"}},lbl("종류"),kindWrap),
     cardBlock,
     h("div",{style:{marginBottom:"13px"}},lbl("현재 잔액"),balEl),
+    h("div",{style:{marginBottom:"13px"}},odToggle,odFields),
     h("div",{style:{marginBottom:"4px"}},lbl("공유 여부"),shBtn),
     isEdit?h("button",{style:{width:"100%",marginTop:"12px",fontSize:"13px",color:C.over,fontWeight:"700",padding:"11px",border:`1px solid ${C.over}`,borderRadius:"11px",background:C.w,cursor:"pointer"},onclick:async()=>{if(!confirm(`'${acc.name}' 계좌를 삭제할까요?`))return;await sb.from("accounts").update({is_active:false}).eq("id",acc.id);ov.remove();reloadAssets();}},"🗑️ 계좌 삭제"):"",
     sv
@@ -4453,6 +4509,7 @@ function showLoanEdit(l0){
     h("div",{style:{marginBottom:"13px"}},lbl("금융기관"),instEl),
     h("div",{style:{display:"grid",gridTemplateColumns:"1fr 1fr",gap:"10px",marginBottom:"13px"}},h("div",{},lbl("대출 원금"),prinEl),h("div",{},lbl("현재 잔액(남은 빚)"),balEl)),
     h("div",{style:{display:"grid",gridTemplateColumns:"1fr 1fr 1fr",gap:"10px",marginBottom:"4px"}},h("div",{},lbl("연 금리%"),rateEl),h("div",{},lbl("월 상환액"),monEl),h("div",{},lbl("상환일"),dayEl)),
+    repayCalc(()=>Number(balEl.value)||0,()=>Number(rateEl.value)||0,[balEl,rateEl]),
     isEdit?h("button",{style:{width:"100%",marginTop:"12px",fontSize:"13px",color:C.over,fontWeight:"700",padding:"11px",border:`1px solid ${C.over}`,borderRadius:"11px",background:C.w,cursor:"pointer"},onclick:async()=>{if(!confirm(`'${l0.name}'을 삭제할까요? 되돌릴 수 없어요.`))return;await sb.from("loans").delete().eq("id",l0.id);ov.remove();reloadAssets();}},"🗑️ 삭제"):"",
     sv
   );
