@@ -523,6 +523,83 @@ function calcStatsFor(txns){
 }
 
 // ── HOME ──
+function showBudgetBreakdown(){
+  const ov=h("div",{style:{position:"fixed",inset:"0",background:"rgba(40,37,31,.42)",display:"flex",alignItems:"flex-end",justifyContent:"center",zIndex:"50"},onclick:e=>{if(e.target===ov)ov.remove();}});
+  const sh=h("div",{style:{width:"100%",maxWidth:"520px",background:C.w,borderRadius:"20px 20px 0 0",padding:"18px 20px 26px",maxHeight:"92vh",overflowY:"auto"}});
+  const isSharedTx=t=>t.account==="공용"||["공용통장","공용카드","공용통장 자동출금","공용통장 지로출금"].includes(t.payment_method);
+  const refreshHome=()=>{const ct=document.getElementById("ct");if(ct&&S.tab==="home"){ct.innerHTML="";buildHome().forEach(n=>ct.append(n));}};
+  const hd=(t,sub)=>h("div",{style:{fontSize:"11.5px",fontWeight:"800",color:C.faint,marginTop:"18px",marginBottom:"8px",letterSpacing:".02em"}},t+(sub?`  ·  ${sub}`:""));
+  const render=()=>{
+    sh.innerHTML="";
+    const psp=(S.txns||[]).filter(t=>kindOf(t.type)==="spend"&&!isSharedTx(t));
+    const total=psp.reduce((s,t)=>s+(Number(t.amount)||0),0);
+    const pct=S.budget>0?Math.round(total/S.budget*100):0;
+    const over=S.budget>0&&total>S.budget;
+    sh.append(h("div",{style:{fontSize:"17px",fontWeight:"800",marginBottom:"4px"}},"🔎 개인 순소비 분석"),
+      h("div",{style:{fontSize:"12px",color:C.sub,marginBottom:"14px"}},`${S.curYm} · 예산 대비 어디에 얼마나 썼는지 그리고 이상한 거래가 없는지 확인해요`));
+    // 요약
+    sh.append(h("div",{style:{background:over?"#FEF2EE":C.soft,borderRadius:"14px",padding:"14px 16px",display:"flex",justifyContent:"space-between",alignItems:"center"}},
+      h("div",{},h("div",{style:{fontSize:"11.5px",color:C.sub}},"개인 순소비 합계"),
+        h("div",{class:"num",style:{fontSize:"24px",fontWeight:"800",color:over?C.over:C.ink,marginTop:"2px"}},W(total))),
+      h("div",{style:{textAlign:"right"}},h("div",{style:{fontSize:"11.5px",color:C.sub}},"예산 대비"),
+        h("div",{class:"num",style:{fontSize:"20px",fontWeight:"800",color:over?C.over:C.brand,marginTop:"2px"}},`${pct}%`))));
+    if(over)sh.append(h("div",{style:{fontSize:"11.5px",color:C.over,marginTop:"8px",lineHeight:"1.6"}},`예산을 ${W(total-S.budget)} 넘었어요. 아래에서 중복·잘못 입력된 거래가 있는지 확인해보세요.`));
+    // 할부 비중
+    const inst=psp.filter(t=>t.type==="소비(할부)");
+    if(inst.length){const isum=inst.reduce((s,t)=>s+(Number(t.amount)||0),0);
+      sh.append(h("div",{style:{fontSize:"11.5px",color:C.faint,marginTop:"10px"}},`이 중 할부 분할분 ${inst.length}건 · ${W(isum)} (각 달에 나눠 들어간 금액이에요)`));}
+    // 카테고리별
+    const byCat={};psp.forEach(t=>{const c=t.category||"기타";byCat[c]=(byCat[c]||0)+(Number(t.amount)||0);});
+    const cats=Object.entries(byCat).sort((a,b)=>b[1]-a[1]);
+    if(cats.length){
+      sh.append(hd("카테고리별"));
+      cats.forEach(([c,a])=>{const cm=CM[c]||CM["기타"];const w=total>0?Math.round(a/total*100):0;
+        sh.append(h("div",{style:{display:"flex",alignItems:"center",gap:"10px",padding:"7px 2px"}},
+          h("span",{style:{fontSize:"15px",width:"20px",textAlign:"center",flexShrink:"0"}},cm.i),
+          h("div",{style:{flex:"1",minWidth:"0"}},h("div",{style:{fontSize:"12.5px",fontWeight:"600"}},c),
+            h("div",{style:{height:"5px",borderRadius:"999px",background:"#F0ECE3",overflow:"hidden",marginTop:"3px"}},h("div",{style:{width:w+"%",height:"100%",background:C.brand,borderRadius:"999px"}}))),
+          h("div",{style:{textAlign:"right",flexShrink:"0"}},h("div",{class:"num",style:{fontSize:"12.5px",fontWeight:"700"}},W(a)),h("div",{style:{fontSize:"10px",color:C.faint}},w+"%"))));
+      });
+    }
+    // ⚠️ 중복 의심 (같은 날·가맹점·금액)
+    const dmap={};psp.forEach(t=>{const k=`${t.date||""}|${(t.merchant||"").trim()}|${Number(t.amount)||0}`;(dmap[k]=dmap[k]||[]).push(t);});
+    const dups=Object.values(dmap).filter(a=>a.length>=2);
+    if(dups.length){
+      let dupTotal=0;dups.forEach(g=>{dupTotal+=(g.length-1)*(Number(g[0].amount)||0);});
+      sh.append(hd("⚠️ 중복 의심",`${dups.length}건 · 약 ${W(dupTotal).slice(1)} 과다 집계 가능`));
+      sh.append(h("div",{style:{fontSize:"11px",color:C.sub,marginBottom:"6px",lineHeight:"1.6"}},"같은 날짜·가맹점·금액으로 2건 이상 입력된 거래예요. 실수로 두 번 들어갔다면 삭제하세요."));
+      dups.forEach(g=>{
+        g.forEach((t,i)=>{
+          const dup=i>0;
+          sh.append(h("div",{style:{display:"flex",alignItems:"center",gap:"10px",padding:"9px 2px",borderBottom:`1px solid ${C.line}`,background:dup?"#FEF7F4":"transparent",borderRadius:"6px"}},
+            h("div",{style:{flex:"1",minWidth:"0"}},h("div",{style:{fontSize:"12.5px",fontWeight:"600",whiteSpace:"nowrap",overflow:"hidden",textOverflow:"ellipsis"}},(t.merchant||t.category||t.type)+(dup?"  ⟵ 중복?":"")),
+              h("div",{style:{fontSize:"10.5px",color:C.faint,marginTop:"1px"}},`${t.date||""} · ${t.category||""} · ${t.payment_method||""}`)),
+            h("div",{class:"num",style:{fontSize:"12.5px",fontWeight:"700",flexShrink:"0"}},W(t.amount)),
+            h("button",{style:{fontSize:"12px",fontWeight:"700",color:dup?C.w:C.faint,background:dup?C.over:"transparent",border:dup?"none":`1px solid ${C.line}`,borderRadius:"7px",padding:"6px 10px",cursor:"pointer",flexShrink:"0"},onclick:async()=>{if(!confirm("이 거래를 삭제할까요?"))return;await sb.from("transactions").delete().eq("id",t.id);await loadMonth();render();refreshHome();}},"삭제")));
+        });
+      });
+    }
+    // 🔎 큰 거래 TOP (오입력 점검)
+    const big=psp.slice().sort((a,b)=>(Number(b.amount)||0)-(Number(a.amount)||0)).slice(0,5);
+    if(big.length){
+      sh.append(hd("🔎 큰 거래 점검","탭하면 수정·삭제"));
+      sh.append(h("div",{style:{fontSize:"11px",color:C.sub,marginBottom:"6px",lineHeight:"1.6"}},"혹시 카드대금이나 이체가 '소비'로 잘못 입력된 게 있나 확인하세요. (카드값은 소비가 아니라 카드대금 유형이어야 해요)"));
+      big.forEach(t=>{
+        sh.append(h("div",{style:{display:"flex",alignItems:"center",gap:"10px",padding:"9px 2px",borderBottom:`1px solid ${C.line}`,cursor:"pointer"},onclick:()=>{ov.remove();showEditTxn(t,async()=>{await loadMonth();refreshHome();});}},
+          h("span",{style:{fontSize:"15px",flexShrink:"0"}},(CM[t.category]||CM["기타"]).i),
+          h("div",{style:{flex:"1",minWidth:"0"}},h("div",{style:{fontSize:"12.5px",fontWeight:"600",whiteSpace:"nowrap",overflow:"hidden",textOverflow:"ellipsis"}},t.merchant||t.category||t.type),
+            h("div",{style:{fontSize:"10.5px",color:C.faint,marginTop:"1px"}},`${t.date||""} · ${t.type} · ${t.payment_method||""}`)),
+          h("div",{class:"num",style:{fontSize:"13px",fontWeight:"700",flexShrink:"0"}},W(t.amount)),
+          h("span",{style:{fontSize:"12px",color:C.faint,flexShrink:"0"}},"›")));
+      });
+    }
+    // 점검 노트
+    const noAcc=psp.filter(t=>!t.account);
+    if(noAcc.length)sh.append(h("div",{style:{fontSize:"11.5px",color:C.warn,marginTop:"16px",background:"#FFFBEE",borderRadius:"10px",padding:"10px 12px",lineHeight:"1.6"}},`📌 계정(개인/공용)이 비어있는 거래가 ${noAcc.length}건 있어요. 이런 거래는 개인 소비로 잡혀요. 위 '큰 거래 점검'이나 거래 목록에서 계정을 지정하면 정확해져요.`));
+    sh.append(h("button",{style:{width:"100%",marginTop:"22px",padding:"13px",borderRadius:"12px",border:"none",background:C.ink,color:C.w,fontSize:"14px",fontWeight:"700",cursor:"pointer"},onclick:()=>ov.remove()},"닫기"));
+  };
+  render();ov.append(sh);document.body.append(ov);
+}
 function buildHome(){
   const st=calcStatsFor(S.txns);
   const prevSt=calcStatsFor(S.prevTxns);
@@ -539,7 +616,7 @@ function buildHome(){
   }},W(S.budget));
   const hero=h("div",{style:{background:C.w,border:`1px solid ${C.line}`,borderRadius:"18px",padding:"20px 20px 18px",position:"relative",overflow:"hidden"}},
     h("div",{style:{display:"flex",justifyContent:"space-between",alignItems:"flex-start"}},
-      h("div",{},h("div",{style:{fontSize:"12.5px",color:C.sub,marginBottom:"6px"}},"이번 달 개인 순소비"),h("div",{class:"num",style:{fontSize:"36px",fontWeight:"800",letterSpacing:"-.03em",lineHeight:"1"}},W(st.pNet))),
+      h("div",{style:{cursor:"pointer"},onclick:()=>showBudgetBreakdown()},h("div",{style:{fontSize:"12.5px",color:C.sub,marginBottom:"6px"}},"이번 달 개인 순소비 ›"),h("div",{class:"num",style:{fontSize:"36px",fontWeight:"800",letterSpacing:"-.03em",lineHeight:"1"}},W(st.pNet))),
       h("div",{style:{textAlign:"right"}},h("div",{style:{fontSize:"11.5px",color:C.sub,marginBottom:"4px"}},"이번 달 예산"),bdBtn)
     ),
     h("div",{style:{marginTop:"16px"}},
