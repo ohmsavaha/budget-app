@@ -644,6 +644,32 @@ const setCatBudget=(cat,amt)=>{try{const b=getCatBudgets();if(amt>0)b[cat]=amt;e
 function homeReload(){const ct=document.getElementById("ct");if(ct&&S.tab==="home"){ct.innerHTML="";buildHome().forEach(n=>ct.append(n));}}
 
 // ① 예산 페이스
+function buildTodayBudget(){
+  if(S.curYm!==ym(td())||!(S.budget>0))return null;
+  const st=calcStatsFor(S.txns);
+  const now=new Date(),dom=now.getDate(),dim=new Date(now.getFullYear(),now.getMonth()+1,0).getDate();
+  const bSpend=st.pNet-personalFixedExp(S.txns);
+  const remain=S.budget-bSpend;
+  const daysLeft=Math.max(1,dim-dom+1);
+  const today=Math.round(remain/daysLeft);
+  const over=remain<=0;
+  const ideal=Math.round(S.budget/dim);
+  const col=over?C.over:today>=ideal?C.brand:C.warn;
+  return h("div",{style:{background:C.w,border:`1px solid ${col}`,borderRadius:"16px",padding:"16px 18px",marginTop:"12px"}},
+    h("div",{style:{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:"8px"}},
+      h("span",{style:{fontSize:"12.5px",fontWeight:"700",color:C.sub}},"💳 오늘 쓸 수 있는 돈"),
+      h("span",{style:{fontSize:"11px",color:C.faint}},`이번 달 ${daysLeft}일 남음`)),
+    over
+      ?h("div",{},h("div",{class:"num",style:{fontSize:"23px",fontWeight:"800",color:C.over}},"예산 초과"),
+        h("div",{style:{fontSize:"11.5px",color:C.over,marginTop:"6px",lineHeight:"1.6"}},`이번 달 예산을 ${W(-remain)} 넘었어요. 남은 날은 꼭 필요한 것만 써요.`))
+      :h("div",{},
+        h("div",{style:{display:"flex",alignItems:"baseline",gap:"6px",flexWrap:"wrap"}},
+          h("span",{style:{fontSize:"12px",color:C.sub}},"오늘"),
+          h("span",{class:"num",style:{fontSize:"30px",fontWeight:"800",color:col,letterSpacing:"-.02em"}},W(today)),
+          h("span",{style:{fontSize:"13px",color:C.sub}},"까지 OK")),
+        h("div",{style:{fontSize:"11.5px",color:C.sub,marginTop:"7px",lineHeight:"1.6"}},`남은 예산 ${W(remain)}을 남은 ${daysLeft}일로 나눈 금액이에요. 오늘 아끼면 내일 여유가 늘어요.`))
+  );
+}
 function buildPaceCard(){
   if(S.curYm!==ym(td())||!(S.budget>0))return null;
   const st=calcStatsFor(S.txns);
@@ -944,7 +970,7 @@ function buildHome(){
   const billSec=buildNextMonthBill();
   const sharedSec=buildSharedSection(st,cfg);
   const insightSec=buildInsight(st,prevSt);
-  const homeCards=[hero,chips,buildPaceCard(),buildExcludeSuggest(),buildMonthSummary(),insightSec,sharedSec,compSec,billSec,buildCardSpend(),buildCatBudgets(),catSec,recSec].filter(Boolean);
+  const homeCards=[hero,chips,buildTodayBudget(),buildPaceCard(),buildExcludeSuggest(),buildMonthSummary(),insightSec,sharedSec,compSec,billSec,buildCardSpend(),buildCatBudgets(),catSec,recSec].filter(Boolean);
   return reorderCards("home",homeCards);
 }
 
@@ -1368,6 +1394,26 @@ function buildYearly(){
         h("div",{style:{display:"grid",gridTemplateColumns:"1fr 1fr",gap:"8px"}},
           yc("총수입",W(ys.income),C.brand),yc("총지출",W(ySpend),C.ink),
           yc("총저축·투자",W(ys.save),C.ink),yc(yNet>=0?"순증가":"순감소",W(Math.abs(yNet)),yNet>=0?C.brand:C.over))));
+      // 전년 동기 대비 (비동기 로드)
+      const cmpEl=h("div",{style:{fontSize:"11.5px",color:C.faint,marginTop:"10px",padding:"0 2px",lineHeight:"1.6"}},"작년 같은 기간과 비교 중…");
+      container.append(cmpEl);
+      (async()=>{
+        try{
+          const py=String(Number(yr)-1),MM=String(curM+1).padStart(2,"0");
+          if(!S._pyData||S._pyData.yr!==py){const{data}=await sb.from("transactions").select("type,account,amount,date").gte("date",py+"-01-01").lte("date",py+"-12-31");S._pyData={yr:py,rows:data||[]};}
+          const pyRows=S._pyData.rows.filter(t=>t.date.slice(5,7)<=MM);
+          if(!pyRows.length){cmpEl.textContent=`작년 1~${curM+1}월엔 기록이 없어 비교할 수 없어요.`;return;}
+          const pst=calcStatsFor(pyRows),pcfg=getSharedCfg();
+          const pSpend=pst.pNet+Math.round(pst.cNet*(pcfg.ratio||50)/100);
+          const tNow=calcStatsFor((S.yearTxns||[]).filter(t=>t.date.slice(5,7)<=MM));
+          const tSpend=tNow.pNet+Math.round(tNow.cNet*(pcfg.ratio||50)/100);
+          if(pSpend<=0){cmpEl.textContent="";return;}
+          const dp=Math.round((tSpend-pSpend)/pSpend*100),up=tSpend>=pSpend;
+          cmpEl.innerHTML="";
+          cmpEl.append(h("span",{style:{fontWeight:"700",color:up?C.over:C.brand}},`작년 1~${curM+1}월 대비 지출 ${up?"▲":"▼"}${Math.abs(dp)}%`),
+            h("span",{style:{color:C.sub}},` · ${up?"+":"−"}${W(Math.abs(tSpend-pSpend))} (작년 ${W(pSpend)})`));
+        }catch(e){cmpEl.textContent="";}
+      })();
     }
     const monthly=getMonthly();
     const total=monthly.reduce((s,v)=>s+v,0);
