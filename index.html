@@ -4395,6 +4395,8 @@ async function loadAssets(){
   {const[s,e]=mRange(S.curYm);const{data:tx}=await sb.from("transactions").select("*").gte("date",s).lte("date",e);S.txns=tx||[];}
 }
 
+const getNwGoal=()=>{try{return Number(localStorage.getItem("nw_goal")||0)||0;}catch{return 0;}};
+const setNwGoal=(v)=>{try{if(v>0)localStorage.setItem("nw_goal",String(v));else localStorage.removeItem("nw_goal");}catch{}};
 function reloadAssets(){return loadAssets().then(()=>{const ct=document.getElementById("ct");if(ct){ct.innerHTML="";buildAssets().forEach(n=>ct.append(n));}});}
 
 function buildAssets(){
@@ -4457,6 +4459,76 @@ function buildAssets(){
       compSec.append(h("div",{style:{display:"flex",alignItems:"center",gap:"16px"}},box,legend));
       setTimeout(()=>{if(!window.Chart)return;new window.Chart(cv,{type:"doughnut",data:{labels:parts.map(p=>p[0]),datasets:[{data:parts.map(p=>p[1]),backgroundColor:parts.map(p=>p[2]),borderWidth:0}]},options:{responsive:true,maintainAspectRatio:false,cutout:"66%",plugins:{legend:{display:false},tooltip:{displayColors:false,callbacks:{label:(c)=>" "+W(c.parsed)}}}}});},60);
       out.push(compSec);
+    }
+  }
+
+  // 💡 자산 전략 클러스터
+  {
+    const _st=calcStatsFor(S.txns),_cfg=getSharedCfg();
+    const _myShared=Math.round(_st.cNet*(_cfg.ratio||50)/100);
+    const _spend=_st.pNet+_myShared,_net=_st.income-_spend-_st.save;
+
+    // 🎯 순자산 목표 + FIRE 트래커
+    const goal=getNwGoal();
+    let nh={};try{nh=JSON.parse(localStorage.getItem("nw_history")||"{}");}catch{}
+    const nk=Object.keys(nh).sort();
+    let growth=null;
+    if(nk.length>=2){const a=nh[nk[0]],b=nh[nk[nk.length-1]];const mo=nk.length-1;if(mo>0)growth=(b-a)/mo;}
+    const contrib=(growth&&growth>0)?growth:(_st.save+Math.max(0,_net));
+    const goalSec=h("div",{style:{background:C.w,border:`1px solid ${C.line}`,borderRadius:"16px",padding:"16px 17px",marginTop:"12px"}});
+    goalSec.append(h("div",{style:{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:"10px"}},
+      h("span",{style:{fontSize:"13px",fontWeight:"800"}},"🎯 순자산 목표"),
+      h("button",{style:{fontSize:"11.5px",color:C.brand,fontWeight:"700",background:"transparent",border:"none",cursor:"pointer"},onclick:()=>{const v=prompt("목표 순자산을 입력하세요 (원). 예: 100000000",goal||"");if(v===null)return;setNwGoal(Math.max(0,Number((v+"").replace(/[^0-9]/g,""))||0));reloadAssets();}},goal>0?"수정":"＋ 설정")));
+    if(goal>0){
+      const pct=Math.min(100,Math.round(netWorth/goal*100));
+      const remain=goal-netWorth;
+      goalSec.append(h("div",{style:{display:"flex",alignItems:"baseline",gap:"7px",flexWrap:"wrap",marginBottom:"8px"}},
+        h("span",{class:"num",style:{fontSize:"22px",fontWeight:"800"}},W(netWorth)),
+        h("span",{style:{fontSize:"12px",color:C.sub}},`/ ${W(goal)} · ${pct}%`)));
+      goalSec.append(h("div",{style:{height:"9px",borderRadius:"999px",background:"#F0ECE3",overflow:"hidden"}},h("div",{style:{width:pct+"%",height:"100%",background:pct>=100?C.brand:C.brand+"AA",borderRadius:"999px"}})));
+      if(remain<=0){
+        goalSec.append(h("div",{style:{fontSize:"12.5px",color:C.brand,fontWeight:"700",marginTop:"9px"}},"🎉 목표 달성! 다음 목표를 세워볼까요?"));
+      }else if(contrib>0){
+        const months=Math.ceil(remain/contrib);const d=new Date();d.setMonth(d.getMonth()+months);
+        const yrs=Math.floor(months/12),mons=months%12;
+        goalSec.append(h("div",{style:{fontSize:"12.5px",color:C.ink,lineHeight:"1.7",marginTop:"9px"}},
+          `이 속도(월 +${W(Math.round(contrib))})면 약 `,h("b",{style:{color:C.brand}},`${yrs>0?yrs+"년 ":""}${mons}개월 후`),` 도달 (${d.getFullYear()}.${String(d.getMonth()+1).padStart(2,"0")})`));
+        goalSec.append(h("div",{style:{fontSize:"10.5px",color:C.faint,marginTop:"4px"}},growth&&growth>0?"최근 순자산 증가 속도 기준":"이번 달 저축+잉여 기준 (추이 쌓이면 더 정확해져요)"));
+      }else{
+        goalSec.append(h("div",{style:{fontSize:"12px",color:C.over,marginTop:"9px",lineHeight:"1.6"}},"지금은 순자산이 늘지 않고 있어요. 저축 여력을 늘리면 도달 시점이 보여요."));
+      }
+    }else{
+      goalSec.append(h("div",{style:{fontSize:"12px",color:C.sub,lineHeight:"1.7"}},"목표 순자산을 정하면, 지금 속도로 언제 도달하는지 예측해줘요. 예: 1억, 5천만"));
+    }
+    out.push(goalSec);
+
+    // 💵 이번 달 저축 여력
+    const canSave=_st.income-_spend;
+    out.push(h("div",{style:{background:"#EEF6F1",border:`1px solid ${C.brand}`,borderRadius:"16px",padding:"15px 17px",marginTop:"12px"}},
+      h("div",{style:{fontSize:"12.5px",fontWeight:"800",color:C.brand,marginBottom:"6px"}},"💵 이번 달 저축 여력"),
+      h("div",{style:{display:"flex",alignItems:"baseline",gap:"7px",flexWrap:"wrap"}},
+        _net>=0?h("span",{style:{fontSize:"12px",color:C.sub}},"쓸 거 다 쓰고"):h("span",{style:{fontSize:"12px",color:C.over}},"이번 달은"),
+        h("span",{class:"num",style:{fontSize:"22px",fontWeight:"800",color:_net>=0?C.brand:C.over}},W(Math.abs(_net))),
+        h("span",{style:{fontSize:"12px",color:C.sub}},_net>=0?"더 모을 수 있어요":"적자예요")),
+      h("div",{style:{fontSize:"10.5px",color:C.sub,marginTop:"8px",lineHeight:"1.6"}},`수입 ${W(_st.income)} − 지출 ${W(_spend)} − 이미 저축 ${W(_st.save)}`+(_net>0?" = 추가 저축 여력":""))
+    ));
+
+    // 🛡️ 비상금 안전성
+    const emFund=(S.savings||[]).filter(x=>x.kind==="비상금").reduce((a,x)=>a+Number(x.current_amount||0),0);
+    if(emFund>0&&_spend>0){
+      const months=emFund/_spend;
+      const lv=months>=6?["충분해요 👍",C.brand]:months>=3?["적정 수준이에요",C.brand]:["조금 부족해요",C.warn];
+      out.push(h("div",{style:{background:C.w,border:`1px solid ${lv[1]}`,borderRadius:"16px",padding:"15px 17px",marginTop:"12px"}},
+        h("div",{style:{fontSize:"12.5px",fontWeight:"800",color:lv[1],marginBottom:"6px"}},"🛡️ 비상금 안전성"),
+        h("div",{style:{display:"flex",alignItems:"baseline",gap:"7px",flexWrap:"wrap"}},
+          h("span",{style:{fontSize:"12px",color:C.sub}},"수입이 끊겨도 약"),
+          h("span",{class:"num",style:{fontSize:"22px",fontWeight:"800",color:lv[1]}},`${months.toFixed(1)}개월`),
+          h("span",{style:{fontSize:"12px",color:C.sub}},"버틸 수 있어요")),
+        h("div",{style:{fontSize:"10.5px",color:C.sub,marginTop:"8px",lineHeight:"1.6"}},`비상금 ${W(emFund)} ÷ 월 지출 ${W(Math.round(_spend))} · ${lv[0]} (보통 3~6개월치를 권장해요)`)
+      ));
+    }else if(emFund===0&&S.savings.length>=0){
+      out.push(h("div",{style:{background:C.soft,borderRadius:"14px",padding:"13px 16px",marginTop:"12px"}},
+        h("div",{style:{fontSize:"12px",color:C.sub,lineHeight:"1.7"}},h("b",{},"🛡️ 비상금이 없어요. "),"갑작스런 실직·사고에 대비해 3~6개월치 생활비를 모아두면 든든해요. 저축 추가 → 종류 ‘비상금’으로 만들 수 있어요.")));
     }
   }
 
