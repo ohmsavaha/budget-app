@@ -539,8 +539,8 @@ async function downloadFullBackup(setStatus){
 const getMonthClose=()=>{try{return JSON.parse(localStorage.getItem("month_close")||"{}");}catch{return{};}};
 const setMonthCloseAll=(o)=>{try{localStorage.setItem("month_close",JSON.stringify(o));}catch{}};
 function showBudgetBreakdown(){
-  const ov=h("div",{style:{position:"fixed",inset:"0",background:"rgba(40,37,31,.42)",display:"flex",alignItems:"flex-end",justifyContent:"center",zIndex:"50"}});
-  const sh=h("div",{style:{width:"100%",maxWidth:"520px",background:C.w,borderRadius:"20px 20px 0 0",padding:"18px 20px 26px",maxHeight:"92vh",overflowY:"auto"}});
+  const ov=h("div",{style:{position:"fixed",inset:"0",background:"rgba(40,37,31,.42)",display:"flex",alignItems:"center",justifyContent:"center",padding:"16px",zIndex:"50"}});
+  const sh=h("div",{style:{width:"100%",maxWidth:"520px",background:C.w,borderRadius:"20px",padding:"18px 20px 26px",maxHeight:"88vh",overflowY:"auto"}});
   const isSharedTx=t=>t.account==="공용"||["공용통장","공용카드","공용통장 자동출금","공용통장 지로출금"].includes(t.payment_method);
   const refreshHome=()=>{const ct=document.getElementById("ct");if(ct&&S.tab==="home"){ct.innerHTML="";buildHome().forEach(n=>ct.append(n));}};
   const hd=(t,sub)=>h("div",{style:{fontSize:"11.5px",fontWeight:"800",color:C.faint,marginTop:"18px",marginBottom:"8px",letterSpacing:".02em"}},t+(sub?`  ·  ${sub}`:""));
@@ -717,8 +717,8 @@ function buildMonthSummary(){
 
 function showMonthClose(){
   const ymKey=S.curYm;
-  const ov=h("div",{style:{position:"fixed",inset:"0",background:"rgba(40,37,31,.42)",display:"flex",alignItems:"flex-end",justifyContent:"center",zIndex:"60"}});
-  const sh=h("div",{style:{width:"100%",maxWidth:"520px",background:C.w,borderRadius:"20px 20px 0 0",padding:"18px 20px 26px",maxHeight:"92vh",overflowY:"auto"}});
+  const ov=h("div",{style:{position:"fixed",inset:"0",background:"rgba(40,37,31,.42)",display:"flex",alignItems:"center",justifyContent:"center",padding:"16px",zIndex:"60"}});
+  const sh=h("div",{style:{width:"100%",maxWidth:"520px",background:C.w,borderRadius:"20px",padding:"18px 20px 26px",maxHeight:"88vh",overflowY:"auto"}});
   const body=h("div",{});
   const render=()=>{
     body.innerHTML="";
@@ -1201,8 +1201,8 @@ function buildCalendarView(){
 
 // ── 하루 상세 시트 ──
 function showDayDetail(dateStr,txns){
-  const ov=h("div",{style:{position:"fixed",inset:"0",background:"rgba(40,37,31,.42)",display:"flex",alignItems:"flex-end",justifyContent:"center",zIndex:"50"}});
-  const sh=h("div",{style:{width:"100%",maxWidth:"520px",background:C.w,borderRadius:"20px 20px 0 0",padding:"18px 20px 26px",maxHeight:"85vh",overflowY:"auto"}});
+  const ov=h("div",{style:{position:"fixed",inset:"0",background:"rgba(40,37,31,.42)",display:"flex",alignItems:"center",justifyContent:"center",padding:"16px",zIndex:"50"}});
+  const sh=h("div",{style:{width:"100%",maxWidth:"520px",background:C.w,borderRadius:"20px",padding:"18px 20px 26px",maxHeight:"85vh",overflowY:"auto"}});
   const[,mo,d]=dateStr.split("-");
   const spend=txns.filter(t=>kindOf(t.type)==="spend").reduce((s,t)=>s+Number(t.amount),0);
   const income=txns.filter(t=>["income","reduce"].includes(kindOf(t.type))).reduce((s,t)=>s+Number(t.amount),0);
@@ -1447,8 +1447,8 @@ function buildYearly(){
 
 // ── 거래 검색 ──
 function showSearch(opt){
-  const ov=h("div",{style:{position:"fixed",inset:"0",background:"rgba(40,37,31,.42)",display:"flex",alignItems:"flex-end",justifyContent:"center",zIndex:"50"}});
-  const sh=h("div",{style:{width:"100%",maxWidth:"520px",background:C.w,borderRadius:"20px 20px 0 0",padding:"18px 20px 26px",maxHeight:"92vh",overflowY:"auto"}});
+  const ov=h("div",{style:{position:"fixed",inset:"0",background:"rgba(40,37,31,.42)",display:"flex",alignItems:"center",justifyContent:"center",padding:"16px",zIndex:"50"}});
+  const sh=h("div",{style:{width:"100%",maxWidth:"520px",background:C.w,borderRadius:"20px",padding:"18px 20px 26px",maxHeight:"88vh",overflowY:"auto"}});
   const resultEl=h("div",{style:{marginTop:"12px"}});
   let timer=null;
   const dStyle={width:"100%",border:`1px solid ${C.line}`,borderRadius:"10px",padding:"10px 11px",fontSize:"13.5px",background:C.w,outline:"none"};
@@ -1561,8 +1561,8 @@ function buildComparison(cur,prev){
 
 // ── 카드 대금 스크린샷 분석 ──
 function showBillCapture(){
-  const ov=h("div",{style:{position:"fixed",inset:"0",background:"rgba(40,37,31,.42)",display:"flex",alignItems:"flex-end",justifyContent:"center",zIndex:"50"}});
-  const sh=h("div",{style:{width:"100%",maxWidth:"520px",background:C.w,borderRadius:"20px 20px 0 0",padding:"18px 20px 28px",maxHeight:"90vh",overflowY:"auto"}});
+  const ov=h("div",{style:{position:"fixed",inset:"0",background:"rgba(40,37,31,.42)",display:"flex",alignItems:"center",justifyContent:"center",padding:"16px",zIndex:"50"}});
+  const sh=h("div",{style:{width:"100%",maxWidth:"520px",background:C.w,borderRadius:"20px",padding:"18px 20px 28px",maxHeight:"88vh",overflowY:"auto"}});
   const lbl=t=>h("div",{style:{fontSize:"13px",fontWeight:"800",color:C.sub,marginBottom:"6px"}},t);
   const resultEl=h("div");
 
@@ -1672,8 +1672,8 @@ function showEditTxn(t, onDone){
   let selCat=t.category||"기타", selAcc=t.account||"개인";
   const isInstallment=!!t.installment_total;
 
-  const ov=h("div",{style:{position:"fixed",inset:"0",background:"rgba(40,37,31,.42)",display:"flex",alignItems:"flex-end",justifyContent:"center",zIndex:"60"}});
-  const sh=h("div",{style:{width:"100%",maxWidth:"520px",background:C.w,borderRadius:"20px 20px 0 0",padding:"18px 20px 28px",maxHeight:"92vh",overflowY:"auto"}});
+  const ov=h("div",{style:{position:"fixed",inset:"0",background:"rgba(40,37,31,.42)",display:"flex",alignItems:"center",justifyContent:"center",padding:"16px",zIndex:"60"}});
+  const sh=h("div",{style:{width:"100%",maxWidth:"520px",background:C.w,borderRadius:"20px",padding:"18px 20px 28px",maxHeight:"88vh",overflowY:"auto"}});
   const lbl=txt=>h("div",{style:{fontSize:"13px",fontWeight:"800",color:C.sub,marginBottom:"6px"}},txt);
 
   const amtEl=h("input",{type:"number",inputmode:"numeric",value:t.amount||"",class:"num",style:{flex:"1",border:"none",fontSize:"24px",fontWeight:"800",color:C.ink,background:"transparent"}});
@@ -1748,8 +1748,8 @@ function showCatDetail(catName){
   const items=S.txns.filter(t=>t.category===catName&&["spend","reduce"].includes(kindOf(t.type))&&t.account==="개인").sort((a,b)=>Number(b.amount)-Number(a.amount));
   const total=items.reduce((s,t)=>s+Number(t.amount),0);
   const c=CM[catName]||CM["기타"];
-  const ov=h("div",{style:{position:"fixed",inset:"0",background:"rgba(40,37,31,.42)",display:"flex",alignItems:"flex-end",justifyContent:"center",zIndex:"50"}});
-  const sh=h("div",{style:{width:"100%",maxWidth:"520px",background:C.w,borderRadius:"20px 20px 0 0",padding:"18px 20px 28px",maxHeight:"85vh",overflowY:"auto"}});
+  const ov=h("div",{style:{position:"fixed",inset:"0",background:"rgba(40,37,31,.42)",display:"flex",alignItems:"center",justifyContent:"center",padding:"16px",zIndex:"50"}});
+  const sh=h("div",{style:{width:"100%",maxWidth:"520px",background:C.w,borderRadius:"20px",padding:"18px 20px 28px",maxHeight:"85vh",overflowY:"auto"}});
   sh.append(h("div",{style:{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:"18px"}},
     h("div",{style:{display:"flex",alignItems:"center",gap:"12px"}},
       h("div",{style:{width:"42px",height:"42px",borderRadius:"13px",background:c.c+"1A",display:"flex",alignItems:"center",justifyContent:"center",fontSize:"21px",flexShrink:"0"}},c.i),
@@ -1929,8 +1929,8 @@ function showFixedDetail(fc,reload){
   const ym=S.curYm;
   const ov=getFcOverride(fc,ym);
   const c=(typeof CM!=="undefined"&&(CM[fc.category]||CM["기타"]))||{i:"📌",c:C.brand};
-  const ov2=h("div",{style:{position:"fixed",inset:"0",background:"rgba(40,37,31,.45)",display:"flex",alignItems:"flex-end",justifyContent:"center",zIndex:"70"},onclick:e=>{if(e.target===ov2)ov2.remove();}});
-  const sh=h("div",{style:{width:"100%",maxWidth:"540px",background:C.w,borderRadius:"22px 22px 0 0",padding:"20px 22px 30px",maxHeight:"92vh",overflowY:"auto"}});
+  const ov2=h("div",{style:{position:"fixed",inset:"0",background:"rgba(40,37,31,.45)",display:"flex",alignItems:"center",justifyContent:"center",padding:"16px",zIndex:"70"},onclick:e=>{if(e.target===ov2)ov2.remove();}});
+  const sh=h("div",{style:{width:"100%",maxWidth:"540px",background:C.w,borderRadius:"22px 22px 0 0",padding:"20px 22px 30px",maxHeight:"88vh",overflowY:"auto"}});
   const close=()=>ov2.remove();
 
   // 헤더
@@ -2424,8 +2424,8 @@ function buildFixed(){
 
 // ── 고정비 추가 시트 ──
 function showAddFixed(preset,onDone){
-  const ov=h("div",{style:{position:"fixed",inset:"0",background:"rgba(40,37,31,.42)",display:"flex",alignItems:"flex-end",justifyContent:"center",zIndex:"50"}});
-  const sh=h("div",{style:{width:"100%",maxWidth:"520px",background:C.w,borderRadius:"20px 20px 0 0",padding:"18px 20px 26px",maxHeight:"92vh",overflowY:"auto"}});
+  const ov=h("div",{style:{position:"fixed",inset:"0",background:"rgba(40,37,31,.42)",display:"flex",alignItems:"center",justifyContent:"center",padding:"16px",zIndex:"50"}});
+  const sh=h("div",{style:{width:"100%",maxWidth:"520px",background:C.w,borderRadius:"20px",padding:"18px 20px 26px",maxHeight:"88vh",overflowY:"auto"}});
   const lbl=t=>h("div",{style:{fontSize:"13px",fontWeight:"800",color:C.sub,marginBottom:"6px"}},t);
   let selCat="주거/공과금",selAcc="개인";
 
@@ -2478,8 +2478,8 @@ function showAddFixed(preset,onDone){
 
 // ── 고정비 수정 시트 ──
 function showEditFixed(fc,onDone){
-  const ov=h("div",{style:{position:"fixed",inset:"0",background:"rgba(40,37,31,.42)",display:"flex",alignItems:"flex-end",justifyContent:"center",zIndex:"50"}});
-  const sh=h("div",{style:{width:"100%",maxWidth:"520px",background:C.w,borderRadius:"20px 20px 0 0",padding:"18px 20px 26px",maxHeight:"92vh",overflowY:"auto"}});
+  const ov=h("div",{style:{position:"fixed",inset:"0",background:"rgba(40,37,31,.42)",display:"flex",alignItems:"center",justifyContent:"center",padding:"16px",zIndex:"50"}});
+  const sh=h("div",{style:{width:"100%",maxWidth:"520px",background:C.w,borderRadius:"20px",padding:"18px 20px 26px",maxHeight:"88vh",overflowY:"auto"}});
   const lbl=t=>h("div",{style:{fontSize:"13px",fontWeight:"800",color:C.sub,marginBottom:"6px"}},t);
   let selCat=fc.category||"주거/공과금",selAcc=fc.account||"개인";
 
@@ -2686,7 +2686,7 @@ function extractOHLC(d,closeArr){
   // ── 종목/지수 상세 차트 팝업 ──
 async function showAssetDetail(symbol,displayName,holding){
   const ov=h("div",{style:{position:"fixed",inset:"0",background:"rgba(40,37,31,.5)",display:"flex",alignItems:"center",justifyContent:"center",zIndex:"80",padding:"20px"}});
-  const box=h("div",{style:{width:"100%",maxWidth:"560px",background:C.w,borderRadius:"20px",padding:"22px",maxHeight:"90vh",overflowY:"auto"}});
+  const box=h("div",{style:{width:"100%",maxWidth:"560px",background:C.w,borderRadius:"20px",padding:"22px",maxHeight:"88vh",overflowY:"auto"}});
   const head=h("div",{style:{display:"flex",justifyContent:"space-between",alignItems:"flex-start",marginBottom:"6px"}},
     h("div",{},h("div",{style:{fontSize:"18px",fontWeight:"800"}},displayName||symbol),h("div",{style:{fontSize:"11.5px",color:C.faint,marginTop:"2px"}},symbol)),
     h("button",{style:{fontSize:"22px",color:C.sub},onclick:()=>ov.remove()},"✕")
@@ -2932,8 +2932,8 @@ function buildReturnCalendar(){
 
 // ══════════ 종목 직접 추가·삭제 ══════════
 function showHoldingManage(snapshotDate){
-  const ov=h("div",{style:{position:"fixed",inset:"0",background:"rgba(40,37,31,.42)",display:"flex",alignItems:"flex-end",justifyContent:"center",zIndex:"60"}});
-  const sh=h("div",{style:{width:"100%",maxWidth:"520px",background:C.w,borderRadius:"20px 20px 0 0",padding:"18px 20px 26px",maxHeight:"90vh",overflowY:"auto"}});
+  const ov=h("div",{style:{position:"fixed",inset:"0",background:"rgba(40,37,31,.42)",display:"flex",alignItems:"center",justifyContent:"center",padding:"16px",zIndex:"60"}});
+  const sh=h("div",{style:{width:"100%",maxWidth:"520px",background:C.w,borderRadius:"20px",padding:"18px 20px 26px",maxHeight:"88vh",overflowY:"auto"}});
   const lbl=t=>h("div",{style:{fontSize:"13px",fontWeight:"800",color:C.sub,marginBottom:"6px"}},t);
   let holdings=(S.holdings||[]).filter(x=>x.snapshot_date===snapshotDate);
   const listEl=h("div",{style:{display:"flex",flexDirection:"column",gap:"6px",marginBottom:"16px"}});
@@ -3173,8 +3173,8 @@ function ensureHiddenChip(ct,tab){
 }
 function openHiddenSheet(tab){
   const st=getCardState(tab);const keys=Object.keys(st).filter(k=>st[k]&&st[k].hid);
-  const ov=h("div",{style:{position:"fixed",inset:"0",background:"rgba(40,37,31,.42)",display:"flex",alignItems:"flex-end",justifyContent:"center",zIndex:"80"}});
-  const sh=h("div",{style:{width:"100%",maxWidth:"520px",background:C.w,borderRadius:"20px 20px 0 0",padding:"18px 20px 26px",maxHeight:"80vh",overflowY:"auto"}});
+  const ov=h("div",{style:{position:"fixed",inset:"0",background:"rgba(40,37,31,.42)",display:"flex",alignItems:"center",justifyContent:"center",padding:"16px",zIndex:"80"}});
+  const sh=h("div",{style:{width:"100%",maxWidth:"520px",background:C.w,borderRadius:"20px",padding:"18px 20px 26px",maxHeight:"80vh",overflowY:"auto"}});
   sh.append(h("div",{style:{fontSize:"16px",fontWeight:"800",marginBottom:"14px"}},"👁️ 숨긴 카드"));
   if(!keys.length)sh.append(h("div",{style:{fontSize:"13px",color:C.faint,padding:"10px 0"}},"숨긴 카드가 없어요."));
   keys.forEach(k=>{
@@ -3397,8 +3397,8 @@ function buildInvest(){
 }
 // ── ADD SHEET ──
 function showAdd(preset){
-  const ov=h("div",{style:{position:"fixed",inset:"0",background:"rgba(40,37,31,.42)",display:"flex",alignItems:"flex-end",justifyContent:"center",zIndex:"50"}});
-  const sh=h("div",{style:{width:"100%",maxWidth:"520px",background:C.w,borderRadius:"20px 20px 0 0",padding:"18px 20px 26px",maxHeight:"92vh",overflowY:"auto"}});
+  const ov=h("div",{style:{position:"fixed",inset:"0",background:"rgba(40,37,31,.42)",display:"flex",alignItems:"center",justifyContent:"center",padding:"16px",zIndex:"50"}});
+  const sh=h("div",{style:{width:"100%",maxWidth:"520px",background:C.w,borderRadius:"20px",padding:"18px 20px 26px",maxHeight:"88vh",overflowY:"auto"}});
   let selCat="외식/배달",selAcc="개인";
   const _p=preset||{};
   if(_p.account)selAcc=_p.account;
@@ -3488,8 +3488,8 @@ function showAdd(preset){
 
 // ── 보유종목 주가 계산 ──
 function showHoldingsCalc(onResult){
-  const ov=h("div",{style:{position:"fixed",inset:"0",background:"rgba(40,37,31,.42)",display:"flex",alignItems:"flex-end",justifyContent:"center",zIndex:"60"}});
-  const sh=h("div",{style:{width:"100%",maxWidth:"520px",background:C.w,borderRadius:"20px 20px 0 0",padding:"18px 20px 28px",maxHeight:"90vh",overflowY:"auto"}});
+  const ov=h("div",{style:{position:"fixed",inset:"0",background:"rgba(40,37,31,.42)",display:"flex",alignItems:"center",justifyContent:"center",padding:"16px",zIndex:"60"}});
+  const sh=h("div",{style:{width:"100%",maxWidth:"520px",background:C.w,borderRadius:"20px",padding:"18px 20px 28px",maxHeight:"88vh",overflowY:"auto"}});
   let holdings=getHoldings();
   const listEl=h("div",{style:{display:"flex",flexDirection:"column",gap:"8px",marginBottom:"12px"}});
   const totalEl=h("div",{style:{fontSize:"13px",color:C.sub,padding:"8px 0"}});
@@ -3585,8 +3585,8 @@ function showHoldingsCalc(onResult){
 
 // ── INVEST SHEET ──
 function showInvest(){
-  const ov=h("div",{style:{position:"fixed",inset:"0",background:"rgba(40,37,31,.42)",display:"flex",alignItems:"flex-end",justifyContent:"center",zIndex:"50"}});
-  const sh=h("div",{style:{width:"100%",maxWidth:"520px",background:C.w,borderRadius:"20px 20px 0 0",padding:"18px 20px 26px",maxHeight:"92vh",overflowY:"auto"}});
+  const ov=h("div",{style:{position:"fixed",inset:"0",background:"rgba(40,37,31,.42)",display:"flex",alignItems:"center",justifyContent:"center",padding:"16px",zIndex:"50"}});
+  const sh=h("div",{style:{width:"100%",maxWidth:"520px",background:C.w,borderRadius:"20px",padding:"18px 20px 26px",maxHeight:"88vh",overflowY:"auto"}});
   let parsedHoldings=[];
   const holdingsBox=h("div",{style:{display:"none",marginTop:"8px",marginBottom:"4px"}});
   const drawHoldings=()=>{
@@ -3757,8 +3757,8 @@ function catBubble(key,text,tone){
 // ── 분해 시트 (공통) ──
 function showBreakdownSheet(title,opts){
   const o=opts||{};
-  const ov=h("div",{style:{position:"fixed",inset:"0",background:"rgba(40,37,31,.42)",display:"flex",alignItems:"flex-end",justifyContent:"center",zIndex:"55"}});
-  const sh=h("div",{style:{width:"100%",maxWidth:"520px",background:C.w,borderRadius:"20px 20px 0 0",padding:"18px 20px 28px",maxHeight:"85vh",overflowY:"auto"}});
+  const ov=h("div",{style:{position:"fixed",inset:"0",background:"rgba(40,37,31,.42)",display:"flex",alignItems:"center",justifyContent:"center",padding:"16px",zIndex:"55"}});
+  const sh=h("div",{style:{width:"100%",maxWidth:"520px",background:C.w,borderRadius:"20px",padding:"18px 20px 28px",maxHeight:"85vh",overflowY:"auto"}});
   sh.append(h("div",{style:{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:o.subtitle?"4px":"14px"}},
     h("span",{style:{fontSize:"17px",fontWeight:"800"}},title),
     h("button",{style:{fontSize:"20px",color:C.sub},onclick:()=>ov.remove()},"✕")));
@@ -3832,8 +3832,8 @@ function showIncomeDetail(){
   const reduceTxns=S.txns.filter(t=>kindOf(t.type)==="reduce").sort((a,b)=>Number(b.amount)-Number(a.amount));
   const total=incomeTxns.reduce((s,t)=>s+Number(t.amount),0);
   const reduceTotal=reduceTxns.reduce((s,t)=>s+Number(t.amount),0);
-  const ov=h("div",{style:{position:"fixed",inset:"0",background:"rgba(40,37,31,.42)",display:"flex",alignItems:"flex-end",justifyContent:"center",zIndex:"55"}});
-  const sh=h("div",{style:{width:"100%",maxWidth:"520px",background:C.w,borderRadius:"20px 20px 0 0",padding:"18px 20px 28px",maxHeight:"88vh",overflowY:"auto"}});
+  const ov=h("div",{style:{position:"fixed",inset:"0",background:"rgba(40,37,31,.42)",display:"flex",alignItems:"center",justifyContent:"center",padding:"16px",zIndex:"55"}});
+  const sh=h("div",{style:{width:"100%",maxWidth:"520px",background:C.w,borderRadius:"20px",padding:"18px 20px 28px",maxHeight:"88vh",overflowY:"auto"}});
   const reloadHome=async()=>{await loadMonth();ov.remove();const ct=document.getElementById("ct");if(ct){ct.innerHTML="";buildHome().forEach(n=>ct.append(n));}};
   sh.append(h("div",{style:{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:"4px"}},
     h("div",{style:{display:"flex",alignItems:"center",gap:"11px"}},
@@ -3878,8 +3878,8 @@ function showIncomeDetail(){
 
 // ── IMPORT ──
 function showImport(){
-  const ov=h("div",{style:{position:"fixed",inset:"0",background:"rgba(40,37,31,.42)",display:"flex",alignItems:"flex-end",justifyContent:"center",zIndex:"50"}});
-  const sh=h("div",{style:{width:"100%",maxWidth:"720px",background:C.w,borderRadius:"20px 20px 0 0",padding:"18px 20px 26px",maxHeight:"92vh",overflowY:"auto"}});
+  const ov=h("div",{style:{position:"fixed",inset:"0",background:"rgba(40,37,31,.42)",display:"flex",alignItems:"center",justifyContent:"center",padding:"16px",zIndex:"50"}});
+  const sh=h("div",{style:{width:"100%",maxWidth:"720px",background:C.w,borderRadius:"20px",padding:"18px 20px 26px",maxHeight:"88vh",overflowY:"auto"}});
   let importData=[];
   const tableEl=h("div");
   const countEl=h("div",{style:{fontSize:"12.5px",color:C.sub,marginBottom:"10px",display:"none"}});
@@ -4184,8 +4184,8 @@ function buildDepositSection(depByPerson,st){
 
 // ── 공용 입금/지출 추가 시트 (결제수단 포함) ──
 function showAddDeposit(){
-  const ov=h("div",{style:{position:"fixed",inset:"0",background:"rgba(40,37,31,.42)",display:"flex",alignItems:"flex-end",justifyContent:"center",zIndex:"50"}});
-  const sh=h("div",{style:{width:"100%",maxWidth:"520px",background:C.w,borderRadius:"20px 20px 0 0",padding:"18px 20px 26px",maxHeight:"92vh",overflowY:"auto"}});
+  const ov=h("div",{style:{position:"fixed",inset:"0",background:"rgba(40,37,31,.42)",display:"flex",alignItems:"center",justifyContent:"center",padding:"16px",zIndex:"50"}});
+  const sh=h("div",{style:{width:"100%",maxWidth:"520px",background:C.w,borderRadius:"20px",padding:"18px 20px 26px",maxHeight:"88vh",overflowY:"auto"}});
   const lbl=t=>h("div",{style:{fontSize:"13px",fontWeight:"800",color:C.sub,marginBottom:"6px"}},t);
   let mode="입금",who="정근",selCat="공용생활비",selPay="공용통장";
   const amt=h("input",{type:"number",inputmode:"numeric",placeholder:"0",class:"num",style:{flex:"1",border:"none",fontSize:"24px",fontWeight:"800",color:C.ink,background:"transparent"}});
@@ -4244,8 +4244,8 @@ function showAddDeposit(){
 // ── 입금 목표 설정 시트 ──
 function showDepositGoal(){
   const st=getSharedTab();const goal=st.depositGoal||{"정근":0,"여친":0};
-  const ov=h("div",{style:{position:"fixed",inset:"0",background:"rgba(40,37,31,.42)",display:"flex",alignItems:"flex-end",justifyContent:"center",zIndex:"55"}});
-  const sh=h("div",{style:{width:"100%",maxWidth:"520px",background:C.w,borderRadius:"20px 20px 0 0",padding:"18px 20px 26px",maxHeight:"85vh",overflowY:"auto"}});
+  const ov=h("div",{style:{position:"fixed",inset:"0",background:"rgba(40,37,31,.42)",display:"flex",alignItems:"center",justifyContent:"center",padding:"16px",zIndex:"55"}});
+  const sh=h("div",{style:{width:"100%",maxWidth:"520px",background:C.w,borderRadius:"20px",padding:"18px 20px 26px",maxHeight:"85vh",overflowY:"auto"}});
   const lbl=t=>h("div",{style:{fontSize:"13px",fontWeight:"800",color:C.sub,marginBottom:"6px"}},t);
   const jEl=h("input",{type:"number",inputmode:"numeric",value:goal["정근"]||"",placeholder:"예: 500000",class:"num",style:{width:"100%",border:`1px solid ${C.line}`,borderRadius:"10px",padding:"11px 12px",fontSize:"14px"}});
   const yEl=h("input",{type:"number",inputmode:"numeric",value:goal["여친"]||"",placeholder:"예: 500000",class:"num",style:{width:"100%",border:`1px solid ${C.line}`,borderRadius:"10px",padding:"11px 12px",fontSize:"14px"}});
@@ -4270,8 +4270,8 @@ function showSharedFcDetail(sfc){
   const autoPaid=sfcPaidAuto(sfc);
   const manualPaid=!!st.paidManual[sfc.id];
   const matched=S.sharedTxns.find(t=>{if(sharedKindOf(t)!=="spend")return false;const a=Number(t.amount),fa=Number(sfc.amount);return t.category===sfc.category&&fa>0&&Math.abs(a-fa)/fa<0.45;});
-  const ov=h("div",{style:{position:"fixed",inset:"0",background:"rgba(40,37,31,.42)",display:"flex",alignItems:"flex-end",justifyContent:"center",zIndex:"55"}});
-  const sh=h("div",{style:{width:"100%",maxWidth:"520px",background:C.w,borderRadius:"20px 20px 0 0",padding:"18px 20px 28px",maxHeight:"85vh",overflowY:"auto"}});
+  const ov=h("div",{style:{position:"fixed",inset:"0",background:"rgba(40,37,31,.42)",display:"flex",alignItems:"center",justifyContent:"center",padding:"16px",zIndex:"55"}});
+  const sh=h("div",{style:{width:"100%",maxWidth:"520px",background:C.w,borderRadius:"20px",padding:"18px 20px 28px",maxHeight:"85vh",overflowY:"auto"}});
   const reloadShared=async()=>{await loadShared();const ct=document.getElementById("ct");if(ct){ct.innerHTML="";buildShared().forEach(n=>ct.append(n));}};
   sh.append(h("div",{style:{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:"18px"}},
     h("div",{style:{display:"flex",alignItems:"center",gap:"12px"}},
@@ -4314,8 +4314,8 @@ function showSharedFcDetail(sfc){
 // ── 공용 고정비 추가/수정 시트 ──
 function showSharedFcEdit(sfc){
   const isEdit=!!sfc;
-  const ov=h("div",{style:{position:"fixed",inset:"0",background:"rgba(40,37,31,.42)",display:"flex",alignItems:"flex-end",justifyContent:"center",zIndex:"60"}});
-  const sh=h("div",{style:{width:"100%",maxWidth:"520px",background:C.w,borderRadius:"20px 20px 0 0",padding:"18px 20px 26px",maxHeight:"92vh",overflowY:"auto"}});
+  const ov=h("div",{style:{position:"fixed",inset:"0",background:"rgba(40,37,31,.42)",display:"flex",alignItems:"center",justifyContent:"center",padding:"16px",zIndex:"60"}});
+  const sh=h("div",{style:{width:"100%",maxWidth:"520px",background:C.w,borderRadius:"20px",padding:"18px 20px 26px",maxHeight:"88vh",overflowY:"auto"}});
   const lbl=t=>h("div",{style:{fontSize:"13px",fontWeight:"800",color:C.sub,marginBottom:"6px"}},t);
   let selCat=sfc?.category||"주거/공과금",selPay=sfc?.pay||"공용통장";
   const nameEl=h("input",{type:"text",value:sfc?.name||"",placeholder:"예: 월세, 가스비",style:{width:"100%",border:`1px solid ${C.line}`,borderRadius:"10px",padding:"11px 12px",fontSize:"14px"}});
@@ -4756,8 +4756,8 @@ function assetMini(lbl,v){return h("div",{style:{background:"rgba(255,255,255,.1
 // ── 계좌 추가/수정 ──
 function showAccountEdit(acc){
   const isEdit=!!acc;
-  const ov=h("div",{style:{position:"fixed",inset:"0",background:"rgba(40,37,31,.42)",display:"flex",alignItems:"flex-end",justifyContent:"center",zIndex:"55"}});
-  const sh=h("div",{style:{width:"100%",maxWidth:"520px",background:C.w,borderRadius:"20px 20px 0 0",padding:"18px 20px 26px",maxHeight:"90vh",overflowY:"auto"}});
+  const ov=h("div",{style:{position:"fixed",inset:"0",background:"rgba(40,37,31,.42)",display:"flex",alignItems:"center",justifyContent:"center",padding:"16px",zIndex:"55"}});
+  const sh=h("div",{style:{width:"100%",maxWidth:"520px",background:C.w,borderRadius:"20px",padding:"18px 20px 26px",maxHeight:"88vh",overflowY:"auto"}});
   const lbl=t=>h("div",{style:{fontSize:"13px",fontWeight:"800",color:C.sub,marginBottom:"6px"}},t);
   let kind=acc?.kind||"통장",shared=acc?!!acc.household_id:false;
   const nameEl=h("input",{type:"text",value:acc?.name||"",placeholder:"예: 카카오뱅크, 신한, 공용통장",style:{width:"100%",border:`1px solid ${C.line}`,borderRadius:"10px",padding:"11px 12px",fontSize:"14px"}});
@@ -4843,8 +4843,8 @@ function savingsCalc(getCur,getTgt,getMon,getMat,getRate,watch){
 }
 function showSavingEdit(sv0){
   const isEdit=!!sv0;
-  const ov=h("div",{style:{position:"fixed",inset:"0",background:"rgba(40,37,31,.42)",display:"flex",alignItems:"flex-end",justifyContent:"center",zIndex:"55"}});
-  const sh=h("div",{style:{width:"100%",maxWidth:"520px",background:C.w,borderRadius:"20px 20px 0 0",padding:"18px 20px 26px",maxHeight:"90vh",overflowY:"auto"}});
+  const ov=h("div",{style:{position:"fixed",inset:"0",background:"rgba(40,37,31,.42)",display:"flex",alignItems:"center",justifyContent:"center",padding:"16px",zIndex:"55"}});
+  const sh=h("div",{style:{width:"100%",maxWidth:"520px",background:C.w,borderRadius:"20px",padding:"18px 20px 26px",maxHeight:"88vh",overflowY:"auto"}});
   const lbl=t=>h("div",{style:{fontSize:"13px",fontWeight:"800",color:C.sub,marginBottom:"6px"}},t);
   let kind=sv0?.kind||"적금";
   const nameEl=h("input",{type:"text",value:sv0?.name||"",placeholder:"예: 주택청약, 비상금통장",style:{width:"100%",border:`1px solid ${C.line}`,borderRadius:"10px",padding:"11px 12px",fontSize:"14px"}});
@@ -4885,8 +4885,8 @@ function showSavingEdit(sv0){
 
 function showLoanEdit(l0){
   const isEdit=!!l0;
-  const ov=h("div",{style:{position:"fixed",inset:"0",background:"rgba(40,37,31,.42)",display:"flex",alignItems:"flex-end",justifyContent:"center",zIndex:"55"}});
-  const sh=h("div",{style:{width:"100%",maxWidth:"520px",background:C.w,borderRadius:"20px 20px 0 0",padding:"18px 20px 26px",maxHeight:"90vh",overflowY:"auto"}});
+  const ov=h("div",{style:{position:"fixed",inset:"0",background:"rgba(40,37,31,.42)",display:"flex",alignItems:"center",justifyContent:"center",padding:"16px",zIndex:"55"}});
+  const sh=h("div",{style:{width:"100%",maxWidth:"520px",background:C.w,borderRadius:"20px",padding:"18px 20px 26px",maxHeight:"88vh",overflowY:"auto"}});
   const lbl=t=>h("div",{style:{fontSize:"13px",fontWeight:"800",color:C.sub,marginBottom:"6px"}},t);
   const inp=(v,ph,num)=>h("input",{type:num?"number":"text",inputmode:num?"numeric":"text",value:v??"",placeholder:ph,class:num?"num":"",style:{width:"100%",border:`1px solid ${C.line}`,borderRadius:"10px",padding:"11px 12px",fontSize:"14px"}});
   let kind=loanKind(l0||{});
@@ -4928,8 +4928,8 @@ function showLoanEdit(l0){
 
 // ── 더치페이 추가 (B방식: 전체 긁고 받을돈 빼기) ──
 function showDutchAdd(){
-  const ov=h("div",{style:{position:"fixed",inset:"0",background:"rgba(40,37,31,.42)",display:"flex",alignItems:"flex-end",justifyContent:"center",zIndex:"55"}});
-  const sh=h("div",{style:{width:"100%",maxWidth:"520px",background:C.w,borderRadius:"20px 20px 0 0",padding:"18px 20px 26px",maxHeight:"92vh",overflowY:"auto"}});
+  const ov=h("div",{style:{position:"fixed",inset:"0",background:"rgba(40,37,31,.42)",display:"flex",alignItems:"center",justifyContent:"center",padding:"16px",zIndex:"55"}});
+  const sh=h("div",{style:{width:"100%",maxWidth:"520px",background:C.w,borderRadius:"20px",padding:"18px 20px 26px",maxHeight:"88vh",overflowY:"auto"}});
   const lbl=t=>h("div",{style:{fontSize:"13px",fontWeight:"800",color:C.sub,marginBottom:"6px"}},t);
   let shareMode="인원",isShared=false,selCat="외식/배달";
   const totEl=h("input",{type:"number",inputmode:"numeric",placeholder:"총 결제액",class:"num",style:{width:"100%",border:`1px solid ${C.line}`,borderRadius:"10px",padding:"11px 12px",fontSize:"15px",fontWeight:"700"}});
@@ -4993,8 +4993,8 @@ function showDutchAdd(){
 
 // ── 더치페이 받음 처리 ──
 function showDutchReceive(d){
-  const ov=h("div",{style:{position:"fixed",inset:"0",background:"rgba(40,37,31,.42)",display:"flex",alignItems:"flex-end",justifyContent:"center",zIndex:"60"}});
-  const sh=h("div",{style:{width:"100%",maxWidth:"520px",background:C.w,borderRadius:"20px 20px 0 0",padding:"18px 20px 26px",maxHeight:"85vh",overflowY:"auto"}});
+  const ov=h("div",{style:{position:"fixed",inset:"0",background:"rgba(40,37,31,.42)",display:"flex",alignItems:"center",justifyContent:"center",padding:"16px",zIndex:"60"}});
+  const sh=h("div",{style:{width:"100%",maxWidth:"520px",background:C.w,borderRadius:"20px",padding:"18px 20px 26px",maxHeight:"85vh",overflowY:"auto"}});
   const lbl=t=>h("div",{style:{fontSize:"13px",fontWeight:"800",color:C.sub,marginBottom:"6px"}},t);
   let selAccId=S.accounts[0]?.id||null;
   const accWrap=h("div",{style:{display:"flex",flexWrap:"wrap",gap:"8px"}});
