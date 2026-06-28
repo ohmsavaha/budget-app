@@ -3977,6 +3977,22 @@ function buildShared(){
 
   const out=[];
 
+  // 🤝 공유 상태 배너
+  const shareTxt=h("div",{style:{fontSize:"12.5px",fontWeight:"700",color:C.brand}},"공유 상태 확인 중…");
+  out.push(h("div",{style:{background:"#EEF6F1",border:`1px solid ${C.brand}`,borderRadius:"14px",padding:"12px 15px",marginBottom:"12px",display:"flex",alignItems:"center",gap:"11px"}},
+    h("span",{style:{fontSize:"19px",flexShrink:"0"}},"🤝"),
+    h("div",{style:{flex:"1",minWidth:"0"}},shareTxt,h("div",{style:{fontSize:"10.5px",color:C.sub,marginTop:"2px"}},"공용 거래·고정비는 둘이 함께 봐요"))));
+  (async()=>{
+    try{
+      if(!S.householdId&&S.session){const{data:hm}=await sb.from("household_members").select("household_id").eq("user_id",S.session.user.id).maybeSingle();S.householdId=hm?.household_id||null;}
+      if(!S.householdId){shareTxt.textContent="아직 공유 가구가 없어요";shareTxt.style.color=C.sub;return;}
+      const{data:mem}=await sb.from("household_members").select("user_id").eq("household_id",S.householdId);
+      const n=(mem||[]).length;
+      if(n>=2)shareTxt.textContent=`다혜님과 공유 중 · ${n}명`;
+      else{shareTxt.textContent="혼자 쓰는 중";shareTxt.style.color=C.sub;}
+    }catch(e){shareTxt.textContent="";}
+  })();
+
   // ① 상단 요약 + 고양이 인사
   const hero=h("div",{style:{background:C.w,border:`1px solid ${C.line}`,borderRadius:"18px",padding:"20px"}},
     h("div",{style:{display:"flex",justifyContent:"space-between",alignItems:"flex-start",marginBottom:"4px"}},
