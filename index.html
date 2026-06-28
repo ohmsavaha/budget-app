@@ -3110,8 +3110,8 @@ function showDoneBar(){
 }
 function enterReorder(scope){
   ensureReorderStyle();REORDER.editing=true;REORDER.scope=scope;
-  if(scope==="tab"){const tb=document.getElementById("tabbar");if(tb)tb.classList.add("tabedit");}
-  else{const ct=document.getElementById("ct");if(ct)ct.classList.add("reorder-editing");}
+  const tb=document.getElementById("tabbar");if(tb)tb.classList.add("tabedit");
+  const ct=document.getElementById("ct");if(ct)ct.classList.add("reorder-editing");
   showDoneBar();
 }
 function exitReorder(){
@@ -3295,7 +3295,7 @@ function reorderCards(tab,cards){
     if(cs.col)el.classList.add("collapsed");
     addCardControls(el,tab,key);
     attachResize(el,tab,key);
-    attachDrag(el,{scope:"card",axis:"y",inEdit:()=>REORDER.scope==="card",onDrop:()=>persistOrder(tab)});
+    attachDrag(el,{scope:"card",axis:"y",inEdit:()=>REORDER.editing,onDrop:()=>persistOrder(tab)});
     if(!cs.hid)visible.push({el,key,i});
   });
   const saved=getCardOrder(tab);
@@ -3308,7 +3308,7 @@ function reorderCards(tab,cards){
 // 탭 바 재배치: defs=[[key,labelNode/btn],...] 이미 만들어진 버튼들에 핸들러+순서적용
 function reorderTabs(barEl,btns){
   ensureReorderStyle();
-  btns.forEach(({key,el})=>{el.dataset.tkey=key;el.classList.add("rtab");if(!el.style.position)el.style.position="relative";attachDrag(el,{scope:"tab",axis:"xy",inEdit:()=>REORDER.scope==="tab",onDrop:()=>persistTabs()});});
+  btns.forEach(({key,el})=>{el.dataset.tkey=key;el.classList.add("rtab");if(!el.style.position)el.style.position="relative";attachDrag(el,{scope:"tab",axis:"xy",inEdit:()=>REORDER.editing,onDrop:()=>persistTabs()});});
   return btns;
 }
 
@@ -3561,9 +3561,27 @@ function showAdd(preset){
     }
     ov.remove();await loadMonth();const ct=document.getElementById("ct");if(ct){ct.innerHTML="";buildHome().forEach(n=>ct.append(n));}
   };
+  // ⚡ 자주 쓰는 (최근 빈도) + 사용처 자동완성
+  const _freq={};
+  (S.txns||[]).forEach(t=>{if(kindOf(t.type)!=="spend")return;const m=(t.merchant||"").trim();if(!m)return;const g=_freq[m]||(_freq[m]={cnt:0,cat:t.category,acc:t.account,pay:t.payment_method});g.cnt++;});
+  const favs=Object.entries(_freq).sort((a,b)=>b[1].cnt-a[1].cnt).slice(0,6);
+  const favRow=h("div",{style:{marginBottom:"14px"}});
+  if(favs.length){
+    favRow.append(h("div",{style:{fontSize:"12px",fontWeight:"700",color:C.sub,marginBottom:"7px"}},"⚡ 자주 쓰는"));
+    const chips=h("div",{style:{display:"flex",flexWrap:"wrap",gap:"7px"}});
+    favs.forEach(([name,f])=>chips.append(h("button",{style:{fontSize:"12.5px",fontWeight:"600",padding:"7px 12px",borderRadius:"999px",border:`1px solid ${C.line}`,background:C.soft,color:C.ink,cursor:"pointer"},onclick:()=>{mer.value=name;if(f.cat)selCat=f.cat;if(f.acc)selAcc=f.acc;if(f.pay&&payList().includes(f.pay))selPay=f.pay;drawCats();drawAcc();drawPay();autoHint.style.display="none";if(!amt.value)amt.focus();}},name)));
+    favRow.append(chips);
+  }
+  // 자동완성 datalist (빌트인 규칙 + 내 규칙 + 최근 가맹점)
+  let _userR={};try{_userR=getUserRules()||{};}catch{}
+  const _allMerch=[...new Set([...Object.keys(BUILTIN_RULES||{}),...Object.keys(_userR),...(S.txns||[]).map(t=>(t.merchant||"").trim()).filter(Boolean)])];
+  const dlist=h("datalist",{id:"merOptions_add"});
+  _allMerch.slice(0,500).forEach(m=>dlist.append(h("option",{value:m})));
+  mer.setAttribute("list","merOptions_add");
   const lbl=t=>h("div",{style:{fontSize:"13px",fontWeight:"800",color:C.sub,marginBottom:"6px"}},t);
   sh.append(
     h("div",{style:{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:"16px"}},h("span",{style:{fontSize:"17px",fontWeight:"800"}},"빠른 입력"),h("button",{style:{fontSize:"20px",color:C.sub},onclick:()=>ov.remove()},"✕")),
+    favRow,dlist,
     h("div",{style:{marginBottom:"14px"}},lbl("금액"),h("div",{style:{display:"flex",alignItems:"center",border:`1px solid ${C.line}`,borderRadius:"12px",padding:"10px 14px"}},h("span",{style:{fontSize:"22px",fontWeight:"700",color:C.faint,marginRight:"6px"}},"₩"),amt)),
     lbl("계정"),h("div",{style:{marginBottom:"13px"}},accRow),
     lbl("결제수단"),h("div",{style:{marginBottom:"13px"}},payWrap),
