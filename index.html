@@ -4231,8 +4231,11 @@ function buildAssets(){
   const accTotal=S.accounts.reduce((s,a)=>s+Number(a.balance||0),0);
   const savTotal=S.savings.reduce((s,a)=>s+Number(a.current_amount||0),0);
   const invTotal=S.investTotal||0;
-  const debtTotal=(S.loans||[]).reduce((s,l)=>s+loanBal(l),0);
-  const netWorth=accTotal+savTotal+invTotal-debtTotal;
+  const odUsed=S.accounts.reduce((s,a)=>{const od=getOD(a.id);return s+((od&&od.on)?accUsed(a):0);},0);
+  const loanDebt=(S.loans||[]).reduce((s,l)=>s+loanBal(l),0);
+  const assetAcc=accTotal+odUsed;            // 계좌 합계는 마이너스 사용액 제외(순수 자산만)
+  const debtTotal=loanDebt+odUsed;           // 부채 = 대출 + 마이너스 사용액
+  const netWorth=accTotal+savTotal+invTotal-loanDebt; // 순자산 = 기존과 동일
   const toReceive=S.dutch.filter(d=>!d.received).reduce((s,d)=>s+Number(d.to_receive||0),0);
 
   // ① 총자산 hero
@@ -4242,9 +4245,9 @@ function buildAssets(){
       catImg("networth",62,{filter:"drop-shadow(0 2px 4px rgba(0,0,0,.2))"})
     ),
     h("div",{style:{display:"grid",gridTemplateColumns:"repeat(3,1fr)",gap:"8px",marginTop:"18px"}},
-      assetMini("🏦 계좌",accTotal),assetMini("🐷 저축",savTotal),assetMini("📈 투자",invTotal)
+      assetMini("🏦 계좌",assetAcc),assetMini("🐷 저축",savTotal),assetMini("📈 투자",invTotal)
     ),
-    debtTotal>0?h("div",{style:{marginTop:"10px",background:"rgba(0,0,0,.18)",borderRadius:"11px",padding:"10px 13px",fontSize:"12.5px",display:"flex",justifyContent:"space-between",alignItems:"center"}},h("span",{},"💳 대출 잔액 (부채)"),h("span",{class:"num",style:{fontWeight:"800"}},"−"+W(debtTotal).slice(1))):"",
+    debtTotal>0?h("div",{style:{marginTop:"10px",background:"rgba(0,0,0,.18)",borderRadius:"11px",padding:"10px 13px",fontSize:"12.5px",display:"flex",justifyContent:"space-between",alignItems:"center"}},h("span",{},"💳 부채 (대출+마이너스)"),h("span",{class:"num",style:{fontWeight:"800"}},"−"+W(debtTotal).slice(1))):"",
     ""
   );
   out.push(hero);
@@ -4354,7 +4357,7 @@ function buildAssets(){
       prin>0?h("div",{style:{fontSize:"10.5px",color:C.faint,marginTop:"5px"}},`${pct}% 상환 · 남은 빚 ${W(bal)}`):""
     ));
   });
-  if(loans.length)loanSec.append(h("div",{style:{display:"flex",justifyContent:"space-between",padding:"11px 4px 2px",fontSize:"13px",fontWeight:"800"}},h("span",{style:{color:C.sub}},"대출 잔액 합계"),h("span",{class:"num",style:{color:C.over}},W(debtTotal))));
+  if(loans.length)loanSec.append(h("div",{style:{display:"flex",justifyContent:"space-between",padding:"11px 4px 2px",fontSize:"13px",fontWeight:"800"}},h("span",{style:{color:C.sub}},"대출 잔액 합계"),h("span",{class:"num",style:{color:C.over}},W(loanDebt))));
   out.push(loanSec);
 
   // 💸 이자 손해 요약 (대출 + 마이너스통장)
@@ -4365,7 +4368,9 @@ function buildAssets(){
     out.push(h("div",{style:{background:"#FEF2EE",border:`1px solid ${C.over}`,borderRadius:"16px",padding:"16px 18px",marginTop:"12px"}},
       h("div",{style:{fontSize:"12.5px",fontWeight:"800",color:C.over,marginBottom:"6px"}},"💸 빚으로 새는 이자"),
       h("div",{style:{display:"flex",alignItems:"baseline",gap:"7px",flexWrap:"wrap"}},h("span",{style:{fontSize:"12px",color:C.sub}},"매달 약"),h("span",{class:"num",style:{fontSize:"24px",fontWeight:"800",color:C.over}},W(Math.round(totMonthInt))),h("span",{style:{fontSize:"12px",color:C.sub}},`· 연 ${W(Math.round(totMonthInt*12))}`)),
-      h("div",{style:{fontSize:"11px",color:C.sub,marginTop:"8px",lineHeight:"1.6"}},"아무것도 안 사고 빚 때문에 나가는 돈이에요. 빨리 갚을수록 이만큼 아껴요. 위 항목을 탭하면 상환 계산기가 있어요.")
+      h("div",{style:{fontSize:"11px",color:C.sub,marginTop:"8px",lineHeight:"1.6"}},"아무것도 안 사고 빚 때문에 나가는 돈이에요. 빨리 갚을수록 이만큼 아껴요."),
+      h("div",{style:{borderTop:`1px solid #F3D9CE`,marginTop:"12px",paddingTop:"4px"}},
+        repayCalc(()=>debtTotal,()=>{const tb=debtTotal;return tb>0?(totMonthInt*12)/tb*100:0;},[]))
     ));
   }
 
