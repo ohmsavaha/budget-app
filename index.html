@@ -4357,16 +4357,28 @@ function buildAssets(){
   if(!S.savings.length)savSec.append(empty("적금·예금·비상금을 등록해보세요."));
   else S.savings.forEach(s=>{
     const g=Number(s.target_amount||0),cur=Number(s.current_amount||0),pct=g>0?Math.min(100,Math.round(cur/g*100)):0;
+    const _se=getSavExt(s.id),_mon=Number(s.monthly_amount||0);let _hint="";
+    if(g>0&&cur>=g)_hint="🎉 목표 달성!";else if(g>cur&&_mon>0)_hint=`이 속도면 ${Math.ceil((g-cur)/_mon)}개월 후 목표 도달`;
+    if(_se&&_se.maturity){const _dd=Math.ceil((new Date(_se.maturity+"T00:00:00")-new Date())/86400000);_hint=(_hint?_hint+" · ":"")+(_dd>=0?`만기 D-${_dd}`:"만기 지남");}
+    const goalHint=_hint?h("div",{style:{fontSize:"10.5px",color:C.brand,marginTop:"7px",fontWeight:"600"}},_hint):"";
     savSec.append(h("div",{style:{padding:"12px 4px",borderBottom:`1px solid ${C.line}`,cursor:"pointer"},onclick:()=>showSavingEdit(s)},
       h("div",{style:{display:"flex",alignItems:"center",gap:"11px"}},
         h("div",{style:{width:"36px",height:"36px",borderRadius:"10px",background:C.soft,display:"flex",alignItems:"center",justifyContent:"center",fontSize:"17px"}},SAV_ICON[s.kind]||"🐷"),
         h("div",{style:{flex:"1",minWidth:"0"}},h("div",{style:{fontSize:"14px",fontWeight:"600"}},s.name),h("div",{style:{fontSize:"11.5px",color:C.sub,marginTop:"2px"}},s.kind+(Number(s.monthly_amount)>0?` · 매월 ${W(s.monthly_amount)}`:""))),
         h("div",{style:{textAlign:"right"}},h("div",{class:"num",style:{fontSize:"14.5px",fontWeight:"700"}},W(cur)),g>0?h("div",{style:{fontSize:"11px",color:C.faint,marginTop:"2px"}},`/ ${W(g)}`):"")
       ),
-      g>0?h("div",{style:{height:"7px",borderRadius:"999px",background:"#F0ECE3",overflow:"hidden",marginTop:"9px"}},h("div",{style:{width:pct+"%",height:"100%",background:pct>=100?C.brand:C.warn,borderRadius:"999px"}})):""
+      g>0?h("div",{style:{height:"7px",borderRadius:"999px",background:"#F0ECE3",overflow:"hidden",marginTop:"9px"}},h("div",{style:{width:pct+"%",height:"100%",background:pct>=100?C.brand:C.warn,borderRadius:"999px"}})):"",goalHint
     ));
   });
   if(S.savings.length)savSec.append(h("div",{style:{display:"flex",justifyContent:"space-between",padding:"11px 4px 2px",fontSize:"13px",fontWeight:"800"}},h("span",{style:{color:C.sub}},"저축 합계"),h("span",{class:"num"},W(savTotal))));
+  const savInt=(S.savings||[]).reduce((acc,sv)=>{const e=getSavExt(sv.id);return acc+(e&&e.rate?Number(sv.current_amount||0)*Number(e.rate)/100:0);},0);
+  if(savInt>0){
+    out.push(h("div",{style:{background:"#EEF6F1",border:`1px solid ${C.brand}`,borderRadius:"16px",padding:"15px 17px",marginTop:"12px"}},
+      h("div",{style:{fontSize:"12.5px",fontWeight:"800",color:C.brand,marginBottom:"6px"}},"💰 저축으로 버는 이자"),
+      h("div",{style:{display:"flex",alignItems:"baseline",gap:"7px",flexWrap:"wrap"}},h("span",{style:{fontSize:"12px",color:C.sub}},"연 약"),h("span",{class:"num",style:{fontSize:"22px",fontWeight:"800",color:C.brand}},W(Math.round(savInt))),h("span",{style:{fontSize:"12px",color:C.sub}},`· 월 ${W(Math.round(savInt/12))}`)),
+      h("div",{style:{fontSize:"11px",color:C.sub,marginTop:"8px",lineHeight:"1.6"}},"가만히 둬도 이자로 버는 돈이에요. 빚 이자보다 많으면 자산이 불어나고 있어요.")
+    ));
+  }
   out.push(savSec);
 
   // 💳 대출
@@ -4470,6 +4482,30 @@ function showAccountEdit(acc){
 }
 
 // ── 저축 추가/수정 ──
+const getSavExt=(id)=>{try{return JSON.parse(localStorage.getItem("savext:"+id)||"null");}catch{return null;}};
+const setSavExt=(id,o)=>{try{if(o&&(o.maturity||o.rate))localStorage.setItem("savext:"+id,JSON.stringify(o));else localStorage.removeItem("savext:"+id);}catch{}};
+function savingsCalc(getCur,getTgt,getMon,getMat,getRate,watch){
+  const wrap=h("div",{style:{background:C.soft,borderRadius:"12px",padding:"13px 15px",marginTop:"10px"}});
+  const out=h("div",{});
+  const calc=()=>{
+    const cur=getCur(),tgt=getTgt(),mon=getMon(),mat=getMat(),rate=getRate();
+    const lines=[];
+    if(tgt>0&&cur>=tgt)lines.push(["목표 달성 🎉","완료!",C.brand]);
+    else if(tgt>cur&&mon>0){const months=Math.ceil((tgt-cur)/mon);const d=new Date();d.setMonth(d.getMonth()+months);lines.push(["목표 도달까지",`${months}개월 · ${d.getFullYear()}.${String(d.getMonth()+1).padStart(2,"0")}`,C.ink]);}
+    if(mat){const md=new Date(mat+"T00:00:00"),now=new Date();const dday=Math.ceil((md-now)/86400000);const mleft=Math.max(0,Math.round((md-now)/86400000/30.4));
+      const contrib=cur+mon*mleft;const interest=rate>0?Math.round((cur+contrib)/2*(rate/100)*(mleft/12)):0;const fv=contrib+interest;
+      lines.push(["만기일",`${mat} · ${dday>=0?"D-"+dday:Math.abs(dday)+"일 지남"}`,C.ink]);
+      lines.push(["만기 예상 수령액",W(fv)+(interest>0?` (이자 약 ${W(interest)})`:""),C.brand]);
+    }
+    out.innerHTML="";
+    if(!lines.length){out.append(h("div",{style:{fontSize:"11.5px",color:C.faint,lineHeight:"1.6"}},"목표액+매월 납입을 넣으면 도달 시점이, 만기일+이율을 넣으면 예상 수령액이 나와요."));return;}
+    lines.forEach(([k,v,c])=>out.append(h("div",{style:{display:"flex",justifyContent:"space-between",fontSize:"12.5px",padding:"4px 0"}},h("span",{style:{color:C.sub}},k),h("span",{class:"num",style:{fontWeight:"800",color:c||C.ink}},v))));
+  };
+  (watch||[]).forEach(el=>el&&el.addEventListener("input",calc));
+  wrap.append(h("div",{style:{fontSize:"12px",fontWeight:"800",color:C.sub,marginBottom:"8px"}},"🎯 만기·목표 계산기"),out);
+  calc();
+  return wrap;
+}
 function showSavingEdit(sv0){
   const isEdit=!!sv0;
   const ov=h("div",{style:{position:"fixed",inset:"0",background:"rgba(40,37,31,.42)",display:"flex",alignItems:"flex-end",justifyContent:"center",zIndex:"55"}});
@@ -4480,6 +4516,9 @@ function showSavingEdit(sv0){
   const curEl=h("input",{type:"number",inputmode:"numeric",value:sv0?.current_amount??"",placeholder:"0",class:"num",style:{width:"100%",border:`1px solid ${C.line}`,borderRadius:"10px",padding:"11px 12px",fontSize:"14px"}});
   const tgtEl=h("input",{type:"number",inputmode:"numeric",value:sv0?.target_amount??"",placeholder:"목표액 (선택)",class:"num",style:{width:"100%",border:`1px solid ${C.line}`,borderRadius:"10px",padding:"11px 12px",fontSize:"14px"}});
   const monEl=h("input",{type:"number",inputmode:"numeric",value:sv0?.monthly_amount??"",placeholder:"매월 (선택)",class:"num",style:{width:"100%",border:`1px solid ${C.line}`,borderRadius:"10px",padding:"11px 12px",fontSize:"14px"}});
+  const svExt=sv0?getSavExt(sv0.id):null;
+  const matEl=h("input",{type:"date",value:svExt?.maturity||"",style:{width:"100%",border:`1px solid ${C.line}`,borderRadius:"10px",padding:"11px 12px",fontSize:"14px",background:C.w}});
+  const srateEl=h("input",{type:"number",inputmode:"decimal",value:svExt?.rate??"",placeholder:"연 이율 % (선택)",class:"num",style:{width:"100%",border:`1px solid ${C.line}`,borderRadius:"10px",padding:"11px 12px",fontSize:"14px"}});
   const kindWrap=h("div",{style:{display:"flex",gap:"7px",flexWrap:"wrap"}});
   const drawKind=()=>{kindWrap.innerHTML="";SAV_KINDS.forEach(k=>{const on=kind===k;kindWrap.append(h("button",{style:{fontSize:"13px",padding:"8px 14px",borderRadius:"999px",border:`1px solid ${on?C.brand:C.line}`,background:on?C.soft:C.w,color:on?C.brand:C.ink,fontWeight:on?"700":"500",cursor:"pointer"},onclick:()=>{kind=k;drawKind();}},(SAV_ICON[k]||"")+" "+k));});};
   drawKind();
@@ -4488,10 +4527,11 @@ function showSavingEdit(sv0){
     if(!nameEl.value.trim()){alert("이름을 입력해주세요.");return;}
     sv.disabled=true;sv.textContent="저장 중…";
     const payload={name:nameEl.value.trim(),kind,current_amount:Number(curEl.value)||0,target_amount:Number(tgtEl.value)||0,monthly_amount:Number(monEl.value)||0};
-    let error;
+    let error,newId=sv0?.id;
     if(isEdit)({error}=await sb.from("savings").update(payload).eq("id",sv0.id));
-    else({error}=await sb.from("savings").insert({...payload,is_active:true}));
+    else{const{data:ins,error:e}=await sb.from("savings").insert({...payload,is_active:true}).select("id").single();error=e;newId=ins?.id;}
     if(error){alert("저장 실패: "+error.message);sv.disabled=false;sv.textContent=isEdit?"수정 저장":"추가하기";return;}
+    if(newId)setSavExt(newId,{maturity:matEl.value||null,rate:Number(srateEl.value)||0});
     ov.remove();reloadAssets();
   };
   sh.append(
@@ -4499,7 +4539,9 @@ function showSavingEdit(sv0){
     h("div",{style:{marginBottom:"13px"}},lbl("이름"),nameEl),
     h("div",{style:{marginBottom:"13px"}},lbl("종류"),kindWrap),
     h("div",{style:{marginBottom:"13px"}},lbl("현재 모은 금액"),curEl),
-    h("div",{style:{display:"grid",gridTemplateColumns:"1fr 1fr",gap:"10px",marginBottom:"4px"}},h("div",{},lbl("목표액"),tgtEl),h("div",{},lbl("매월 납입"),monEl)),
+    h("div",{style:{display:"grid",gridTemplateColumns:"1fr 1fr",gap:"10px",marginBottom:"13px"}},h("div",{},lbl("목표액"),tgtEl),h("div",{},lbl("매월 납입"),monEl)),
+    h("div",{style:{display:"grid",gridTemplateColumns:"1fr 1fr",gap:"10px",marginBottom:"4px"}},h("div",{},lbl("만기일 (선택)"),matEl),h("div",{},lbl("연 이율% (선택)"),srateEl)),
+    savingsCalc(()=>Number(curEl.value)||0,()=>Number(tgtEl.value)||0,()=>Number(monEl.value)||0,()=>matEl.value,()=>Number(srateEl.value)||0,[curEl,tgtEl,monEl,matEl,srateEl]),
     isEdit?h("button",{style:{width:"100%",marginTop:"12px",fontSize:"13px",color:C.over,fontWeight:"700",padding:"11px",border:`1px solid ${C.over}`,borderRadius:"11px",background:C.w,cursor:"pointer"},onclick:async()=>{if(!confirm(`'${sv0.name}'을 삭제할까요?`))return;await sb.from("savings").update({is_active:false}).eq("id",sv0.id);ov.remove();reloadAssets();}},"🗑️ 삭제"):"",
     sv
   );
