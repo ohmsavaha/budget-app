@@ -669,7 +669,7 @@ function buildExcludeSuggest(){
   const pat=/이자|충전|송금|이체|atm|출금|상환|보증금|예치|카드대금|환전|인출/i;
   const station=/충전소|주유|가스|lpg/i;  // LPG·주유소는 소비(주유)이므로 감지 제외
   const dismissed=getSuggestDismiss();
-  const cand=(S.txns||[]).filter(t=>{const txt=(t.merchant||"")+" "+(t.category||"");const k=(t.merchant||t.category||"").trim();return kindOf(t.type)==="spend"&&!isExcludedSpend(t)&&pat.test(txt)&&!station.test(txt)&&!dismissed.includes(k);});
+  const cand=(S.txns||[]).filter(t=>{const txt=(t.merchant||"")+" "+(t.category||"");const k=(t.merchant||t.category||"").trim();return kindOf(t.type)==="spend"&&!isExcludedSpend(t)&&!isFixedExpenseTx(t)&&pat.test(txt)&&!station.test(txt)&&!dismissed.includes(k);});
   if(!cand.length)return null;
   const byKw={};
   cand.forEach(t=>{const k=(t.merchant||t.category||"").trim();if(!k)return;const g=byKw[k]||(byKw[k]={sum:0,cnt:0});g.sum+=Number(t.amount)||0;g.cnt++;});
@@ -823,7 +823,7 @@ function buildHome(){
   else{drawCatRows();catSec.append(catList);}
   const recSec=sec("최근 내역",`${S.txns.length}건`);
   if(!S.txns.length)recSec.append(empty("첫 거래를 추가해보세요."));
-  else S.txns.slice(0,15).forEach(t=>{
+  else S.txns.slice(0,S.recentN||15).forEach(t=>{
     const c=CM[t.category]||CM["기타"],k=kindOf(t.type);
     const sg=k==="income"||k==="reduce"?"+":k==="spend"?"−":"",cl=k==="income"||k==="reduce"?C.brand:C.ink;
     const reloadHome=async()=>{await loadMonth();const ct=document.getElementById("ct");if(ct){ct.innerHTML="";buildHome().forEach(n=>ct.append(n));}};
@@ -844,6 +844,10 @@ function buildHome(){
       )
     ));
   });
+  if(S.txns.length>(S.recentN||15)){
+    recSec.append(h("button",{style:{width:"100%",marginTop:"10px",fontSize:"13px",fontWeight:"700",color:C.brand,background:C.soft,border:`1px solid ${C.line}`,borderRadius:"11px",padding:"11px",cursor:"pointer"},onclick:()=>{S.recentN=(S.recentN||15)+30;const ct=document.getElementById("ct");if(ct){ct.innerHTML="";buildHome().forEach(n=>ct.append(n));}}},`＋ 더 보기 (남은 ${S.txns.length-(S.recentN||15)}건)`));
+  }
+  recSec.append(h("button",{style:{width:"100%",marginTop:"8px",fontSize:"13px",fontWeight:"700",color:C.sub,background:C.w,border:`1px solid ${C.line}`,borderRadius:"11px",padding:"11px",cursor:"pointer"},onclick:()=>showSearch()},"🔍 기간·키워드로 거래 찾기"));
   const billSec=buildNextMonthBill();
   const sharedSec=buildSharedSection(st,cfg);
   const insightSec=buildInsight(st,prevSt);
@@ -1322,61 +1326,77 @@ function buildYearly(){
 }
 
 // ── 거래 검색 ──
-function showSearch(){
+function showSearch(opt){
   const ov=h("div",{style:{position:"fixed",inset:"0",background:"rgba(40,37,31,.42)",display:"flex",alignItems:"flex-end",justifyContent:"center",zIndex:"50"}});
-  const sh=h("div",{style:{width:"100%",maxWidth:"520px",background:C.w,borderRadius:"20px 20px 0 0",padding:"18px 20px 26px",maxHeight:"90vh",overflowY:"auto"}});
+  const sh=h("div",{style:{width:"100%",maxWidth:"520px",background:C.w,borderRadius:"20px 20px 0 0",padding:"18px 20px 26px",maxHeight:"92vh",overflowY:"auto"}});
   const resultEl=h("div",{style:{marginTop:"12px"}});
   let timer=null;
+  const dStyle={width:"100%",border:`1px solid ${C.line}`,borderRadius:"10px",padding:"10px 11px",fontSize:"13.5px",background:C.w,outline:"none"};
+  const inp=h("input",{type:"text",placeholder:"가맹점·카테고리·메모 (선택)",autocomplete:"off",style:{width:"100%",border:`1px solid ${C.brand}`,borderRadius:"12px",padding:"12px 14px",fontSize:"15px",outline:"none"}});
+  const fromEl=h("input",{type:"date",value:opt?.from||"",style:dStyle});
+  const toEl=h("input",{type:"date",value:opt?.to||"",style:dStyle});
 
-  const inp=h("input",{type:"text",placeholder:"가맹점, 카테고리, 메모 검색…",autocomplete:"off",style:{width:"100%",border:`1px solid ${C.brand}`,borderRadius:"12px",padding:"12px 14px",fontSize:"15px",outline:"none"}});
-  inp.oninput=e=>{
-    clearTimeout(timer);
-    const q=e.target.value.trim();
-    if(q.length<2){resultEl.innerHTML="";return;}
-    resultEl.innerHTML='<div class="center"><div class="spin"></div></div>';
-    timer=setTimeout(async()=>{
-      const{data}=await sb.from("transactions").select("*").or(`merchant.ilike.%${q}%,memo.ilike.%${q}%,category.ilike.%${q}%`).order("date",{ascending:false}).limit(60);
-      const results=data||[];
-      resultEl.innerHTML="";
-      if(!results.length){resultEl.append(empty(`"${q}" 검색 결과 없음`));return;}
-      const total=results.reduce((s,t)=>s+Number(t.amount),0);
-      resultEl.append(h("div",{style:{fontSize:"12.5px",color:C.sub,padding:"0 2px 8px",display:"flex",justifyContent:"space-between"}},
-        h("span",{},`${results.length}건`),h("span",{class:"num"},`합계 ${W(total)}`)
-      ));
-      const reloadSearch=async()=>{
-        const q2=inp.value.trim();
-        if(q2.length<2)return;
-        const{data:d2}=await sb.from("transactions").select("*").or(`merchant.ilike.%${q2}%,memo.ilike.%${q2}%,category.ilike.%${q2}%`).order("date",{ascending:false}).limit(60);
-        resultEl.innerHTML="";
-        (d2||[]).forEach(drawRow);
-        await loadMonth();
-        const ct=document.getElementById("ct");
-        if(ct){ct.innerHTML="";buildHome().forEach(n=>ct.append(n));}
-      };
-      const drawRow=t=>{
-        const c=CM[t.category]||CM["기타"],k=kindOf(t.type);
-        const cl=k==="income"||k==="reduce"?C.brand:C.ink;
-        const sg=k==="income"||k==="reduce"?"+":k==="spend"?"−":"";
-        resultEl.append(h("div",{
-          style:{display:"flex",alignItems:"center",gap:"11px",padding:"10px 4px",borderBottom:`1px solid ${C.line}`,cursor:"pointer",transition:"background .12s",borderRadius:"4px"},
-          onmouseenter:e=>{e.currentTarget.style.background="#F6F4EF";},
-          onmouseleave:e=>{e.currentTarget.style.background="transparent";},
-          onclick:()=>showEditTxn(t,reloadSearch)
-        },
-          h("div",{style:{width:"32px",height:"32px",borderRadius:"9px",background:c.c+"1A",display:"flex",alignItems:"center",justifyContent:"center",fontSize:"14px",flexShrink:"0"}},c.i),
-          h("div",{style:{flex:"1",minWidth:"0"}},
-            h("div",{style:{fontSize:"13.5px",fontWeight:"600",whiteSpace:"nowrap",overflow:"hidden",textOverflow:"ellipsis"}},(t.merchant||t.category||t.type)+(t.installment_total?` (${t.installment_no}/${t.installment_total})`:"")),
-            h("div",{style:{fontSize:"11.5px",color:C.sub,marginTop:"1px"}},`${(t.date||"").slice(5)} · ${t.account} · ${t.category}`)
-          ),
-          h("div",{style:{display:"flex",alignItems:"center",gap:"6px"}},
-            h("div",{class:"num",style:{fontSize:"13.5px",fontWeight:"700",color:cl,whiteSpace:"nowrap"}},`${sg}${W(t.amount).slice(1)}`),
-            h("span",{style:{fontSize:"12px",color:C.faint}},"›")
-          )
-        ));
-      };
-      results.forEach(drawRow);
-    },300);
+  const drawRow=t=>{
+    const c=CM[t.category]||CM["기타"],k=kindOf(t.type);
+    const cl=k==="income"||k==="reduce"?C.brand:C.ink;
+    const sg=k==="income"||k==="reduce"?"+":k==="spend"?"−":"";
+    resultEl.append(h("div",{
+      style:{display:"flex",alignItems:"center",gap:"11px",padding:"10px 4px",borderBottom:`1px solid ${C.line}`,cursor:"pointer",transition:"background .12s",borderRadius:"4px"},
+      onmouseenter:e=>{e.currentTarget.style.background="#F6F4EF";},
+      onmouseleave:e=>{e.currentTarget.style.background="transparent";},
+      onclick:()=>showEditTxn(t,run)
+    },
+      h("div",{style:{width:"32px",height:"32px",borderRadius:"9px",background:c.c+"1A",display:"flex",alignItems:"center",justifyContent:"center",fontSize:"14px",flexShrink:"0"}},c.i),
+      h("div",{style:{flex:"1",minWidth:"0"}},
+        h("div",{style:{fontSize:"13.5px",fontWeight:"600",whiteSpace:"nowrap",overflow:"hidden",textOverflow:"ellipsis"}},(t.merchant||t.category||t.type)+(t.installment_total?` (${t.installment_no}/${t.installment_total})`:"")),
+        h("div",{style:{fontSize:"11.5px",color:C.sub,marginTop:"1px"}},`${(t.date||"").slice(2)} · ${t.account} · ${t.category}`)
+      ),
+      h("div",{style:{display:"flex",alignItems:"center",gap:"6px"}},
+        h("div",{class:"num",style:{fontSize:"13.5px",fontWeight:"700",color:cl,whiteSpace:"nowrap"}},`${sg}${W(t.amount).slice(1)}`),
+        h("span",{style:{fontSize:"12px",color:C.faint}},"›")
+      )
+    ));
   };
+
+  const run=async()=>{
+    const q=inp.value.trim(),f=fromEl.value,t=toEl.value;
+    if(q.length<2&&!f&&!t){resultEl.innerHTML="";resultEl.append(empty("검색어(2자 이상) 또는 기간을 선택하세요."));return;}
+    resultEl.innerHTML='<div class="center"><div class="spin"></div></div>';
+    let qb=sb.from("transactions").select("*");
+    if(q.length>=2)qb=qb.or(`merchant.ilike.%${q}%,memo.ilike.%${q}%,category.ilike.%${q}%`);
+    if(f)qb=qb.gte("date",f);
+    if(t)qb=qb.lte("date",t);
+    const{data}=await qb.order("date",{ascending:false}).limit(500);
+    const results=data||[];
+    resultEl.innerHTML="";
+    if(!results.length){resultEl.append(empty("조건에 맞는 거래가 없어요."));return;}
+    const spend=results.filter(x=>kindOf(x.type)==="spend").reduce((a,x)=>a+Number(x.amount||0),0);
+    const income=results.filter(x=>["income","reduce"].includes(kindOf(x.type))).reduce((a,x)=>a+Number(x.amount||0),0);
+    resultEl.append(h("div",{style:{background:C.soft,borderRadius:"12px",padding:"11px 14px",marginBottom:"10px"}},
+      h("div",{style:{display:"flex",justifyContent:"space-between",alignItems:"center"}},
+        h("span",{style:{fontSize:"13px",fontWeight:"800"}},`${results.length}건`),
+        h("div",{style:{display:"flex",gap:"12px"}},
+          spend>0?h("span",{style:{fontSize:"12px",color:C.ink}},`지출 ${W(spend)}`):"",
+          income>0?h("span",{style:{fontSize:"12px",color:C.brand}},`수입 ${W(income)}`):""))));
+    results.forEach(drawRow);
+  };
+
+  const _t=new Date(),_ts=_t.toISOString().slice(0,10);
+  const _fom=`${ym(_ts)}-01`;
+  const _lm=new Date(_t.getFullYear(),_t.getMonth()-1,1),_lmEnd=new Date(_t.getFullYear(),_t.getMonth(),0);
+  const _3m=new Date(_t.getFullYear(),_t.getMonth()-2,1);
+  const fmt=d=>d.toISOString().slice(0,10);
+  const setR=(f,t)=>{fromEl.value=f;toEl.value=t;run();};
+  const chip=(lbl,fn)=>h("button",{style:{fontSize:"12px",fontWeight:"600",padding:"7px 12px",borderRadius:"999px",border:`1px solid ${C.line}`,background:C.w,color:C.ink,cursor:"pointer",whiteSpace:"nowrap",flexShrink:"0"},onclick:fn},lbl);
+  const chipRow=h("div",{style:{display:"flex",gap:"7px",overflowX:"auto",paddingBottom:"2px",marginTop:"10px"}},
+    chip("이번 달",()=>setR(_fom,_ts)),
+    chip("지난달",()=>setR(fmt(_lm),fmt(_lmEnd))),
+    chip("최근 3개월",()=>setR(fmt(_3m),_ts)),
+    chip("올해",()=>setR(`${_t.getFullYear()}-01-01`,_ts)),
+    chip("전체",()=>{fromEl.value="";toEl.value="";run();}));
+
+  inp.oninput=()=>{clearTimeout(timer);timer=setTimeout(run,320);};
+  fromEl.onchange=run;toEl.onchange=run;
 
   sh.append(
     h("div",{style:{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:"14px"}},
@@ -1384,11 +1404,14 @@ function showSearch(){
       h("button",{style:{fontSize:"20px",color:C.sub},onclick:()=>ov.remove()},"✕")
     ),
     inp,
-    h("div",{style:{fontSize:"12px",color:C.faint,marginTop:"6px",paddingLeft:"2px"}},"가맹점 · 카테고리 · 메모 검색 · 2자 이상 입력"),
+    chipRow,
+    h("div",{style:{display:"grid",gridTemplateColumns:"1fr auto 1fr",gap:"8px",alignItems:"center",marginTop:"10px"}},
+      fromEl,h("span",{style:{fontSize:"12px",color:C.faint}},"~"),toEl),
+    h("div",{style:{fontSize:"11.5px",color:C.faint,marginTop:"8px",paddingLeft:"2px"}},"검색어·기간을 조합할 수 있어요. 기간만 골라도 그 기간 거래가 다 나와요."),
     resultEl
   );
   ov.append(sh);document.body.append(ov);
-  setTimeout(()=>inp.focus(),100);
+  if(opt&&(opt.from||opt.to))run(); else setTimeout(()=>inp.focus(),100);
 }
 
 // ── 전월비교 ──
