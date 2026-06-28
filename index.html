@@ -1670,6 +1670,47 @@ function barChart(data,hl){
   );
 }
 
+function showYearMonthDetail(yr,i){
+  const MM=String(i+1).padStart(2,"0"),ymk=`${yr}-${MM}`,memoKey=ymk;
+  const list=(S.yearTxns||[]).filter(t=>t.date.slice(0,7)===ymk);
+  let inc=0,sp=0,sv=0,iv=0;
+  list.forEach(t=>{const a=Number(t.amount)||0,k=kindOf(t.type);if(k==="income")inc+=a;else if(k==="spend")sp+=a;else if(t.type==="저축/적금")sv+=a;else if(t.type==="투자")iv+=a;});
+  const net=inc-sp-sv-iv;
+  const ov=h("div",{style:{position:"fixed",inset:"0",background:"rgba(40,37,31,.42)",display:"flex",alignItems:"center",justifyContent:"center",padding:"16px",zIndex:"55"}});
+  const sh=h("div",{style:{width:"100%",maxWidth:"520px",background:C.w,borderRadius:"20px",padding:"18px 20px 26px",maxHeight:"85vh",overflowY:"auto"}});
+  sh.append(h("div",{style:{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:"14px"}},
+    h("span",{style:{fontSize:"18px",fontWeight:"800"}},`${yr}년 ${i+1}월`),
+    h("button",{style:{fontSize:"20px",color:C.sub},onclick:()=>ov.remove()},"✕")));
+  const tile=(lb,val,col,bg)=>h("div",{style:{background:bg,borderRadius:"11px",padding:"11px 12px"}},h("div",{style:{fontSize:"10px",color:C.sub,marginBottom:"4px"}},lb),h("div",{class:"num",style:{fontSize:"15px",fontWeight:"800",color:col}},val));
+  sh.append(h("div",{style:{display:"grid",gridTemplateColumns:"1fr 1fr",gap:"8px",marginBottom:"10px"}},
+    tile("수입","+"+W(inc).slice(1),C.brand,"#EDFBF4"),tile("소비","-"+W(sp).slice(1),C.over,"#FFF1EF"),
+    tile("저축",W(sv),"#4169B1","#EEF3FF"),tile("투자",W(iv),"#4169B1","#EEF3FF")));
+  sh.append(h("div",{style:{background:net>=0?"#EDFBF4":"#FFF1EF",borderRadius:"11px",padding:"12px 14px",marginBottom:"14px",display:"flex",justifyContent:"space-between",alignItems:"center"}},
+    h("span",{style:{fontSize:"12.5px",fontWeight:"700",color:C.sub}},net>=0?"순액 (남은 돈)":"순액 (적자)"),
+    h("span",{class:"num",style:{fontSize:"18px",fontWeight:"800",color:net>=0?C.brand:C.over}},`${net>=0?"+":"−"}${W(Math.abs(net)).slice(1)}`)));
+  // 메모
+  const memoWrap=h("div",{style:{background:"#FFFBF0",border:"1px solid #EAD9A8",borderRadius:"12px",padding:"12px 14px",marginBottom:"14px"}});
+  const renderMemo=()=>{memoWrap.innerHTML="";const mt=getDayMemos()[memoKey]||"";
+    memoWrap.append(h("div",{style:{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:mt?"7px":"0"}},
+      h("span",{style:{fontSize:"12px",fontWeight:"800",color:"#A8842C"}},"📝 이 달의 메모"),
+      h("button",{style:{fontSize:"11.5px",color:C.brand,fontWeight:"700",background:"transparent",border:"none",cursor:"pointer"},onclick:()=>{const v=prompt(`${i+1}월 메모 (이벤트·특이사항):`,mt);if(v===null)return;const mm=getDayMemos(),tt=v.trim();if(tt)mm[memoKey]=tt;else delete mm[memoKey];setDayMemos(mm);renderMemo();}},mt?"수정":"＋ 추가")));
+    if(mt)memoWrap.append(h("div",{style:{fontSize:"13px",color:C.ink,lineHeight:"1.6",whiteSpace:"pre-wrap"}},mt));};
+  renderMemo();sh.append(memoWrap);
+  // 이 달로 이동
+  sh.append(h("button",{style:{width:"100%",fontSize:"13px",fontWeight:"700",padding:"11px",borderRadius:"11px",border:`1px solid ${C.line}`,background:C.w,color:C.brand,cursor:"pointer",marginBottom:"14px"},onclick:()=>{S.curYm=ymk;S.tab="calendar";ov.remove();renderDash();}},"📅 이 달 월간 달력으로 보기 →"));
+  // 내역
+  const spendList=list.filter(t=>kindOf(t.type)==="spend").sort((a,b)=>Number(b.amount)-Number(a.amount));
+  if(spendList.length){
+    sh.append(h("div",{style:{fontSize:"12px",fontWeight:"800",color:C.sub,marginBottom:"8px"}},`주요 지출 ${spendList.length}건`));
+    spendList.slice(0,30).forEach(t=>{const c=CM[t.category]||CM["기타"];
+      sh.append(h("div",{style:{display:"flex",alignItems:"center",gap:"11px",padding:"9px 2px",borderBottom:`1px solid ${C.line}`}},
+        h("div",{style:{width:"32px",height:"32px",borderRadius:"9px",background:c.c+"1A",display:"flex",alignItems:"center",justifyContent:"center",fontSize:"15px",flexShrink:"0"}},c.i),
+        h("div",{style:{flex:"1",minWidth:"0"}},h("div",{style:{fontSize:"13px",fontWeight:"600",whiteSpace:"nowrap",overflow:"hidden",textOverflow:"ellipsis"}},t.merchant||t.category||t.type),h("div",{style:{fontSize:"11px",color:C.sub,marginTop:"1px"}},`${(t.date||"").slice(5)} · ${t.category}`)),
+        h("div",{class:"num",style:{fontSize:"13.5px",fontWeight:"700",color:C.ink}},"-"+W(t.amount).slice(1))));
+    });
+  }else sh.append(empty("이 달 지출 내역이 없어요."));
+  ov.append(sh);document.body.append(ov);
+}
 // ── 연간 탭 ──
 function buildYearly(){
   const yr=S.curYm.slice(0,4);
@@ -1834,20 +1875,50 @@ function buildYearly(){
     });
     container.append(h("div",{style:{background:C.w,border:`1px solid ${C.line}`,borderRadius:"14px",padding:"14px"}},toggleRow));
 
-    // 월별 리스트
-    const listSec=sec("월별 내역","");
-    const listEl=h("div",{style:{display:"flex",flexDirection:"column",gap:"2px"}});
-    monthly.forEach((v,i)=>{
-      if(v===0&&i>curM)return;
-      const isHL=i===curM;
-      listEl.append(h("div",{
-        style:{display:"flex",justifyContent:"space-between",alignItems:"center",padding:"9px 4px",borderBottom:`1px solid ${C.line}`,background:isHL?C.soft:"transparent",borderRadius:isHL?"6px":"0",paddingLeft:isHL?"8px":"4px"}},
-        h("span",{style:{fontSize:"13px",color:isHL?C.brand:C.ink,fontWeight:isHL?"700":"400"}},(i+1)+"월"+(isHL?" (이번달)":"")),
-        h("span",{class:"num",style:{fontSize:"13.5px",fontWeight:"700",color:v>0?(isHL?C.brand:C.ink):C.faint}},v>0?W(v):"—")
-      ));
-    });
-    listSec.append(listEl);
-    container.append(listSec);
+    // 월별 수입/소비/저축/투자 집계
+    const mInc=Array(12).fill(0),mSp=Array(12).fill(0),mSv=Array(12).fill(0),mIv=Array(12).fill(0);
+    for(const t of (S.yearTxns||[])){const mm=parseInt(t.date.slice(5,7))-1;if(mm<0||mm>11)continue;const a=Number(t.amount)||0,k=kindOf(t.type);if(k==="income")mInc[mm]+=a;else if(k==="spend")mSp[mm]+=a;else if(t.type==="저축/적금")mSv[mm]+=a;else if(t.type==="투자")mIv[mm]+=a;}
+    const yMemos=getDayMemos();
+    // 📅 12개월 그리드 (연 달력)
+    {
+      const gMax=Math.max(1,...mSp);
+      const grid=h("div",{style:{display:"grid",gridTemplateColumns:"repeat(3,1fr)",gap:"7px"}});
+      for(let i=0;i<12;i++){
+        const inc=mInc[i],sp=mSp[i],hasData=(inc+sp+mSv[i]+mIv[i])>0,fut=i>curM&&!hasData,inten=sp>0?sp/gMax:0,isHL=i===curM;
+        const memoKey=`${yr}-${String(i+1).padStart(2,"0")}`;
+        grid.append(h("div",{style:{borderRadius:"12px",padding:"10px 7px",cursor:hasData?"pointer":"default",background:sp>0?`rgba(194,85,61,${(0.06+inten*0.30).toFixed(2)})`:"#F7F5F0",border:`1.5px solid ${isHL?C.ink:"transparent"}`,opacity:fut?".45":"1",minHeight:"60px",display:"flex",flexDirection:"column",justifyContent:"center",alignItems:"center",gap:"2px"},onclick:hasData?()=>showYearMonthDetail(yr,i):null},
+          h("div",{style:{fontSize:"13px",fontWeight:"800",color:isHL?C.brand:C.ink}},(i+1)+"월"+(yMemos[memoKey]?" 📝":"")),
+          inc>0?h("div",{class:"num",style:{fontSize:"10px",fontWeight:"700",color:C.brand,lineHeight:"1.35"}},"+"+shortNum(inc)):"",
+          sp>0?h("div",{class:"num",style:{fontSize:"10px",fontWeight:"700",color:C.over,lineHeight:"1.35"}},"-"+shortNum(sp)):""
+        ));
+      }
+      container.append(h("div",{style:{background:C.w,border:`1px solid ${C.line}`,borderRadius:"18px",padding:"16px"}},
+        h("div",{style:{fontSize:"12.5px",fontWeight:"800",color:C.sub,marginBottom:"12px"}},`📅 ${yr}년 달력 · 월을 탭하면 상세·메모`),grid));
+    }
+    // 📋 월별 상세 표
+    {
+      const tbl=sec("📋 월별 상세",h("span",{style:{fontSize:"10.5px",color:C.faint}},"탭하면 내역"));
+      const cell=(lb,val,col)=>h("div",{style:{textAlign:"center"}},h("div",{style:{fontSize:"9px",color:C.faint,marginBottom:"2px"}},lb),h("div",{class:"num",style:{fontSize:"11px",fontWeight:"700",color:col}},val));
+      let shown=0;
+      for(let i=0;i<12;i++){
+        const inc=mInc[i],sp=mSp[i],sv=mSv[i],iv=mIv[i],any=inc+sp+sv+iv;
+        if(any===0&&i!==curM)continue;
+        shown++;const net=inc-sp-sv-iv,isHL=i===curM;
+        tbl.append(h("div",{class:"catrow",style:{padding:"10px 6px",borderBottom:`1px solid ${C.line}`,cursor:"pointer",background:isHL?C.soft:"transparent",borderRadius:isHL?"8px":"0"},onclick:()=>showYearMonthDetail(yr,i)},
+          h("div",{style:{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:"8px"}},
+            h("span",{style:{fontSize:"13px",fontWeight:isHL?"800":"700",color:isHL?C.brand:C.ink}},(i+1)+"월"+(isHL?" ·이번달":"")+(yMemos[`${yr}-${String(i+1).padStart(2,"0")}`]?" 📝":"")),
+            h("span",{class:"num",style:{fontSize:"13.5px",fontWeight:"800",color:net>=0?C.brand:C.over}},`${net>=0?"+":"−"}${W(Math.abs(net)).slice(1)}`)),
+          h("div",{style:{display:"grid",gridTemplateColumns:"repeat(4,1fr)",gap:"4px"}},
+            cell("수입",inc>0?"+"+shortNum(inc):"—",inc>0?C.brand:C.faint),
+            cell("소비",sp>0?"-"+shortNum(sp):"—",sp>0?C.over:C.faint),
+            cell("저축",sv>0?shortNum(sv):"—",sv>0?"#4169B1":C.faint),
+            cell("투자",iv>0?shortNum(iv):"—",iv>0?"#4169B1":C.faint))
+        ));
+      }
+      if(!shown)tbl.append(empty("올해 기록이 아직 없어요."));
+      tbl.append(h("div",{style:{fontSize:"10px",color:C.faint,marginTop:"9px",lineHeight:"1.5"}},"순액 = 수입 − 소비 − 저축 − 투자 (그 달에 남거나 모자란 돈)"));
+      container.append(tbl);
+    }
 
     // 카테고리 연간 순위 (개인소비만)
     if(mode==="개인소비"||mode==="공용소비"){
