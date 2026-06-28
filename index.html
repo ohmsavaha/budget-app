@@ -25,6 +25,8 @@ input,select{outline:none}
 .center{display:flex;justify-content:center;align-items:center;padding:50px 0}
 .catrow:hover{background:#F0EDE5 !important}
 .fcrow:hover{background:#F6F4EF !important}
+.noscroll::-webkit-scrollbar{display:none}
+.noscroll{-ms-overflow-style:none;scrollbar-width:none}
 </style>
 </head>
 <body>
@@ -450,7 +452,7 @@ function renderDash(){
   const _tabOrder=getTabOrder();
   const _orderedDefs=TAB_DEFS.slice().sort((a,b)=>{const ia=_tabOrder.indexOf(a[0]),ib=_tabOrder.indexOf(b[0]);return(ia<0?99:ia)-(ib<0?99:ib);});
   const _tabBtns=_orderedDefs.map(([key,lbl])=>({key,el:tabBtn(key,lbl)}));
-  const tabbar=h("div",{id:"tabbar",style:{display:"flex",gap:"6px",flexWrap:"wrap",alignItems:"center"}},..._tabBtns.map(b=>b.el));
+  const tabbar=h("div",{id:"tabbar",class:"noscroll",style:{display:"flex",gap:"6px",flexWrap:"nowrap",overflowX:"auto",alignItems:"center",flex:"1 1 0",minWidth:"0",WebkitOverflowScrolling:"touch"}},..._tabBtns.map(b=>b.el));
   reorderTabs(tabbar,_tabBtns);
   const settingsBtn=h("button",{style:{fontSize:"12px",color:C.faint,padding:"8px 10px"},onclick:()=>showApiKeySetting()},"⚙️");
   const logoutBtn=h("button",{style:{fontSize:"12px",color:C.faint,marginLeft:"auto",padding:"8px 10px"},onclick:()=>sb.auth.signOut()},"로그아웃");
@@ -463,12 +465,15 @@ function renderDash(){
       ),
       h("div",{style:{display:"flex",alignItems:"center",gap:"4px",background:C.w,border:`1px solid ${C.line}`,borderRadius:"999px",padding:"3px 4px"}},prevBtn,todayBtn,nextBtn)
     ),
-    h("div",{style:{display:"flex",gap:"6px",marginBottom:"14px",flexWrap:"wrap",alignItems:"center"}},
+    h("div",{style:{display:"flex",gap:"8px",marginBottom:"14px",alignItems:"center"}},
       tabbar,
-      h("button",{style:{fontSize:"13px",padding:"8px 14px",borderRadius:"999px",border:`1px solid ${C.line}`,background:C.w,color:C.sub,cursor:"pointer"},onclick:()=>showSearch()},"🔍"),
-      h("button",{style:{fontSize:"13px",padding:"8px 14px",borderRadius:"999px",border:`1px solid ${C.line}`,background:C.w,color:C.sub,cursor:"pointer"},onclick:()=>showImport()},"📥 가져오기"),
-      h("button",{style:{fontSize:"13px",padding:"8px 14px",borderRadius:"999px",border:`1px solid ${C.line}`,background:C.w,color:C.sub,cursor:"pointer"},onclick:()=>{if(REORDER.editing)exitReorder();else enterReorder("card");}},"✏️ 편집"),
-      settingsBtn,logoutBtn
+      h("div",{style:{display:"flex",gap:"3px",alignItems:"center",flexShrink:"0"}},
+        h("button",{title:"검색",style:{fontSize:"15px",width:"36px",height:"36px",borderRadius:"999px",border:`1px solid ${C.line}`,background:C.w,cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center"},onclick:()=>showSearch()},"🔍"),
+        h("button",{title:"가져오기",style:{fontSize:"15px",width:"36px",height:"36px",borderRadius:"999px",border:`1px solid ${C.line}`,background:C.w,cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center"},onclick:()=>showImport()},"📥"),
+        h("button",{title:"편집",style:{fontSize:"15px",width:"36px",height:"36px",borderRadius:"999px",border:`1px solid ${C.line}`,background:C.w,cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center"},onclick:()=>{if(REORDER.editing)exitReorder();else enterReorder("card");}},"✏️"),
+        h("button",{title:"설정",style:{fontSize:"15px",width:"36px",height:"36px",borderRadius:"999px",border:`1px solid ${C.line}`,background:C.w,cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center"},onclick:()=>showApiKeySetting()},"⚙️"),
+        h("button",{title:"로그아웃",style:{fontSize:"11px",color:C.faint,padding:"0 6px",background:"none",border:"none",cursor:"pointer",flexShrink:"0"},onclick:()=>sb.auth.signOut()},"로그아웃")
+      )
     ),
     ct
   );
