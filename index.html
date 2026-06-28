@@ -849,27 +849,49 @@ function buildCardSpend(){
 }
 
 // ⑤ 카테고리별 미니 예산
+function showCatBudgetEdit(cat0){
+  const ov=h("div",{style:{position:"fixed",inset:"0",background:"rgba(40,37,31,.42)",display:"flex",alignItems:"center",justifyContent:"center",padding:"16px",zIndex:"60"}});
+  const sh=h("div",{style:{width:"100%",maxWidth:"520px",background:C.w,borderRadius:"20px",padding:"18px 20px 24px",maxHeight:"88vh",overflowY:"auto"}});
+  const budgets=getCatBudgets();
+  let selCat=cat0||null;
+  const prevAgg={};(S.prevTxns||[]).forEach(t=>{if(kindOf(t.type)==="spend"&&t.account==="개인"&&!isExcludedSpend(t))prevAgg[t.category]=(prevAgg[t.category]||0)+(Number(t.amount)||0);});
+  const amtEl=h("input",{type:"number",inputmode:"numeric",value:cat0&&budgets[cat0]?budgets[cat0]:"",placeholder:"월 한도 (원)",class:"num",style:{width:"100%",border:`1px solid ${C.line}`,borderRadius:"10px",padding:"11px 12px",fontSize:"15px"}});
+  const hint=h("div",{style:{fontSize:"11.5px",color:C.sub,marginTop:"7px",minHeight:"16px",lineHeight:"1.6"}});
+  const updateHint=()=>{hint.innerHTML="";if(!selCat)return;const p=prevAgg[selCat]||0;if(p>0){hint.append(h("span",{},`지난달 ${selCat} 지출 ${W(p)} · `),h("button",{style:{color:C.brand,fontWeight:"700",background:"transparent",border:"none",cursor:"pointer",fontSize:"11.5px",padding:"0"},onclick:()=>{amtEl.value=Math.round(p);}},"지난달처럼 설정"));}else hint.textContent="지난달 이 카테고리 지출 기록이 없어요.";};
+  const catWrap=h("div",{style:{display:"flex",flexWrap:"wrap",gap:"7px"}});
+  const drawCats=()=>{catWrap.innerHTML="";CATS.forEach(c=>{const on=selCat===c.n;catWrap.append(h("button",{style:{fontSize:"12.5px",padding:"7px 11px",borderRadius:"999px",border:`1px solid ${on?c.c:C.line}`,background:on?c.c+"1A":C.w,color:on?c.c:C.ink,fontWeight:on?"700":"500",cursor:"pointer"},onclick:()=>{selCat=c.n;drawCats();updateHint();}},c.i+" "+c.n));});};
+  drawCats();updateHint();
+  const lbl=t=>h("div",{style:{fontSize:"13px",fontWeight:"800",color:C.sub,marginBottom:"6px"}},t);
+  const sv=h("button",{style:{width:"100%",background:C.brand,color:C.w,fontSize:"15px",fontWeight:"700",padding:"14px",borderRadius:"13px",border:"none",cursor:"pointer",marginTop:"14px"}},"저장");
+  sv.onclick=()=>{if(!selCat){alert("카테고리를 골라주세요.");return;}setCatBudget(selCat,Math.max(0,Number(amtEl.value)||0));ov.remove();homeReload();};
+  sh.append(
+    h("div",{style:{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:"16px"}},h("span",{style:{fontSize:"17px",fontWeight:"800"}},cat0?"카테고리 예산 수정":"카테고리 예산 추가"),h("button",{style:{fontSize:"20px",color:C.sub},onclick:()=>ov.remove()},"✕")),
+    lbl("카테고리"),h("div",{style:{marginBottom:"14px"}},catWrap),
+    lbl("월 한도"),amtEl,hint,
+    sv
+  );
+  if(cat0)sh.append(h("button",{style:{width:"100%",marginTop:"10px",fontSize:"13px",color:C.over,fontWeight:"700",padding:"11px",border:`1px solid ${C.over}`,borderRadius:"11px",background:C.w,cursor:"pointer"},onclick:()=>{setCatBudget(cat0,0);ov.remove();homeReload();}},"🗑️ 이 예산 삭제"));
+  ov.append(sh);document.body.append(ov);
+}
 function buildCatBudgets(){
   const budgets=getCatBudgets();
+  const isCur=S.curYm===ym(td());const _now=new Date(),dom=_now.getDate(),dim=new Date(_now.getFullYear(),_now.getMonth()+1,0).getDate();
   const cagg={};for(const t of (S.txns||[]))if(kindOf(t.type)==="spend"&&t.account==="개인"&&!isExcludedSpend(t))cagg[t.category]=(cagg[t.category]||0)+(Number(t.amount)||0);
-  const addBtn=h("button",{style:{fontSize:"11.5px",color:C.brand,fontWeight:"700",cursor:"pointer",background:"transparent",border:"none"},onclick:()=>{
-    const cat=prompt("카테고리 이름 (예: 외식, 쇼핑, 카페)");if(!cat)return;
-    const v=prompt(`'${cat.trim()}' 월 한도 (원):`,"");if(v===null)return;
-    setCatBudget(cat.trim(),Math.max(0,Number(v)||0));homeReload();
-  }},"＋ 추가");
+  const addBtn=h("button",{style:{fontSize:"11.5px",color:C.brand,fontWeight:"700",cursor:"pointer",background:"transparent",border:"none"},onclick:()=>showCatBudgetEdit(null)},"＋ 추가");
   const keys=Object.keys(budgets);
   const s=sec("🎯 카테고리 예산",addBtn);
   if(!keys.length){s.append(empty("외식·쇼핑처럼 카테고리별 한도를 정해 관리해보세요.\n＋ 추가로 시작하세요."));return s;}
   keys.sort((a,b)=>budgets[b]-budgets[a]).forEach(cat=>{
     const lim=budgets[cat],spent=cagg[cat]||0,pct=lim>0?Math.round(spent/lim*100):0,over=spent>lim,cm=CM[cat]||CM["기타"];
+    const proj=isCur&&dom>0?Math.round(spent/dom*dim):spent;
     s.append(h("div",{style:{padding:"10px 2px",borderBottom:`1px solid ${C.line}`}},
       h("div",{style:{display:"flex",alignItems:"center",gap:"9px",marginBottom:"7px"}},
         h("span",{style:{fontSize:"15px"}},cm.i),
         h("div",{style:{flex:"1",fontSize:"13px",fontWeight:"600"}},cat),
         h("div",{class:"num",style:{fontSize:"12px",fontWeight:"700",color:over?C.over:C.ink}},`${W(spent)} / ${W(lim)}`),
-        h("button",{style:{fontSize:"12px",color:C.faint,background:"transparent",border:"none",cursor:"pointer",padding:"2px 4px"},onclick:()=>{const v=prompt(`'${cat}' 월 한도 수정 (0=삭제):`,lim);if(v===null)return;setCatBudget(cat,Math.max(0,Number(v)||0));homeReload();}},"✎")),
+        h("button",{style:{fontSize:"12px",color:C.faint,background:"transparent",border:"none",cursor:"pointer",padding:"2px 4px"},onclick:()=>showCatBudgetEdit(cat)},"✎")),
       h("div",{style:{height:"7px",borderRadius:"999px",background:"#F0ECE3",overflow:"hidden"}},h("div",{style:{width:`${Math.min(100,pct)}%`,height:"100%",background:over?C.over:pct>=85?C.warn:C.brand,borderRadius:"999px"}})),
-      over?h("div",{style:{fontSize:"10.5px",color:C.over,marginTop:"5px"}},`한도 ${W(spent-lim)} 초과`):h("div",{style:{fontSize:"10.5px",color:C.faint,marginTop:"5px"}},`${pct}% · ${W(lim-spent)} 남음`)
+      over?h("div",{style:{fontSize:"10.5px",color:C.over,marginTop:"5px"}},`한도 ${W(spent-lim)} 초과`):(isCur&&lim>0&&proj>lim?h("div",{style:{fontSize:"10.5px",color:C.warn,marginTop:"5px"}},`${pct}% · 이 속도면 월말 ${W(proj)} (초과 예상)`):h("div",{style:{fontSize:"10.5px",color:C.faint,marginTop:"5px"}},`${pct}% · ${W(lim-spent)} 남음`))
     ));
   });
   return s;
@@ -1037,6 +1059,11 @@ function buildInsight(st,prevSt){
     if(used>=1)insights.push({icon:"🚨",tone:"warn",text:`예산을 ${W(bSpend-S.budget)} 초과했어요`});
     else if(used>=0.8&&dl>5)insights.push({icon:"⏰",tone:"warn",text:`예산의 ${Math.round(used*100)}%를 썼는데 아직 ${dl}일 남았어요. 페이스 조절이 필요해요`});
   }
+  try{
+    const cb=getCatBudgets(),cagg={};
+    for(const t of (S.txns||[]))if(kindOf(t.type)==="spend"&&t.account==="개인"&&!isExcludedSpend(t))cagg[t.category]=(cagg[t.category]||0)+(Number(t.amount)||0);
+    Object.keys(cb).filter(c=>cb[c]>0&&(cagg[c]||0)>cb[c]).sort((a,b)=>((cagg[b]||0)-cb[b])-((cagg[a]||0)-cb[a])).slice(0,2).forEach(c=>insights.push({icon:"⚠️",tone:"warn",text:`${c} 예산을 ${W((cagg[c]||0)-cb[c])} 초과했어요`}));
+  }catch{}
 
   if(!insights.length)return null;
 
