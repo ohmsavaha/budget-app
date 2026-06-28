@@ -1535,15 +1535,16 @@ function buildNextMonthBill(){
 // ── 연간 막대 차트 ──
 function barChart(data,hl){
   const max=Math.max(...data,1);
-  return h("div",{style:{display:"flex",alignItems:"flex-end",gap:"4px",height:"110px"}},
+  return h("div",{style:{display:"flex",alignItems:"flex-end",gap:"5px",height:"120px",padding:"4px 0"}},
     ...data.map((v,i)=>{
       const pct=v>0?Math.max((v/max)*100,4):0;
-      const isHL=i===hl;
+      const isHL=i===hl,inten=v/max;
+      const col=isHL?C.brand:`rgba(30,110,82,${(0.30+inten*0.50).toFixed(2)})`;
       return h("div",{style:{flex:"1",display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"flex-end",gap:"5px",height:"100%"}},
         v>0
-          ?h("div",{style:{width:"100%",height:pct+"%",background:isHL?C.brand:C.brand+"55",borderRadius:"3px 3px 0 0",minHeight:"3px",transition:"height .4s"}})
+          ?h("div",{style:{width:"100%",height:pct+"%",background:`linear-gradient(180deg,${col} 0%,${isHL?"#2C8F6B":col} 100%)`,borderRadius:"5px 5px 2px 2px",minHeight:"4px",transition:"height .4s",boxShadow:isHL?"0 3px 9px rgba(30,110,82,.32)":"none"}})
           :h("div",{style:{width:"100%",height:"2px",background:C.line,borderRadius:"1px"}}),
-        h("div",{style:{fontSize:"9.5px",color:isHL?C.ink:C.faint,fontWeight:isHL?"800":"400",lineHeight:"1"}},String(i+1))
+        h("div",{style:{fontSize:"9.5px",color:isHL?C.brand:C.faint,fontWeight:isHL?"800":"400",lineHeight:"1"}},String(i+1))
       );
     })
   );
@@ -1631,6 +1632,45 @@ function buildYearly(){
     const maxM=monthly.indexOf(Math.max(...monthly));
 
     // 헤더 카드
+    // ✨ 저축률 게이지 + 분기별 + 연말예상
+    {
+      const Y=calcStatsFor(S.yearTxns||[]),ycfg2=getSharedCfg();
+      const ySh2=Math.round(Y.cNet*(ycfg2.ratio||50)/100),ySpend2=Y.pNet+ySh2;
+      const saveRate=Y.income>0?Math.round(Y.save/Y.income*100):0;
+      const gw=Math.min(100,Math.max(0,saveRate)),gcol=saveRate>=20?C.brand:saveRate>=10?C.warn:C.over,gcol2=saveRate>=20?"#37A57E":saveRate>=10?"#E0A93E":"#D9694E";
+      container.append(h("div",{style:{background:C.w,border:`1px solid ${C.line}`,borderRadius:"16px",padding:"16px 18px"}},
+        h("div",{style:{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:"12px"}},
+          h("div",{style:{fontSize:"12.5px",fontWeight:"800",color:C.sub}},`🏦 ${yr}년 저축률`),
+          h("div",{class:"num",style:{fontSize:"22px",fontWeight:"800",color:gcol}},`${saveRate}%`)),
+        h("div",{style:{height:"13px",borderRadius:"999px",background:"#F0ECE3",overflow:"hidden"}},
+          h("div",{style:{width:gw+"%",height:"100%",background:`linear-gradient(90deg,${gcol},${gcol2})`,borderRadius:"999px",transition:"width .5s"}})),
+        h("div",{style:{fontSize:"11px",color:C.faint,marginTop:"9px",lineHeight:"1.5"}},
+          saveRate>=20?"훌륭해요! 수입의 20% 이상을 모으고 있어요 👍":saveRate>=10?"좋아요. 조금만 더 올려볼까요?":Y.income>0?"저축률을 조금씩 올려보면 좋아요. 자동이체가 도움돼요.":"수입·저축 기록이 쌓이면 저축률이 표시돼요.")));
+      const qSpend=[0,0,0,0],qInc=[0,0,0,0];
+      for(const t of (S.yearTxns||[])){const mm=parseInt(t.date.slice(5,7))-1;if(mm<0||mm>11)continue;const q=Math.floor(mm/3),k=kindOf(t.type);if(k==="spend")qSpend[q]+=Number(t.amount)||0;else if(k==="income")qInc[q]+=Number(t.amount)||0;}
+      const qgrid=h("div",{style:{display:"grid",gridTemplateColumns:"1fr 1fr",gap:"9px"}});
+      const QN=["1분기 · 1~3월","2분기 · 4~6월","3분기 · 7~9월","4분기 · 10~12월"],curQ=Math.floor(curM/3);
+      for(let q=0;q<4;q++){const isCurQ=q===curQ,fut=q>curQ;
+        qgrid.append(h("div",{style:{background:isCurQ?C.soft:"#F8F6F1",borderRadius:"12px",padding:"12px 13px",border:`1px solid ${isCurQ?C.brand:"transparent"}`,opacity:fut?".5":"1"}},
+          h("div",{style:{fontSize:"11px",fontWeight:"700",color:isCurQ?C.brand:C.sub,marginBottom:"7px"}},QN[q]+(isCurQ?" ●":"")),
+          h("div",{style:{display:"flex",justifyContent:"space-between",fontSize:"11.5px",marginBottom:"3px"}},h("span",{style:{color:C.faint}},"지출"),h("span",{class:"num",style:{fontWeight:"700",color:C.ink}},W(qSpend[q]))),
+          h("div",{style:{display:"flex",justifyContent:"space-between",fontSize:"11.5px"}},h("span",{style:{color:C.faint}},"수입"),h("span",{class:"num",style:{fontWeight:"700",color:C.brand}},W(qInc[q])))));
+      }
+      container.append(h("div",{style:{background:C.w,border:`1px solid ${C.line}`,borderRadius:"16px",padding:"16px 18px"}},
+        h("div",{style:{fontSize:"12.5px",fontWeight:"800",color:C.sub,marginBottom:"12px"}},`📆 ${yr}년 분기별 요약`),qgrid));
+      if(yr===String(new Date().getFullYear())){
+        const elapsed=curM+1;
+        if(elapsed>0&&ySpend2>0){
+          const projSpend=Math.round(ySpend2/elapsed*12),projInc=Math.round(Y.income/elapsed*12);
+          container.append(h("div",{style:{background:"linear-gradient(135deg,#EDF4FF,#EAF3ED)",border:`1px solid ${C.line}`,borderRadius:"16px",padding:"16px 18px"}},
+            h("div",{style:{fontSize:"12.5px",fontWeight:"800",color:C.sub,marginBottom:"10px"}},"🔮 이 페이스면 올해 말"),
+            h("div",{style:{display:"grid",gridTemplateColumns:"1fr 1fr",gap:"9px"}},
+              h("div",{style:{background:"rgba(255,255,255,.6)",borderRadius:"11px",padding:"11px 12px"}},h("div",{style:{fontSize:"10.5px",color:C.sub,marginBottom:"4px"}},"예상 총지출"),h("div",{class:"num",style:{fontSize:"17px",fontWeight:"800",color:C.ink}},W(projSpend))),
+              h("div",{style:{background:"rgba(255,255,255,.6)",borderRadius:"11px",padding:"11px 12px"}},h("div",{style:{fontSize:"10.5px",color:C.sub,marginBottom:"4px"}},"예상 총수입"),h("div",{class:"num",style:{fontSize:"17px",fontWeight:"800",color:C.brand}},W(projInc)))),
+            h("div",{style:{fontSize:"10.5px",color:C.faint,marginTop:"9px"}},`현재 ${elapsed}개월 평균 기준 예측이에요.`)));
+        }
+      }
+    }
     container.append(h("div",{style:{background:C.w,border:`1px solid ${C.line}`,borderRadius:"18px",padding:"18px 18px 14px"}},
       h("div",{style:{display:"flex",justifyContent:"space-between",alignItems:"flex-start",marginBottom:"14px"}},
         h("div",{},
@@ -1647,6 +1687,21 @@ function buildYearly(){
         maxM>=0&&monthly[maxM]>0?`최대 지출: ${maxM+1}월 (${W(monthly[maxM])})`:""
       )
     ));
+
+    // 🔥 월별 히트맵
+    {
+      const hmax=Math.max(...monthly,1);
+      const hm=h("div",{style:{display:"grid",gridTemplateColumns:"repeat(6,1fr)",gap:"6px"}});
+      monthly.forEach((v,i)=>{
+        const inten=v>0?v/hmax:0,isHLm=i===curM,fut=i>curM&&v===0;
+        hm.append(h("div",{style:{aspectRatio:"1",borderRadius:"9px",background:v>0?`rgba(30,110,82,${(0.12+inten*0.78).toFixed(2)})`:"#F2EEE6",display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",gap:"1px",border:`1.5px solid ${isHLm?C.ink:"transparent"}`,opacity:fut?".4":"1"}},
+          h("div",{style:{fontSize:"11px",fontWeight:"800",color:inten>0.5?"#fff":C.ink}},(i+1)+"월"),
+          h("div",{class:"num",style:{fontSize:"8.5px",fontWeight:"700",color:inten>0.5?"rgba(255,255,255,.92)":C.sub}},v>0?shortNum(v):"-")));
+      });
+      container.append(h("div",{style:{background:C.w,border:`1px solid ${C.line}`,borderRadius:"16px",padding:"16px 18px"}},
+        h("div",{style:{fontSize:"12.5px",fontWeight:"800",color:C.sub,marginBottom:"12px"}},`🔥 ${yr}년 ${mode} 히트맵`),hm,
+        h("div",{style:{fontSize:"10px",color:C.faint,marginTop:"10px",textAlign:"center"}},"색이 진할수록 많은 달이에요.")));
+    }
 
     // 모드 토글
     const toggleRow=h("div",{style:{display:"flex",gap:"8px"}});
@@ -1684,6 +1739,25 @@ function buildYearly(){
       }
       const crows=Object.entries(cagg).sort((a,b)=>b[1]-a[1]).slice(0,6);
       if(crows.length){
+        {
+          const tot=crows.reduce((a,x)=>a+x[1],0);
+          if(tot>0){
+            const topD=crows.slice(0,6),othD=crows.slice(6).reduce((a,x)=>a+x[1],0);
+            const segs=[...topD.map(([n,v])=>({n,v,c:(CM[n]||CM["기타"]).c})),...(othD>0?[{n:"기타 등",v:othD,c:"#B8AE9C"}]:[])];
+            let accD=0;const stops=segs.map(g=>{const a0=accD/tot*360,a1=(accD+g.v)/tot*360;accD+=g.v;return `${g.c} ${a0}deg ${a1}deg`;}).join(",");
+            const donut=h("div",{style:{position:"relative",width:"126px",height:"126px",flexShrink:"0"}},
+              h("div",{style:{width:"126px",height:"126px",borderRadius:"50%",background:`conic-gradient(${stops})`}}),
+              h("div",{style:{position:"absolute",inset:"21px",background:C.w,borderRadius:"50%",display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center"}},h("div",{style:{fontSize:"9.5px",color:C.sub}},"총"),h("div",{class:"num",style:{fontSize:"13px",fontWeight:"800"}},shortNum(tot))));
+            const legend=h("div",{style:{flex:"1",display:"flex",flexDirection:"column",gap:"6px",minWidth:"0"}});
+            segs.forEach(g=>legend.append(h("div",{style:{display:"flex",alignItems:"center",gap:"7px",fontSize:"11.5px"}},
+              h("span",{style:{width:"10px",height:"10px",borderRadius:"3px",background:g.c,flexShrink:"0"}}),
+              h("span",{style:{flex:"1",color:C.ink,whiteSpace:"nowrap",overflow:"hidden",textOverflow:"ellipsis"}},g.n),
+              h("span",{class:"num",style:{color:C.sub,fontWeight:"700",flexShrink:"0"}},Math.round(g.v/tot*100)+"%"))));
+            container.append(h("div",{style:{background:C.w,border:`1px solid ${C.line}`,borderRadius:"16px",padding:"16px 18px"}},
+              h("div",{style:{fontSize:"12.5px",fontWeight:"800",color:C.sub,marginBottom:"14px"}},`🍩 ${yr}년 ${mode} 비중`),
+              h("div",{style:{display:"flex",alignItems:"center",gap:"15px"}},donut,legend)));
+          }
+        }
         const cSec=sec(yr+"년 "+mode+" TOP 카테고리","");
         const cmax=crows[0][1];
         crows.forEach(([n,v])=>{
