@@ -1524,7 +1524,10 @@ function buildYearly(){
         nwSec.append(h("div",{style:{display:"flex",justifyContent:"space-between",alignItems:"center",padding:"6px 2px"}},
           h("span",{style:{fontSize:"12.5px",color:C.sub}},`${Number(yk[0].slice(5,7))}월 ${W(a)} → ${Number(yk[yk.length-1].slice(5,7))}월 ${W(b)}`),
           h("span",{class:"num",style:{fontSize:"15px",fontWeight:"800",color:diff>=0?C.brand:C.over}},`${diff>=0?"+":""}${W(diff)}`)));
-        nwSec.append(h("div",{style:{fontSize:"11px",color:C.faint,marginTop:"4px",lineHeight:"1.6"}},diff>=0?"올해 자산이 불어나고 있어요 👍 자산 탭에서 월별 그래프를 볼 수 있어요.":"올해 자산이 줄었어요. 자산 탭에서 원인을 확인해보세요."));
+        const nwBox=h("div",{style:{height:"160px",marginTop:"8px"}});const nwCv=document.createElement("canvas");nwBox.append(nwCv);nwSec.append(nwBox);
+        setTimeout(()=>{if(!window.Chart)return;const ctx=nwCv.getContext("2d");const g=ctx.createLinearGradient(0,0,0,160);g.addColorStop(0,"rgba(30,110,82,.22)");g.addColorStop(1,"rgba(30,110,82,0)");
+          new window.Chart(nwCv,{type:"line",data:{labels:yk.map(k=>Number(k.slice(5,7))+"월"),datasets:[{data:yk.map(k=>nh[k]),borderColor:C.brand,backgroundColor:g,borderWidth:2,fill:true,tension:.35,pointRadius:3,pointBackgroundColor:C.brand}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:{displayColors:false,callbacks:{label:(c)=>" "+W(c.parsed.y)}}},scales:{x:{grid:{display:false},ticks:{font:{size:10},color:"#9b958a"}},y:{display:false}}}});},60);
+        nwSec.append(h("div",{style:{fontSize:"11px",color:C.faint,marginTop:"4px",lineHeight:"1.6"}},diff>=0?"올해 자산이 불어나고 있어요 👍":"올해 자산이 줄었어요. 자산 탭에서 원인을 확인해보세요."));
         container.append(nwSec);
       }
     }
