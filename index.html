@@ -467,6 +467,7 @@ function renderDash(){
       tabbar,
       h("button",{style:{fontSize:"13px",padding:"8px 14px",borderRadius:"999px",border:`1px solid ${C.line}`,background:C.w,color:C.sub,cursor:"pointer"},onclick:()=>showSearch()},"🔍"),
       h("button",{style:{fontSize:"13px",padding:"8px 14px",borderRadius:"999px",border:`1px solid ${C.line}`,background:C.w,color:C.sub,cursor:"pointer"},onclick:()=>showImport()},"📥 가져오기"),
+      h("button",{style:{fontSize:"13px",padding:"8px 14px",borderRadius:"999px",border:`1px solid ${C.line}`,background:C.w,color:C.sub,cursor:"pointer"},onclick:()=>{if(REORDER.editing)exitReorder();else enterReorder("card");}},"✏️ 편집"),
       settingsBtn,logoutBtn
     ),
     ct
@@ -1199,10 +1200,10 @@ function buildCalendarView(){
     else if(heat>0)bg=`rgba(194,85,61,${heat.toFixed(3)})`;
     else if(data&&data.income>0)bg="rgba(46,125,80,0.10)";
     const clickable=data||fcByDay[d];
-    const cell=h("div",{style:{padding:"4px 2px",borderRadius:"9px",textAlign:"center",cursor:clickable?"pointer":"default",background:bg,minHeight:"62px",display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"flex-start",gap:"2px"},onclick:clickable?()=>showDayDetail(dateStr,data?data.txns:[],fcByDay[d]||[]):null},
-      h("div",{style:{fontSize:"14.5px",fontWeight:isToday?"800":"600",lineHeight:"1.5",color:isToday?C.w:isSun?"#B23A5C":isSat?"#4169B1":C.ink}},d),
-      data&&data.spend>0?h("div",{class:"num",style:{fontSize:"10px",color:isToday?"rgba(255,255,255,.9)":C.over,lineHeight:"1.25",fontWeight:"700"}},"-"+shortNum(data.spend)):"",
-      data&&data.income>0?h("div",{class:"num",style:{fontSize:"10px",color:isToday?"rgba(255,255,255,.9)":C.brand,lineHeight:"1.25",fontWeight:"700"}},"+"+shortNum(data.income)):"",
+    const cell=h("div",{style:{padding:"4px 2px",borderRadius:"9px",textAlign:"center",cursor:clickable?"pointer":"default",background:bg,minHeight:"68px",display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"flex-start",gap:"2px"},onclick:clickable?()=>showDayDetail(dateStr,data?data.txns:[],fcByDay[d]||[]):null},
+      h("div",{style:{fontSize:"16.5px",fontWeight:isToday?"800":"700",lineHeight:"1.45",color:isToday?C.w:isSun?"#B23A5C":isSat?"#4169B1":C.ink}},d),
+      data&&data.spend>0?h("div",{class:"num",style:{fontSize:"11px",color:isToday?"rgba(255,255,255,.9)":C.over,lineHeight:"1.3",fontWeight:"700"}},"-"+shortNum(data.spend)):"",
+      data&&data.income>0?h("div",{class:"num",style:{fontSize:"11px",color:isToday?"rgba(255,255,255,.9)":C.brand,lineHeight:"1.3",fontWeight:"700"}},"+"+shortNum(data.income)):"",
       fcByDay[d]?h("div",{style:{width:"6px",height:"6px",borderRadius:"50%",background:isToday?"rgba(255,255,255,.9)":"#9B7BD4"}}):"");
     grid.append(cell);
   }
@@ -3136,7 +3137,6 @@ function attachDrag(el,opts){
     if(e.target&&e.target.closest&&e.target.closest(".rctl,.rsz"))return;
     const pt=e.touches?e.touches[0]:e;sx=pt.clientX;sy=pt.clientY;
     if(REORDER.editing&&inEdit()){beginDrag(e);return;}
-    pressTimer=setTimeout(()=>{pressTimer=null;if("vibrate"in navigator){try{navigator.vibrate(14);}catch{}}enterReorder(scope);beginDrag(e);},450);
   };
   const onMoveWait=(e)=>{if(pressTimer){const pt=e.touches?e.touches[0]:e;if(Math.abs(pt.clientX-sx)>10||Math.abs(pt.clientY-sy)>10){clearTimeout(pressTimer);pressTimer=null;}}};
   const onUpWait=()=>{if(pressTimer){clearTimeout(pressTimer);pressTimer=null;}};
