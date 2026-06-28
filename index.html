@@ -1317,8 +1317,8 @@ function buildYearly(){
   const curM=parseInt(S.curYm.split("-")[1])-1;
   let mode="개인소비"; // 개인소비 | 공용소비 | 수입
 
-  const kindForMode=m=>({"개인소비":"spend","공용소비":"spend","수입":"income"})[m];
-  const accForMode=m=>({"개인소비":"개인","공용소비":"공용","수입":null})[m];
+  const kindForMode=m=>({"개인소비":"spend","공용소비":"spend","수입":"income","저축":"save"})[m];
+  const accForMode=m=>({"개인소비":"개인","공용소비":"공용","수입":null,"저축":null})[m];
 
   const getMonthly=()=>{
     const arr=Array(12).fill(0);
@@ -1335,6 +1335,18 @@ function buildYearly(){
   const container=h("div",{style:{display:"flex",flexDirection:"column",gap:"12px"}});
   const draw=()=>{
     container.innerHTML="";
+    // 📊 연간 현금 흐름 (모드 무관, 항상 표시)
+    {
+      const ys=calcStatsFor(S.yearTxns||[]),ycfg=getSharedCfg();
+      const yShared=Math.round(ys.cNet*(ycfg.ratio||50)/100);
+      const ySpend=ys.pNet+yShared,yNet=ys.income-ySpend-ys.save;
+      const yc=(lbl,v,col)=>h("div",{style:{background:C.soft,borderRadius:"11px",padding:"11px 12px"}},h("div",{style:{fontSize:"10.5px",color:C.sub,marginBottom:"4px"}},lbl),h("div",{class:"num",style:{fontSize:"15px",fontWeight:"800",color:col||C.ink}},v));
+      container.append(h("div",{style:{background:C.w,border:`1px solid ${C.line}`,borderRadius:"16px",padding:"15px"}},
+        h("div",{style:{fontSize:"12.5px",fontWeight:"800",color:C.sub,marginBottom:"10px"}},`📊 ${yr}년 현금 흐름`),
+        h("div",{style:{display:"grid",gridTemplateColumns:"1fr 1fr",gap:"8px"}},
+          yc("총수입",W(ys.income),C.brand),yc("총지출",W(ySpend),C.ink),
+          yc("총저축·투자",W(ys.save),C.ink),yc(yNet>=0?"순증가":"순감소",W(Math.abs(yNet)),yNet>=0?C.brand:C.over))));
+    }
     const monthly=getMonthly();
     const total=monthly.reduce((s,v)=>s+v,0);
     const avg=monthly.filter(v=>v>0).length?Math.round(total/monthly.filter(v=>v>0).length):0;
@@ -1360,10 +1372,10 @@ function buildYearly(){
 
     // 모드 토글
     const toggleRow=h("div",{style:{display:"flex",gap:"8px"}});
-    ["개인소비","공용소비","수입"].forEach(m=>{
+    ["개인소비","공용소비","수입","저축"].forEach(m=>{
       const sel=mode===m;
       toggleRow.append(h("button",{
-        style:{flex:"1",fontSize:"13px",fontWeight:"700",padding:"10px",borderRadius:"10px",border:`1px solid ${sel?C.ink:C.line}`,background:sel?C.ink:C.w,color:sel?C.w:C.sub,cursor:"pointer"},
+        style:{flex:"1",fontSize:"12px",fontWeight:"700",padding:"10px 4px",borderRadius:"10px",border:`1px solid ${sel?C.ink:C.line}`,background:sel?C.ink:C.w,color:sel?C.w:C.sub,cursor:"pointer",whiteSpace:"nowrap"},
         onclick:()=>{mode=m;draw();}
       },m));
     });
@@ -1385,15 +1397,16 @@ function buildYearly(){
     container.append(listSec);
 
     // 카테고리 연간 순위 (개인소비만)
-    if(mode==="개인소비"){
+    if(mode==="개인소비"||mode==="공용소비"){
+      const _acc=mode==="개인소비"?"개인":"공용";
       const cagg={};
       for(const t of S.yearTxns){
-        if(kindOf(t.type)!=="spend"||t.account!=="개인")continue;
+        if(kindOf(t.type)!=="spend"||t.account!==_acc)continue;
         cagg[t.category]=(cagg[t.category]||0)+Number(t.amount);
       }
       const crows=Object.entries(cagg).sort((a,b)=>b[1]-a[1]).slice(0,6);
       if(crows.length){
-        const cSec=sec(yr+"년 지출 TOP 카테고리","");
+        const cSec=sec(yr+"년 "+mode+" TOP 카테고리","");
         const cmax=crows[0][1];
         crows.forEach(([n,v])=>{
           const c=CM[n]||CM["기타"];
@@ -1411,6 +1424,20 @@ function buildYearly(){
           ));
         });
         container.append(cSec);
+      }
+    }
+    // 💎 올해 순자산 추이 (자산 탭·월마감에서 기록된 값)
+    {
+      let nh={};try{nh=JSON.parse(localStorage.getItem("nw_history")||"{}");}catch{}
+      const yk=Object.keys(nh).filter(k=>k.slice(0,4)===yr).sort();
+      if(yk.length>=2){
+        const a=nh[yk[0]],b=nh[yk[yk.length-1]],diff=b-a;
+        const nwSec=sec(yr+"년 순자산 변화",`${yk.length}개월 기록`);
+        nwSec.append(h("div",{style:{display:"flex",justifyContent:"space-between",alignItems:"center",padding:"6px 2px"}},
+          h("span",{style:{fontSize:"12.5px",color:C.sub}},`${Number(yk[0].slice(5,7))}월 ${W(a)} → ${Number(yk[yk.length-1].slice(5,7))}월 ${W(b)}`),
+          h("span",{class:"num",style:{fontSize:"15px",fontWeight:"800",color:diff>=0?C.brand:C.over}},`${diff>=0?"+":""}${W(diff)}`)));
+        nwSec.append(h("div",{style:{fontSize:"11px",color:C.faint,marginTop:"4px",lineHeight:"1.6"}},diff>=0?"올해 자산이 불어나고 있어요 👍 자산 탭에서 월별 그래프를 볼 수 있어요.":"올해 자산이 줄었어요. 자산 탭에서 원인을 확인해보세요."));
+        container.append(nwSec);
       }
     }
   };
