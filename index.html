@@ -530,7 +530,7 @@ function renderDash(){
   const prevBtn=h("button",{style:{width:"30px",height:"30px",borderRadius:"999px",color:C.sub,fontSize:"18px"},onclick:()=>{S.curYm=shYm(S.curYm,-1);renderDash();}},"‹");
   const todayBtn=h("button",{style:{fontSize:"12px",fontWeight:"700",color:isCur?C.brand:C.sub,padding:"4px 8px"},onclick:()=>{S.curYm=ym(td());renderDash();}},isCur?"현재":"현재로");
   const nextBtn=h("button",{style:{width:"30px",height:"30px",borderRadius:"999px",color:C.sub,fontSize:"18px"},onclick:()=>{S.curYm=shYm(S.curYm,1);renderDash();}},"›");
-  const TAB_DEFS=[["home","🏠 홈"],["spend","💸 지출"],["shared","🤝 공용"],["assets","💰 자산"],["calendar","📅 월간"],["fixed","고정비"],["invest","투자"],["yearly","연간"]];
+  const TAB_DEFS=[["home","🏠 홈"],["spend","💸 지출"],["shared","🤝 공용"],["assets","💰 자산"],["calendar","📅 월간"],["fixed","📌 고정비"],["invest","📈 투자"],["yearly","🗓️ 연간"]];
   const tabBtn=(key,lbl)=>h("button",{
     style:{fontSize:"13px",fontWeight:"700",padding:"8px 16px",borderRadius:"999px",border:`1px solid ${S.tab===key?C.ink:C.line}`,background:S.tab===key?C.ink:C.w,color:S.tab===key?C.w:C.sub,cursor:"pointer",whiteSpace:"nowrap"},
     onclick:()=>{if(REORDER.editing)return;S.tab=key;renderDash();}
