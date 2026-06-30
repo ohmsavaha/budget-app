@@ -3993,7 +3993,7 @@ function buildInvest(){
     // 일간변동률: 보유종목 day_change_pct 가중평균
     const hl=(S.holdings||[]).filter(x=>x.snapshot_date===(S.holdings?.[0]?.snapshot_date));
     let dayW=0,daySum=0;
-    hl.forEach(x=>{const w=Number(x.eval_value_krw)||0,c=x.day_change_pct;if(c!=null){dayW+=w;daySum+=w*Number(c);}});
+    hl.forEach(x=>{const w=Number(x.eval_value_krw)||0,c=x.day_change_pct;if(c!=null&&Math.abs(Number(c))<=50){dayW+=w;daySum+=w*Number(c);}});
     const dayPct=dayW>0?Math.round(daySum/dayW*100)/100:null;
     const cell=(lb,val,col)=>h("div",{style:{background:"#F6F4EF",borderRadius:"12px",padding:"11px 13px"}},
       h("div",{style:{fontSize:"10.5px",color:C.sub,marginBottom:"4px"}},lb),
@@ -4142,10 +4142,32 @@ function buildInvest(){
         await sb.from("investment_holdings").update({eval_value_krw:Math.round(krw),eval_value_usd:newUsd,fx_rate:fx,day_change_pct:q.changePct??null}).eq("id",x.id);
         updated++;
       }
+      // ── 종목 합계로 상단 스냅샷도 동기화 (평가액·손익·수익률·일간변동) ──
+      // 방금 갱신된 종목 값을 다시 읽어 합산
+      const latestDate2=latest[0]?.snapshot_date;
+      let sumKrw=0,dayW=0,daySum=0;
+      try{
+        const{data:fresh}=await sb.from("investment_holdings").select("eval_value_krw,day_change_pct").eq("snapshot_date",latestDate2);
+        (fresh||[]).forEach(x=>{const v=Number(x.eval_value_krw)||0;sumKrw+=v;const c=x.day_change_pct;if(c!=null&&Math.abs(Number(c))<=50){dayW+=v;daySum+=v*Number(c);}});
+      }catch(e){dlog("[합계재집계실패]",e);}
+      const snap=S.invRows&&S.invRows[0];
+      if(snap&&sumKrw>0){
+        const cashV=Number(snap.cash_krw)||0;
+        const newTotal=Math.round(sumKrw+cashV);                       // 평가액 = 종목합 + 예수금
+        const inv2=snap.total_invested_krw!=null?Number(snap.total_invested_krw):null;
+        const newPl=inv2!=null?Math.round(newTotal-inv2):(Number(snap.total_pl_krw)||0);
+        const newRr=inv2&&inv2>0?Math.round(newPl/inv2*10000)/100:(snap.return_rate_krw??null);
+        const newDay=dayW>0?Math.round(daySum/dayW*100)/100:null;
+        try{
+          await sb.from("investment_snapshots").update({total_value_krw:newTotal,total_pl_krw:newPl,return_rate_krw:newRr,exchange_rate:Math.round(fx*100)/100}).eq("user_id",S.session.user.id).eq("snapshot_date",latestDate2);
+        }catch(e){dlog("[스냅샷동기화실패]",e);}
+      }
       refreshBtn.textContent=`✅ ${updated}개 갱신${skipped.length?` · ⚠️ ${skipped.length}개 실패`:""}`;
-      await loadInvest();
+      await loadInvest();await loadAllSnapshots(true);
       const ct=document.getElementById("ct");if(ct){ct.innerHTML="";buildInvest().forEach(n=>ct.append(n));}
-      if(skipped.length)alert(`💱 환율 ${Math.round(fx).toLocaleString()}원 실시간 적용됨 ✅\n\n아래 ${skipped.length}개 종목은 현재가를 못 받아 예전 값 그대로예요.\n증권사 앱을 보고 직접 입력해주세요:\n\n· ${skipped.join("\n· ")}`);
+      let msg=`💱 환율 ${Math.round(fx).toLocaleString()}원 실시간 적용 ✅\n📊 평가액·수익률을 종목 합계로 다시 맞췄어요.`;
+      if(skipped.length)msg+=`\n\n⚠️ 아래 ${skipped.length}개는 현재가를 못 받아 예전 값 그대로예요. 증권사 앱 보고 직접 입력해주세요:\n· ${skipped.join("\n· ")}`;
+      alert(msg);
     };
     const manageBtn=h("button",{style:{width:"100%",marginBottom:"10px",fontSize:"13px",fontWeight:"700",padding:"10px",borderRadius:"10px",border:`1px solid ${C.line}`,background:C.w,color:C.sub,cursor:"pointer"},onclick:()=>showHoldingManage(latestDate)},"✏️ 종목 직접 추가·삭제");
     holdSec.append(refreshBtn,manageBtn,toggle,listWrap);
