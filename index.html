@@ -3332,7 +3332,7 @@ function stockIcon(name,ticker){
 }
   function buildDonut(latest){
   if(!latest||!latest.length)return null;
-  const items=latest.map(x=>({name:x.name,val:Number(x.eval_value_krw)||0})).filter(x=>x.val>0).sort((a,b)=>b.val-a.val);
+  const items=latest.map(x=>({name:x.name,val:safeEvalKrw(x)})).filter(x=>x.val>0).sort((a,b)=>b.val-a.val);
   if(!items.length)return null;
   const total=items.reduce((s,x)=>s+x.val,0);
   const sec_=sec("🍩 자산 배분","평가액 기준");
@@ -3562,12 +3562,23 @@ const SECTORS={
   T:"통신·미디어",VZ:"통신·미디어",TMUS:"통신·미디어",DIS:"통신·미디어",CMCSA:"통신·미디어",WBD:"통신·미디어",PARA:"통신·미디어",SPOT:"통신·미디어",ROKU:"통신·미디어"
 };
 const sectorOf=(ticker)=>{const t=(ticker||"").toUpperCase().split(".")[0];return SECTORS[t]||"기타";};
+// 평가액 정상화: eval_value_krw가 usd×fx와 10배 이상 어긋나면 검산값 사용 (천배 버그 방어)
+function safeEvalKrw(x){
+  const krw=Number(x.eval_value_krw)||0;
+  const usd=Number(x.eval_value_usd)||0;
+  const fx=Number(x.fx_rate)||1380;
+  if(usd>0){
+    const calc=usd*fx;
+    if(calc>0&&(krw>calc*10||krw<calc/10))return Math.round(calc); // 어긋나면 검산값
+  }
+  return krw;
+}
 
 // ══════════ 업종 비중 도넛 ══════════
 function buildSectorDonut(latest){
   if(!latest||!latest.length)return null;
   const agg={};
-  latest.forEach(x=>{const s=sectorOf(x.ticker),v=Number(x.eval_value_krw)||0;if(v>0)agg[s]=(agg[s]||0)+v;});
+  latest.forEach(x=>{const s=sectorOf(x.ticker),v=safeEvalKrw(x);if(v>0)agg[s]=(agg[s]||0)+v;});
   const items=Object.entries(agg).map(([name,val])=>({name,val})).sort((a,b)=>b.val-a.val);
   if(items.length<2)return null;
   const total=items.reduce((s,x)=>s+x.val,0);
@@ -3982,37 +3993,46 @@ function buildInvestJournal(){
 function buildInvest(){
   const rows=S.invRows,lt=rows[0];
 
-  // ── 위 요약: 총평가액 + 6개 지표 ──
+  // ── 위 요약 (토스/증권사 표준 구조) ──
   let hero;
   if(lt){
     const tv=Number(lt.total_value_krw)||0;
     const inv=lt.total_invested_krw!=null?Number(lt.total_invested_krw):(lt.total_pl_krw!=null?tv-Number(lt.total_pl_krw):null);
-    const pl=Number(lt.total_pl_krw)||0;
     const cash=Number(lt.cash_krw)||0;
+    const evalOnly=tv-cash;
+    const pl=lt.total_pl_krw!=null?Number(lt.total_pl_krw):(inv!=null?tv-inv:0);
     const rr=lt.return_rate_krw??(inv?Math.round(pl/inv*10000)/100:0);
-    // 일간변동률: 보유종목 day_change_pct 가중평균
     const hl=(S.holdings||[]).filter(x=>x.snapshot_date===(S.holdings?.[0]?.snapshot_date));
     let dayW=0,daySum=0;
     hl.forEach(x=>{const w=Number(x.eval_value_krw)||0,c=x.day_change_pct;if(c!=null&&Math.abs(Number(c))<=50){dayW+=w;daySum+=w*Number(c);}});
     const dayPct=dayW>0?Math.round(daySum/dayW*100)/100:null;
-    const cell=(lb,val,col)=>h("div",{style:{background:"#F6F4EF",borderRadius:"12px",padding:"11px 13px"}},
+    const dayPl=(dayPct!=null&&(1+dayPct/100)!==0)?Math.round(evalOnly-(evalOnly/(1+dayPct/100))):null;
+    const factCell=(lb,val)=>h("div",{style:{background:"#F6F4EF",borderRadius:"12px",padding:"11px 13px"}},
       h("div",{style:{fontSize:"10.5px",color:C.sub,marginBottom:"4px"}},lb),
-      h("div",{class:"num",style:{fontSize:"15px",fontWeight:"800",color:col||C.ink}},val)
-    );
+      h("div",{class:"num",style:{fontSize:"14.5px",fontWeight:"800",color:C.ink}},val));
+    const profitRow=(lb,amt,pct,strong)=>{
+      const pos=(amt||0)>=0;const col=amt==null?C.sub:pos?C.brand:C.over;
+      return h("div",{style:{display:"flex",justifyContent:"space-between",alignItems:"center",padding:strong?"13px 14px":"11px 14px",background:strong?(pos?"#EEF6F1":"#FEF2EE"):"#F6F4EF",borderRadius:"12px"}},
+        h("span",{style:{fontSize:strong?"13px":"12px",fontWeight:strong?"800":"600",color:strong?(pos?C.brand:C.over):C.sub}},lb),
+        h("div",{style:{textAlign:"right"}},
+          h("div",{class:"num",style:{fontSize:strong?"16px":"14px",fontWeight:"800",color:col}},amt==null?"-":((pos?"+":"−")+W(Math.abs(amt)).slice(1))),
+          pct!=null?h("div",{class:"num",style:{fontSize:"11px",fontWeight:"700",color:col,marginTop:"1px"}},`${pct>=0?"+":""}${pct}%`):""));
+    };
     hero=h("div",{style:{background:C.w,border:`1px solid ${C.line}`,borderRadius:"18px",padding:"20px"}},
       h("div",{style:{fontSize:"12.5px",color:C.sub}},`총 자산 평가액 (${(lt.snapshot_date||"").slice(5)})`),
-      h("div",{class:"num",style:{fontSize:"32px",fontWeight:"800",letterSpacing:"-.03em",marginTop:"4px"}},W(tv)),
-      dayPct!=null?h("div",{class:"num",style:{fontSize:"13px",fontWeight:"700",marginTop:"4px",color:dayPct>=0?C.brand:C.over}},`${dayPct>=0?"▲":"▼"} ${Math.abs(dayPct)}% (전일 대비)`):"",
-      h("div",{style:{display:"grid",gridTemplateColumns:"1fr 1fr 1fr",gap:"8px",marginTop:"16px"}},
-        cell("총 투자원금",inv!=null?W(inv):"-"),
-        cell("평가손익",(pl>=0?"+":"−")+W(Math.abs(pl)).slice(1),pl>=0?C.brand:C.over),
-        cell("예수금",W(cash)),
-        cell("투자 수익률",(rr>=0?"+":"")+rr+"%",rr>=0?C.brand:C.over),
-        cell("환율",lt.exchange_rate?Number(lt.exchange_rate).toLocaleString():"-"),
-        cell("일간 변동률",dayPct!=null?((dayPct>=0?"+":"")+dayPct+"%"):"-",dayPct==null?C.sub:dayPct>=0?C.brand:C.over)
-      )
+      h("div",{class:"num",style:{fontSize:"32px",fontWeight:"800",letterSpacing:"-.03em",marginTop:"4px",marginBottom:"14px"}},W(tv)),
+      h("div",{style:{display:"flex",flexDirection:"column",gap:"7px"}},
+        profitRow("💰 총 수익",pl,rr,true),
+        profitRow("📈 일간 수익",dayPl,dayPct,false)
+      ),
+      h("div",{style:{display:"grid",gridTemplateColumns:"1fr 1fr 1fr",gap:"8px",marginTop:"10px"}},
+        factCell("총 투자원금",inv!=null?W(inv):"-"),
+        factCell("예수금",W(cash)),
+        factCell("환율",lt.exchange_rate?Number(lt.exchange_rate).toLocaleString():"-")
+      ),
+      h("div",{style:{fontSize:"10px",color:C.faint,marginTop:"9px",lineHeight:"1.5"}},"총 수익=원금 대비 누적 · 일간 수익=전일 종가 대비 오늘 변동이에요.")
     );
-  }else hero=empty("투자 스냅샷이 없어요.");
+    }else hero=empty("투자 스냅샷이 없어요.");
 
   // ── 시장 한눈에 보기 ──
   const mktStamp=h("span",{style:{fontSize:"11px",color:C.faint}},"불러오는 중…");
@@ -4134,7 +4154,15 @@ function buildInvest(){
         const qty=Number(x.quantity)||0;
         if(!x.ticker){skipped.push(`${x.name||"?"} (심볼 없음)`);continue;}
         const q=quotes[x.ticker];
-        if(!q||q.price==null){skipped.push(`${x.name||x.ticker} (시세 못 받음)`);continue;}
+        if(!q||q.price==null){
+          // 시세 못 받음 → 달러 평가액이 있으면 환율로 krw 교정 (깨진 값 복구)
+          if(x.eval_value_usd!=null&&Number(x.eval_value_usd)>0){
+            const fixKrw=Math.round(Number(x.eval_value_usd)*fx);
+            await sb.from("investment_holdings").update({eval_value_krw:fixKrw,fx_rate:fx}).eq("id",x.id);
+            skipped.push(`${x.name||x.ticker} (시세 못 받음 · 환율만 갱신)`);
+          }else skipped.push(`${x.name||x.ticker} (시세 못 받음)`);
+          continue;
+        }
         if(!qty){skipped.push(`${x.name||x.ticker} (수량 없음)`);continue;}
         const usd=q.currency==="KRW"?null:q.price*qty;
         const krw=q.currency==="KRW"?q.price*qty:Math.round(q.price*qty*fx);
@@ -4170,7 +4198,60 @@ function buildInvest(){
       alert(msg);
     };
     const manageBtn=h("button",{style:{width:"100%",marginBottom:"10px",fontSize:"13px",fontWeight:"700",padding:"10px",borderRadius:"10px",border:`1px solid ${C.line}`,background:C.w,color:C.sub,cursor:"pointer"},onclick:()=>showHoldingManage(latestDate)},"✏️ 종목 직접 추가·삭제");
-    holdSec.append(refreshBtn,manageBtn,toggle,listWrap);
+    // 이상값 감지 → 정리 버튼 노출
+    const hasBad=latest.some(x=>{const krw=Number(x.eval_value_krw)||0,usd=Number(x.eval_value_usd)||0,fx=Number(x.fx_rate)||1380;return usd>0&&krw>0&&(krw>usd*fx*10||krw<usd*fx/10);});
+    let fixBtn=null;
+    if(hasBad){
+      fixBtn=h("button",{style:{width:"100%",marginBottom:"10px",fontSize:"13px",fontWeight:"800",padding:"11px",borderRadius:"10px",border:`1px solid ${C.over}`,background:"#FEF2EE",color:C.over,cursor:"pointer"},onclick:async()=>{
+        if(!confirm("평가액이 비정상으로 큰 종목이 있어요.\n현재가·환율 기준으로 전 종목 평가액을 다시 계산해 고칠까요?"))return;
+        fixBtn.textContent="🔧 정리 중…";fixBtn.disabled=true;
+        let fx=Number(latest[0]?.fx_rate)||1380;try{const fxr=await fetchFxRate();if(fxr?.price)fx=fxr.price;}catch{}
+        const syms=latest.map(x=>x.ticker).filter(Boolean);
+        const quotes=syms.length?await fetchQuotes(syms):{};
+        let fixed=0;
+        for(const x of latest){
+          const qty=Number(x.quantity)||0;const q=x.ticker&&quotes[x.ticker];
+          let krw=null,usd=x.eval_value_usd;
+          if(q&&q.price!=null&&qty){
+            usd=q.currency==="KRW"?null:Math.round(q.price*qty*100)/100;
+            krw=q.currency==="KRW"?Math.round(q.price*qty):Math.round(q.price*qty*fx);
+          }else if(Number(x.eval_value_usd)>0){
+            krw=Math.round(Number(x.eval_value_usd)*fx);  // 시세 없으면 달러평가액×환율
+          }
+          if(krw!=null){await sb.from("investment_holdings").update({eval_value_krw:krw,eval_value_usd:usd,fx_rate:fx}).eq("id",x.id);fixed++;}
+        }
+        // 스냅샷도 다시 합산
+        try{
+          const{data:fresh}=await sb.from("investment_holdings").select("eval_value_krw").eq("snapshot_date",latestDate);
+          const sum=(fresh||[]).reduce((a,r)=>a+(Number(r.eval_value_krw)||0),0);
+          const snap=S.invRows&&S.invRows[0];
+          if(snap&&sum>0){const cashV=Number(snap.cash_krw)||0,total=Math.round(sum+cashV);const inv2=snap.total_invested_krw!=null?Number(snap.total_invested_krw):null;const pl=inv2!=null?total-inv2:(Number(snap.total_pl_krw)||0);const rr=inv2&&inv2>0?Math.round(pl/inv2*10000)/100:snap.return_rate_krw;await sb.from("investment_snapshots").update({total_value_krw:total,total_pl_krw:pl,return_rate_krw:rr,exchange_rate:Math.round(fx*100)/100}).eq("user_id",S.session.user.id).eq("snapshot_date",latestDate);}
+        }catch(e){dlog("[정리스냅샷실패]",e);}
+        await loadInvest();await loadAllSnapshots(true);
+        const ct=document.getElementById("ct");if(ct){ct.innerHTML="";buildInvest().forEach(n=>ct.append(n));}
+        alert(`✅ ${fixed}개 종목 평가액을 현재가·환율 기준으로 정리했어요.`);
+      }},"⚠️ 평가액 이상값 정리하기");
+    }
+    const diagBtn=h("button",{style:{width:"100%",marginBottom:"10px",fontSize:"12px",fontWeight:"700",padding:"9px",borderRadius:"10px",border:`1px dashed ${C.faint}`,background:C.w,color:C.faint,cursor:"pointer"},onclick:()=>{
+      const rows=latest.map(x=>{
+        const krw=Number(x.eval_value_krw)||0,usd=Number(x.eval_value_usd)||0,fx=Number(x.fx_rate)||0,qty=Number(x.quantity)||0;
+        const calc=usd&&fx?Math.round(usd*fx):null;
+        const bad=calc&&(krw>calc*3||krw<calc/3);
+        return{n:x.name||x.ticker,krw,usd,fx,qty,calc,bad};
+      }).sort((a,b)=>b.krw-a.krw);
+      const sumKrw=rows.reduce((a,r)=>a+r.krw,0);
+      const ov=h("div",{style:{position:"fixed",inset:"0",background:"rgba(40,37,31,.5)",display:"flex",alignItems:"center",justifyContent:"center",padding:"16px",zIndex:"90"}});
+      const sh=h("div",{style:{width:"100%",maxWidth:"560px",background:C.w,borderRadius:"18px",padding:"18px 20px",maxHeight:"85vh",overflowY:"auto"}});
+      sh.append(h("div",{style:{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:"10px"}},h("span",{style:{fontSize:"15px",fontWeight:"800"}},"🔧 종목값 진단"),h("button",{style:{fontSize:"20px",color:C.sub},onclick:()=>ov.remove()},"✕")));
+      sh.append(h("div",{style:{fontSize:"12px",color:C.sub,marginBottom:"12px",lineHeight:"1.6"}},`합계 ${W(sumKrw)} · 빨간 표시는 원화값이 (달러×환율)과 3배 이상 어긋난 종목이에요.`));
+      rows.forEach(r=>{
+        sh.append(h("div",{style:{padding:"9px 4px",borderBottom:`1px solid ${C.line}`,background:r.bad?"#FEF2EE":"transparent",borderRadius:"6px"}},
+          h("div",{style:{display:"flex",justifyContent:"space-between",fontSize:"13px",fontWeight:"700"}},h("span",{},(r.bad?"⚠️ ":"")+r.n),h("span",{class:"num"},W(r.krw))),
+          h("div",{style:{fontSize:"10.5px",color:C.sub,marginTop:"3px",lineHeight:"1.5"}},`수량 ${r.qty} · 달러평가 $${r.usd.toLocaleString()} · 환율 ${r.fx} · 검산(달러×환율)=${r.calc!=null?W(r.calc):"-"}`)));
+      });
+      ov.append(sh);document.body.append(ov);
+    }},"🔧 종목값 진단 (어디가 이상한지 보기)");
+    [refreshBtn,manageBtn,fixBtn,diagBtn,toggle,listWrap].filter(Boolean).forEach(n=>holdSec.append(n));
   }
   const latestForDonut=hold.length?hold.filter(x=>x.snapshot_date===hold[0].snapshot_date):[];
   const donutSec=hold.length?buildDonut(latestForDonut):null;
