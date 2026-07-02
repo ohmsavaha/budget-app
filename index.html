@@ -484,6 +484,45 @@ async function loadMonth(){
   S.allSnaps=data||[];
   return S.allSnaps;
 }
+
+// ── 📸 투자 자동 스냅샷: 하루 1회, 오늘 기록 없으면 종목 합계로 자동 생성 ──
+async function autoSnapshot(){
+  try{
+    if(!S.session)return;
+    const today=td();
+    if(localStorage.getItem("autosnap_last")===today)return; // 오늘 이미 시도함
+    const holds=(S.holdings||[]);
+    if(!holds.length)return;
+    const latestDate=holds[0].snapshot_date;
+    // 오늘 날짜 스냅샷이 이미 있으면 skip
+    const{data:exist}=await sb.from("investment_snapshots").select("snapshot_date").eq("user_id",S.session.user.id).eq("snapshot_date",today).limit(1);
+    if(exist&&exist.length){localStorage.setItem("autosnap_last",today);return;}
+    // 최신 스냅샷(원금/예수금 승계용)
+    const base=(S.invRows&&S.invRows[0])||(S.allSnaps&&S.allSnaps[0])||null;
+    // 최신 종목 합계 (safeEvalKrw로 이상값 방어)
+    const latest=holds.filter(x=>x.snapshot_date===latestDate);
+    let sumKrw=0;latest.forEach(x=>{sumKrw+=(typeof safeEvalKrw==="function"?safeEvalKrw(x):(Number(x.eval_value_krw)||0));});
+    if(sumKrw<=0)return;
+    const cash=base?Number(base.cash_krw)||0:0;
+    const inv=base&&base.total_invested_krw!=null?Number(base.total_invested_krw):null;
+    const fx=base&&base.exchange_rate?Number(base.exchange_rate):null;
+    const total=Math.round(sumKrw+cash);
+    const pl=inv!=null?Math.round(total-inv):null;
+    const rr=inv&&inv>0?Math.round(pl/inv*10000)/100:null;
+    const row={user_id:S.session.user.id,snapshot_date:today,total_value_krw:total,cash_krw:cash};
+    if(inv!=null)row.total_invested_krw=inv;
+    if(pl!=null)row.total_pl_krw=pl;
+    if(rr!=null)row.return_rate_krw=rr;
+    if(fx!=null)row.exchange_rate=fx;
+    const{error}=await sb.from("investment_snapshots").upsert(row,{onConflict:"user_id,snapshot_date"});
+    localStorage.setItem("autosnap_last",today);
+    if(!error){
+      S.allSnaps=null;await loadAllSnapshots(true);await loadInvest();
+      if(S.tab==="invest"){const ct=document.getElementById("ct");if(ct){ct.innerHTML="";buildInvest().forEach(n=>ct.append(n));}}
+      if(typeof toast==="function")toast("📸 오늘 투자현황을 자동 기록했어요");
+    }
+  }catch(e){try{dlog("[autoSnapshot]",e);}catch{}}
+}
 async function loadInvest(){
   const[s,e]=mRange(S.curYm);
   const{data}=await sb.from("investment_snapshots").select("*").gte("snapshot_date",s).lte("snapshot_date",e).order("snapshot_date",{ascending:false});
@@ -600,7 +639,7 @@ function renderDash(){
   } else if(S.tab==="yearly"){
     loadYear().then(()=>setCt(...buildYearly()));
   } else {
-    Promise.all([loadInvest(),loadAllSnapshots(true)]).then(()=>setCt(...buildInvest()));
+    Promise.all([loadInvest(),loadAllSnapshots(true)]).then(()=>{setCt(...buildInvest());autoSnapshot();});
   }
 }
 
@@ -1165,7 +1204,7 @@ const F_DELIV=/배달의민족|배민|요기요|쿠팡이츠|땡겨요/i;
 const F_GROC=/코스트코|트레이더스|이마트|홈플러스|롯데마트|하나로|더프레시|노브랜드|식자재|마켓컬리|컬리|오아시스|정육|청과|수산|반찬|마트|시장/i;
 function foodBuckets(txns){
   const cons=(txns||[]).filter(t=>["소비(일시불)","소비(할부)"].includes(t.type));
-  const foodCats=["식비","외식","배달","카페","간식","먹거리","술/유흥"].filter(k=>{try{return !!CM[k];}catch{return false;}});
+  const foodCats=["외식/배달","카페/간식","술/유흥"];
   const b={groc:[],deliv:[],eat:[]};
   cons.forEach(t=>{
     const m=(t.merchant||"")+" "+(t.category||"");
@@ -1311,7 +1350,7 @@ function showShopBought(x,onDone){
   ["코스트코","트레이더스","이마트","홈플러스","쿠팡","마켓컬리","다이소","올리브영"].forEach(v=>{const o=document.createElement("option");o.value=v;dl.append(o);});
   let pick=false;
   const pickBtn=h("button",{style:{width:"100%",fontSize:"12.5px",fontWeight:"700",padding:"10px",borderRadius:"10px",border:`1px solid ${C.line}`,background:C.w,color:C.sub,cursor:"pointer",marginBottom:"9px"},onclick:()=>{pick=!pick;pickBtn.textContent=pick?"⭐ 가성비 좋았어요! (재구매 픽)":"☆ 가성비 픽으로 표시";pickBtn.style.background=pick?"#FFF6E0":C.w;}},"☆ 가성비 픽으로 표시");
-  let cats=["식비","생활용품","쇼핑","기타"];try{cats=cats.filter(k=>CM[k]);if(!cats.length)cats=["기타"];}catch{}
+  let cats=["장보기","생활용품","쇼핑","기타"];try{cats=cats.filter(k=>CM[k]);if(!cats.length)cats=["기타"];}catch{}
   let selCat=cats[0];
   const catRow=h("div",{style:{display:"flex",gap:"6px",flexWrap:"wrap",marginBottom:"9px"}});
   const catBtns=cats.map(c=>{const b=h("button",{style:{fontSize:"12px",fontWeight:"700",padding:"7px 11px",borderRadius:"999px",border:`1px solid ${C.line}`,background:c===selCat?C.ink:C.w,color:c===selCat?"#fff":C.sub,cursor:"pointer"},onclick:()=>{selCat=c;catBtns.forEach(bb=>{bb.style.background=bb.textContent===selCat?C.ink:C.w;bb.style.color=bb.textContent===selCat?"#fff":C.sub;});}},c);catRow.append(b);return b;});
@@ -1348,9 +1387,114 @@ function showShopBought(x,onDone){
   setTimeout(()=>priceEl.focus(),50);
 }
 
+// ── 💳 카드값 vs 실제청구 대조 ──
+function buildCardReconcile(){
+  const isCardPm=pm=>/카드|페이|국민|삼성|현대|롯데|신한|우리|하나|비씨|bc|kb|토스|카카오/i.test(pm||"");
+  // 이번 달 카드 사용분(예상) vs 카드대금 유형(실제 청구 입력분)
+  const cons=(S.txns||[]).filter(t=>["소비(일시불)","소비(할부)"].includes(t.type)&&isCardPm(t.payment_method));
+  const bills=(S.txns||[]).filter(t=>t.type==="카드대금");
+  if(!cons.length&&!bills.length)return null;
+  // 카드사별 사용분 집계
+  const byUse={},byBill={};
+  cons.forEach(t=>{const pm=t.payment_method||"기타";byUse[pm]=(byUse[pm]||0)+(Number(t.amount)||0);});
+  bills.forEach(t=>{const pm=(t.merchant||"기타").trim();byBill[pm]=(byBill[pm]||0)+(Number(t.amount)||0);});
+  const el=sec("💳 카드 사용 vs 실제 청구",h("span",{style:{fontSize:"11px",color:C.faint}},"차이 점검"));
+  const totUse=Object.values(byUse).reduce((a,b)=>a+b,0);
+  const totBill=Object.values(byBill).reduce((a,b)=>a+b,0);
+  el.append(h("div",{style:{display:"flex",gap:"8px",margin:"10px 0"}},
+    h("div",{style:{flex:"1",background:"#F6F4EF",borderRadius:"11px",padding:"11px 13px"}},h("div",{style:{fontSize:"10.5px",color:C.sub}},"이번 달 카드 사용"),h("div",{class:"num",style:{fontSize:"15px",fontWeight:"800"}},W(totUse))),
+    h("div",{style:{flex:"1",background:"#F6F4EF",borderRadius:"11px",padding:"11px 13px"}},h("div",{style:{fontSize:"10.5px",color:C.sub}},"입력한 실제 청구"),h("div",{class:"num",style:{fontSize:"15px",fontWeight:"800"}},totBill?W(totBill):"미입력"))));
+  if(!bills.length){
+    el.append(h("div",{style:{fontSize:"11.5px",color:C.sub,background:"#FFFBEE",borderRadius:"10px",padding:"10px 12px",lineHeight:"1.6"}},"💡 카드 명세서가 오면 지출 탭 카드대금 카드의 📷 버튼으로 실제 청구액을 입력해봐요. 사용분과 얼마나 맞는지 자동으로 대조해드려요."));
+    return el;
+  }
+  const pms=[...new Set([...Object.keys(byUse),...Object.keys(byBill)])];
+  const list=h("div",{style:{display:"flex",flexDirection:"column",gap:"7px",marginTop:"4px"}});
+  pms.forEach(pm=>{
+    const u=byUse[pm]||0,b=byBill[pm]||0;const diff=b-u;
+    if(!u&&!b)return;
+    const near=Math.abs(diff)<Math.max(u,b)*0.05;
+    list.append(h("div",{style:{padding:"9px 12px",borderRadius:"10px",background:near?"#EEF6F1":"#FEF2EE"}},
+      h("div",{style:{display:"flex",justifyContent:"space-between",fontSize:"13px",fontWeight:"700"}},h("span",{},pm),h("span",{style:{color:near?C.brand:C.over}},near?"거의 일치 ✓":`${diff>=0?"+":"−"}${W(Math.abs(diff)).slice(1)}`)),
+      h("div",{style:{fontSize:"10.5px",color:C.sub,marginTop:"2px"}},`사용 ${W(u)} · 청구 ${b?W(b):"-"}`)));
+  });
+  el.append(list);
+  el.append(h("div",{style:{fontSize:"10px",color:C.faint,marginTop:"8px",lineHeight:"1.5"}},"차이가 크면 할부·연회비·미청구분이 섞였을 수 있어요. 사용 시점과 청구 시점이 달라 자연스러운 차이도 있어요."));
+  return el;
+}
+
+// ── 🔁 정기결제(구독) 자동 감지 ──
+function buildSubscriptions(){
+  // 최근 3개월 거래에서 (가맹점+금액) 반복 패턴 탐지
+  const pool=[...(S.txns||[]),...(S.prevTxns||[])];
+  const cons=pool.filter(t=>["소비(일시불)","소비(할부)"].includes(t.type));
+  const groups={};
+  cons.forEach(t=>{
+    const nm=(t.merchant||t.category||"").trim();if(!nm)return;
+    const amt=Number(t.amount)||0;if(amt<1000)return;
+    const key=nm+"|"+Math.round(amt/100)*100; // 금액 100원 단위 반올림으로 그룹
+    (groups[key]=groups[key]||{name:nm,amt,months:new Set(),cat:t.category,tx:[]});
+    groups[key].months.add((t.date||"").slice(0,7));
+    groups[key].tx.push(t);
+  });
+  // 구독 후보: 서로 다른 달에 2회 이상 같은 금액
+  const subsKW=/넷플릭스|netflix|유튜브|youtube|스포티파이|spotify|디즈니|웨이브|왓챠|티빙|melon|멜론|지니|밀리|클로드|claude|chatgpt|openai|구독|프라임|아이클라우드|icloud|쿠팡|와우|멤버십|통신|요금|보험/i;
+  const subs=Object.values(groups).filter(g=>g.months.size>=2||(g.months.size>=1&&subsKW.test(g.name))).sort((a,b)=>b.amt-a.amt);
+  if(!subs.length)return null;
+  const monthly=subs.reduce((a,g)=>a+g.amt,0);
+  const el=sec("🔁 정기결제 감지",h("span",{style:{fontSize:"11px",color:C.faint}},`월 약 ${W(monthly)}`));
+  el.append(h("div",{style:{fontSize:"11.5px",color:C.sub,marginBottom:"10px",marginTop:"2px",lineHeight:"1.6"}},`매달 반복되는 결제 ${subs.length}건을 찾았어요. 안 쓰는 건 없는지 점검해봐요.`));
+  const list=h("div",{style:{display:"flex",flexDirection:"column",gap:"6px"}});
+  subs.slice(0,12).forEach(g=>{
+    const c=(()=>{try{return CM[g.cat]||CM["기타"];}catch{return{i:"🔁"};}})();
+    list.append(h("div",{style:{display:"flex",alignItems:"center",gap:"10px",padding:"9px 12px",borderRadius:"10px",background:"#F6F4EF",cursor:"pointer"},onclick:()=>showTxnListModal(g.name+" 결제 내역",g.tx)},
+      h("span",{style:{fontSize:"15px",flexShrink:"0"}},c.i||"🔁"),
+      h("div",{style:{flex:"1",minWidth:"0"}},
+        h("div",{style:{fontSize:"13px",fontWeight:"700",whiteSpace:"nowrap",overflow:"hidden",textOverflow:"ellipsis"}},g.name),
+        h("div",{style:{fontSize:"10.5px",color:C.faint}},`${g.months.size}개월 반복 · ${g.cat||""}`)),
+      h("div",{class:"num",style:{fontSize:"13.5px",fontWeight:"800",flexShrink:"0"}},W(g.amt))));
+  });
+  el.append(list);
+  el.append(h("div",{style:{fontSize:"11.5px",color:C.sub,background:"#FFFBEE",borderRadius:"10px",padding:"10px 12px",marginTop:"10px",lineHeight:"1.6"}},`💡 연간으로 보면 약 ${W(monthly*12)}예요. 이 중 하나만 정리해도 1년이면 큰 돈이 돼요.`));
+  el.append(h("div",{style:{fontSize:"10px",color:C.faint,marginTop:"6px"}},"같은 가맹점·비슷한 금액이 여러 달 반복되면 구독으로 추정해요."));
+  return el;
+}
+
+// ── 🐱 고양이 지출 리포트 ──
+function buildCatReport(){
+  const cons=(S.txns||[]).filter(t=>t.category==="고양이"&&["소비(일시불)","소비(할부)"].includes(t.type));
+  const prev=(S.prevTxns||[]).filter(t=>t.category==="고양이"&&["소비(일시불)","소비(할부)"].includes(t.type));
+  const total=cons.reduce((a,t)=>a+(Number(t.amount)||0),0);
+  const ptotal=prev.reduce((a,t)=>a+(Number(t.amount)||0),0);
+  if(!total&&!ptotal)return null;
+  const cats=(()=>{try{return CM["고양이"];}catch{return{c:"#C2553D"};}})();
+  const el=sec("🐱 고양이 지출",h("span",{style:{fontSize:"11px",color:C.faint}},"후추 · 마요 · 짜장"));
+  const diff=total-ptotal;
+  el.append(h("div",{style:{background:"linear-gradient(135deg,#FFF6E0,#FFEFE8)",borderRadius:"14px",padding:"16px 18px",margin:"10px 0",textAlign:"center"}},
+    h("div",{style:{fontSize:"12px",color:C.sub,marginBottom:"4px"}},"이번 달 우리 애들한테"),
+    h("div",{class:"num",style:{fontSize:"26px",fontWeight:"800",letterSpacing:"-.02em"}},W(total)),
+    ptotal>0?h("div",{style:{fontSize:"11.5px",color:diff>=0?C.over:C.brand,marginTop:"3px",fontWeight:"700"}},`전월 대비 ${diff>=0?"▲":"▼"} ${W(Math.abs(diff)).slice(1)}`):h("div",{style:{fontSize:"11px",color:C.faint,marginTop:"3px"}},"고양이 카테고리로 기록하면 여기 모여요")));
+  if(cons.length){
+    // 최근 지출 몇 건
+    const recent=cons.slice().sort((a,b)=>(b.date||"").localeCompare(a.date||"")).slice(0,4);
+    const list=h("div",{style:{display:"flex",flexDirection:"column",gap:"5px"}});
+    recent.forEach(t=>list.append(h("div",{style:{display:"flex",justifyContent:"space-between",alignItems:"center",padding:"7px 4px",borderBottom:`1px solid ${C.line}`,fontSize:"12.5px"}},
+      h("span",{style:{color:C.ink,whiteSpace:"nowrap",overflow:"hidden",textOverflow:"ellipsis",flex:"1"}},`🐾 ${t.merchant||"고양이 용품"}`),
+      h("span",{style:{color:C.faint,fontSize:"10.5px",margin:"0 8px"}},(t.date||"").slice(5)),
+      h("span",{class:"num",style:{fontWeight:"700"}},W(t.amount)))));
+    el.append(list);
+    // 올해 누적 (같은 해 데이터)
+    const yr=(S.curYm||"").slice(0,4);
+    const cnt=cons.length;
+    el.append(h("div",{style:{fontSize:"11.5px",color:C.sub,background:"#F6F4EF",borderRadius:"10px",padding:"9px 12px",marginTop:"10px",lineHeight:"1.6",cursor:"pointer"},onclick:()=>showTxnListModal("고양이 지출 전체",cons)},`💛 이번 달 ${cnt}번 애들을 챙겼어요. 탭하면 전체 내역 보기 ›`));
+  }
+  return el;
+}
+
+
 function buildSpend(){
   const st=calcStatsFor(S.txns),prevSt=calcStatsFor(S.prevTxns);
-  const cards=[buildNextMonthBill(),buildCardSpend(),buildCatBudgetDonut(),buildCatBudgetSpend(),buildFoodAnalysis(),buildShoppingList(),buildExcludeSuggest(),buildRecent()].filter(Boolean);
+  const cards=[buildNextMonthBill(),buildCardReconcile(),buildCardSpend(),buildSubscriptions(),buildCatBudgetDonut(),buildCatBudgetSpend(),buildFoodAnalysis(),buildCatReport(),buildShoppingList(),buildExcludeSuggest(),buildRecent()].filter(Boolean);
   return reorderCards("spend",cards);
 }
 function buildHome(){
@@ -2159,6 +2303,12 @@ function showSearch(opt){
   const inp=h("input",{type:"text",placeholder:"가맹점·카테고리·메모 (선택)",autocomplete:"off",style:{width:"100%",border:`1px solid ${C.brand}`,borderRadius:"12px",padding:"12px 14px",fontSize:"15px",outline:"none"}});
   const fromEl=h("input",{type:"date",value:opt?.from||"",style:dStyle});
   const toEl=h("input",{type:"date",value:opt?.to||"",style:dStyle});
+  const minEl=h("input",{type:"number",inputmode:"numeric",placeholder:"최소 금액",style:{...dStyle}});
+  const maxEl=h("input",{type:"number",inputmode:"numeric",placeholder:"최대 금액",style:{...dStyle}});
+  let sortMode="date";
+  const sortBtn=h("button",{style:{flexShrink:"0",fontSize:"12px",fontWeight:"700",padding:"9px 11px",borderRadius:"10px",border:`1px solid ${C.line}`,background:C.w,color:C.sub,cursor:"pointer",whiteSpace:"nowrap"},onclick:()=>{sortMode=sortMode==="date"?"amount":"date";sortBtn.textContent=sortMode==="date"?"↕ 최신순":"↕ 금액순";run();}},"↕ 최신순");
+  let kindF="all";
+  const kindBtn=h("button",{style:{flexShrink:"0",fontSize:"12px",fontWeight:"700",padding:"9px 11px",borderRadius:"10px",border:`1px solid ${C.line}`,background:C.w,color:C.sub,cursor:"pointer",whiteSpace:"nowrap"},onclick:()=>{kindF=kindF==="all"?"spend":kindF==="spend"?"income":"all";kindBtn.textContent={all:"전체",spend:"지출만",income:"수입만"}[kindF];kindBtn.style.background=kindF==="all"?C.w:"#EEF6F1";run();}},"전체");
 
   const drawRow=t=>{
     const c=CM[t.category]||CM["기타"],k=kindOf(t.type);
@@ -2184,14 +2334,21 @@ function showSearch(opt){
 
   const run=async()=>{
     const q=inp.value.trim(),f=fromEl.value,t=toEl.value;
-    if(q.length<2&&!f&&!t){resultEl.innerHTML="";resultEl.append(empty("검색어(2자 이상) 또는 기간을 선택하세요."));return;}
+    const mn=Number(minEl.value)||null,mx=Number(maxEl.value)||null;
+    if(q.length<2&&!f&&!t&&mn==null&&mx==null){resultEl.innerHTML="";resultEl.append(empty("검색어(2자 이상)·기간·금액 중 하나를 입력하세요."));return;}
     resultEl.innerHTML='<div class="center"><div class="spin"></div></div>';
     let qb=sb.from("transactions").select("*");
     if(q.length>=2)qb=qb.or(`merchant.ilike.%${q}%,memo.ilike.%${q}%,category.ilike.%${q}%`);
     if(f)qb=qb.gte("date",f);
     if(t)qb=qb.lte("date",t);
-    const{data}=await qb.order("date",{ascending:false}).limit(500);
-    const results=data||[];
+    if(mn!=null)qb=qb.gte("amount",mn);
+    if(mx!=null)qb=qb.lte("amount",mx);
+    const{data}=await qb.order("date",{ascending:false}).limit(1000);
+    let results=data||[];
+    if(kindF==="spend")results=results.filter(x=>kindOf(x.type)==="spend");
+    else if(kindF==="income")results=results.filter(x=>["income","reduce"].includes(kindOf(x.type)));
+    if(sortMode==="amount")results=results.slice().sort((a,b)=>Number(b.amount||0)-Number(a.amount||0));
+    S._searchResults=results;
     resultEl.innerHTML="";
     if(!results.length){resultEl.append(empty("조건에 맞는 거래가 없어요."));return;}
     const spend=results.filter(x=>kindOf(x.type)==="spend").reduce((a,x)=>a+Number(x.amount||0),0);
@@ -2220,6 +2377,8 @@ function showSearch(opt){
     chip("전체",()=>{fromEl.value="";toEl.value="";run();}));
 
   inp.oninput=()=>{clearTimeout(timer);timer=setTimeout(run,320);};
+  [minEl,maxEl].forEach(el=>el.oninput=()=>{clearTimeout(timer);timer=setTimeout(run,420);});
+  [fromEl,toEl].forEach(el=>el.onchange=()=>run());
   fromEl.onchange=run;toEl.onchange=run;
 
   sh.append(
@@ -2231,6 +2390,22 @@ function showSearch(opt){
     chipRow,
     h("div",{style:{display:"grid",gridTemplateColumns:"1fr auto 1fr",gap:"8px",alignItems:"center",marginTop:"10px"}},
       fromEl,h("span",{style:{fontSize:"12px",color:C.faint}},"~"),toEl),
+    h("div",{style:{display:"grid",gridTemplateColumns:"1fr auto 1fr",gap:"8px",alignItems:"center",marginTop:"8px"}},
+      minEl,h("span",{style:{fontSize:"12px",color:C.faint}},"~"),maxEl),
+    h("div",{style:{display:"flex",gap:"7px",marginTop:"9px",flexWrap:"wrap"}},kindBtn,sortBtn,
+      h("button",{style:{marginLeft:"auto",fontSize:"12px",fontWeight:"800",padding:"9px 13px",borderRadius:"10px",border:`1px solid ${C.brand}`,background:"#EEF6F1",color:C.brand,cursor:"pointer",whiteSpace:"nowrap"},onclick:()=>{
+        const rows=S._searchResults||[];
+        if(!rows.length){toast("내보낼 검색 결과가 없어요",false);return;}
+        const esc=v=>{const x=(v==null?"":String(v)).replace(/"/g,'""');return /[",\n]/.test(x)?`"${x}"`:x;};
+        const head=["날짜","유형","분류","가맹점/메모","결제수단","계좌","금액"];
+        const body=rows.map(t=>[t.date||"",t.type||"",t.category||"",(t.merchant||t.memo||""),t.payment_method||"",t.account||"",t.amount||0].map(esc).join(","));
+        const csv="\uFEFF"+[head.join(","),...body].join("\r\n");
+        const blob=new Blob([csv],{type:"text/csv;charset=utf-8;"});
+        const url=URL.createObjectURL(blob);const a=document.createElement("a");
+        a.href=url;a.download=`가계부_검색_${td()}.csv`;a.click();
+        setTimeout(()=>URL.revokeObjectURL(url),1000);
+        toast(`📤 ${rows.length}건 CSV로 내보냈어요`);
+      }},"📤 CSV")),
     h("div",{style:{fontSize:"11.5px",color:C.faint,marginTop:"8px",paddingLeft:"2px"}},"검색어·기간을 조합할 수 있어요. 기간만 골라도 그 기간 거래가 다 나와요."),
     resultEl
   );
@@ -4205,20 +4380,42 @@ function buildInvest(){
     }
     const diagBtn=h("button",{style:{width:"100%",marginBottom:"10px",fontSize:"12px",fontWeight:"700",padding:"9px",borderRadius:"10px",border:`1px dashed ${C.faint}`,background:C.w,color:C.faint,cursor:"pointer"},onclick:()=>{
       const rows=latest.map(x=>{
-        const krw=Number(x.eval_value_krw)||0,usd=Number(x.eval_value_usd)||0,fx=Number(x.fx_rate)||0,qty=Number(x.quantity)||0;
+        const krw=Number(x.eval_value_krw)||0,usd=Number(x.eval_value_usd)||0,fx=Number(x.fx_rate)||0,qty=Number(x.quantity)||0,avg=Number(x.avg_price)||0;
         const calc=usd&&fx?Math.round(usd*fx):null;
         const bad=calc&&(krw>calc*3||krw<calc/3);
-        return{n:x.name||x.ticker,krw,usd,fx,qty,calc,bad};
+        // 원인 자동 판별
+        let cause="";
+        if(bad){
+          const perShareUsd=qty>0?usd/qty:0;
+          if(usd<=0)cause="달러평가액이 0/없음 → 종목 직접수정 필요";
+          else if(fx>3000||fx<500)cause=`환율값 이상(${fx}) → 정리 버튼으로 교정`;
+          else if(krw>calc*3)cause="원화값이 과대 → 정리 버튼이면 해결(A)";
+          else cause="원화값이 과소 → 정리 버튼이면 해결";
+          if(avg>0&&perShareUsd>0&&(perShareUsd>avg*5||perShareUsd<avg/5))cause+=" · 달러값도 의심(B)";
+        }
+        return{n:x.name||x.ticker,krw,usd,fx,qty,avg,calc,bad,cause};
       }).sort((a,b)=>b.krw-a.krw);
       const sumKrw=rows.reduce((a,r)=>a+r.krw,0);
+      const safeSum=rows.reduce((a,r)=>a+(r.bad&&r.calc?r.calc:r.krw),0);
+      const badRows=rows.filter(r=>r.bad);
       const ov=h("div",{style:{position:"fixed",inset:"0",background:"rgba(40,37,31,.5)",display:"flex",alignItems:"center",justifyContent:"center",padding:"16px",zIndex:"90"}});
       const sh=h("div",{style:{width:"100%",maxWidth:"560px",background:C.w,borderRadius:"18px",padding:"18px 20px",maxHeight:"85vh",overflowY:"auto"}});
       sh.append(h("div",{style:{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:"10px"}},h("span",{style:{fontSize:"15px",fontWeight:"800"}},"🔧 종목값 진단"),h("button",{style:{fontSize:"20px",color:C.sub},onclick:()=>ov.remove()},"✕")));
-      sh.append(h("div",{style:{fontSize:"12px",color:C.sub,marginBottom:"12px",lineHeight:"1.6"}},`합계 ${W(sumKrw)} · 빨간 표시는 원화값이 (달러×환율)과 3배 이상 어긋난 종목이에요.`));
+      const diagBox=h("div",{style:{background:badRows.length?"#FEF2EE":"#EEF6F1",borderRadius:"12px",padding:"12px 14px",marginBottom:"14px",lineHeight:"1.65",fontSize:"12.5px"}});
+      if(badRows.length){
+        diagBox.append(h("div",{style:{fontWeight:"800",color:C.over,marginBottom:"5px"}},`⚠️ 이상 종목 ${badRows.length}개 발견`));
+        diagBox.append(h("div",{style:{color:C.sub}},`현재 합계 ${W(sumKrw)} → 보정 적용 시 ${W(safeSum)}`));
+        diagBox.append(h("div",{style:{color:C.sub,marginTop:"4px"}},"👉 대부분 아래 '평가액 이상값 정리하기'로 해결돼요. (B)표시는 달러값 자체가 틀려서 종목 직접수정이 필요해요."));
+      }else{
+        diagBox.append(h("div",{style:{fontWeight:"800",color:C.brand,marginBottom:"3px"}},"✅ 이상 없음"));
+        diagBox.append(h("div",{style:{color:C.sub}},`합계 ${W(sumKrw)} · 모든 종목의 원화값이 정상 범위예요.`));
+      }
+      sh.append(diagBox);
       rows.forEach(r=>{
         sh.append(h("div",{style:{padding:"9px 4px",borderBottom:`1px solid ${C.line}`,background:r.bad?"#FEF2EE":"transparent",borderRadius:"6px"}},
           h("div",{style:{display:"flex",justifyContent:"space-between",fontSize:"13px",fontWeight:"700"}},h("span",{},(r.bad?"⚠️ ":"")+r.n),h("span",{class:"num"},W(r.krw))),
-          h("div",{style:{fontSize:"10.5px",color:C.sub,marginTop:"3px",lineHeight:"1.5"}},`수량 ${r.qty} · 달러평가 $${r.usd.toLocaleString()} · 환율 ${r.fx} · 검산(달러×환율)=${r.calc!=null?W(r.calc):"-"}`)));
+          h("div",{style:{fontSize:"10.5px",color:C.sub,marginTop:"3px",lineHeight:"1.5"}},`수량 ${r.qty} · 달러평가 $${r.usd.toLocaleString()} · 환율 ${r.fx} · 검산=${r.calc!=null?W(r.calc):"-"}`),
+          r.cause?h("div",{style:{fontSize:"10.5px",color:C.over,marginTop:"2px",fontWeight:"700"}},"→ "+r.cause):""));
       });
       ov.append(sh);document.body.append(ov);
     }},"🔧 종목값 진단 (어디가 이상한지 보기)");
