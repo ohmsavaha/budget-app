@@ -3449,7 +3449,7 @@ function stockIcon(name,ticker){
     const cutStr=cutoff.toISOString().slice(0,10);
     const data=rows.filter(r=>period==="전체"||r.snapshot_date>=cutStr);
     const labels=data.map(r=>(r.snapshot_date||"").slice(5));
-    const vals=data.map(r=>Number(curMode==="USD"?r.return_rate_usd:r.return_rate_krw)||0);
+    const vals=data.map(r=>{const v=Number(curMode==="USD"?r.return_rate_usd:r.return_rate_krw)||0;return Math.abs(v)>500?null:v;}); // ±500% 초과=오염 데이터로 보고 차트에서 제외
     if(chart)chart.destroy();
     if(!window.Chart)return;
     const ctx=cv.getContext("2d");
@@ -3709,10 +3709,18 @@ const SECTORS={
 };
 const sectorOf=(ticker)=>{const t=(ticker||"").toUpperCase().split(".")[0];return SECTORS[t]||"기타";};
 // 평가액 정상화: eval_value_krw가 usd×fx와 10배 이상 어긋나면 검산값 사용 (천배 버그 방어)
+function usdLooksKrw(x){
+  // 달러평가액 칸에 원화가 잘못 저장됐는지 감지: 주당 달러가 비상식적으로 크면 의심
+  const usd=Number(x.eval_value_usd)||0,qty=Number(x.quantity)||0,avg=Number(x.avg_price)||0;
+  if(usd<=0||qty<=0)return false;
+  const ps=usd/qty; // 주당 "달러"
+  return ps>10000||(avg>0&&ps>avg*20&&ps>1000);
+}
 function safeEvalKrw(x){
   const krw=Number(x.eval_value_krw)||0;
   const usd=Number(x.eval_value_usd)||0;
   const fx=Number(x.fx_rate)||1380;
+  if(usdLooksKrw(x))return Math.round(usd); // usd칸이 사실 원화 → 그 값이 진짜 평가액
   if(usd>0){
     const calc=usd*fx;
     if(calc>0&&(krw>calc*10||krw<calc/10))return Math.round(calc); // 어긋나면 검산값
@@ -4301,7 +4309,14 @@ function buildInvest(){
         if(!x.ticker){skipped.push(`${x.name||"?"} (심볼 없음)`);continue;}
         const q=quotes[x.ticker];
         if(!q||q.price==null){
-          // 시세 못 받음 → 달러 평가액이 있으면 환율로 krw 교정 (깨진 값 복구)
+          // 시세 못 받음 → 달러 평가액 기반 교정 (usd칸이 원화면 스왑)
+          if(usdLooksKrw(x)){
+            const realKrw=Math.round(Number(x.eval_value_usd));
+            const realUsd=Math.round(Number(x.eval_value_usd)/fx*100)/100;
+            await sb.from("investment_holdings").update({eval_value_krw:realKrw,eval_value_usd:realUsd,fx_rate:fx}).eq("id",x.id);
+            skipped.push(`${x.name||x.ticker} (시세 못 받음 · 원화혼입 교정)`);
+            continue;
+          }
           if(x.eval_value_usd!=null&&Number(x.eval_value_usd)>0){
             const fixKrw=Math.round(Number(x.eval_value_usd)*fx);
             await sb.from("investment_holdings").update({eval_value_krw:fixKrw,fx_rate:fx}).eq("id",x.id);
@@ -4310,8 +4325,14 @@ function buildInvest(){
           continue;
         }
         if(!qty){skipped.push(`${x.name||x.ticker} (수량 없음)`);continue;}
-        const usd=q.currency==="KRW"?null:q.price*qty;
-        const krw=q.currency==="KRW"?q.price*qty:Math.round(q.price*qty*fx);
+        // 프록시가 원화 가격을 달러로 잘못 표기하는 경우 방어: 주당가 비상식적이면 환율로 나눠 교정
+        let px=Number(q.price);
+        if(q.currency!=="KRW"){
+          const avgP=Number(x.avg_price)||0;
+          if(px>10000||(avgP>0&&px>avgP*20&&px>1000)){dlog("[가격 원화의심→교정]",x.ticker,px,"→",px/fx);px=px/fx;}
+        }
+        const usd=q.currency==="KRW"?null:px*qty;
+        const krw=q.currency==="KRW"?px*qty:Math.round(px*qty*fx);
         const newUsd=usd!=null?Math.round(usd*100)/100:x.eval_value_usd;
         await sb.from("investment_holdings").update({eval_value_krw:Math.round(krw),eval_value_usd:newUsd,fx_rate:fx,day_change_pct:q.changePct??null}).eq("id",x.id);
         updated++;
@@ -4345,7 +4366,7 @@ function buildInvest(){
     };
     const manageBtn=h("button",{style:{width:"100%",marginBottom:"10px",fontSize:"13px",fontWeight:"700",padding:"10px",borderRadius:"10px",border:`1px solid ${C.line}`,background:C.w,color:C.sub,cursor:"pointer"},onclick:()=>showHoldingManage(latestDate)},"✏️ 종목 직접 추가·삭제");
     // 이상값 감지 → 정리 버튼 노출
-    const hasBad=latest.some(x=>{const krw=Number(x.eval_value_krw)||0,usd=Number(x.eval_value_usd)||0,fx=Number(x.fx_rate)||1380;return usd>0&&krw>0&&(krw>usd*fx*10||krw<usd*fx/10);});
+    const hasBad=latest.some(x=>{const krw=Number(x.eval_value_krw)||0,usd=Number(x.eval_value_usd)||0,fx=Number(x.fx_rate)||1380;return usdLooksKrw(x)||(usd>0&&krw>0&&(krw>usd*fx*10||krw<usd*fx/10));});
     let fixBtn=null;
     if(hasBad){
       fixBtn=h("button",{style:{width:"100%",marginBottom:"10px",fontSize:"13px",fontWeight:"800",padding:"11px",borderRadius:"10px",border:`1px solid ${C.over}`,background:"#FEF2EE",color:C.over,cursor:"pointer"},onclick:async()=>{
@@ -4359,8 +4380,14 @@ function buildInvest(){
           const qty=Number(x.quantity)||0;const q=x.ticker&&quotes[x.ticker];
           let krw=null,usd=x.eval_value_usd;
           if(q&&q.price!=null&&qty){
-            usd=q.currency==="KRW"?null:Math.round(q.price*qty*100)/100;
-            krw=q.currency==="KRW"?Math.round(q.price*qty):Math.round(q.price*qty*fx);
+            let px=Number(q.price);
+            if(q.currency!=="KRW"){const avgP=Number(x.avg_price)||0;if(px>10000||(avgP>0&&px>avgP*20&&px>1000)){dlog("[정리:가격 원화의심→교정]",x.ticker,px,"→",px/fx);px=px/fx;}}
+            usd=q.currency==="KRW"?null:Math.round(px*qty*100)/100;
+            krw=q.currency==="KRW"?Math.round(px*qty):Math.round(px*qty*fx);
+          }else if(usdLooksKrw(x)){
+            // usd칸에 원화가 저장된 케이스 → 스왑 교정
+            krw=Math.round(Number(x.eval_value_usd));
+            usd=Math.round(Number(x.eval_value_usd)/fx*100)/100;
           }else if(Number(x.eval_value_usd)>0){
             krw=Math.round(Number(x.eval_value_usd)*fx);  // 시세 없으면 달러평가액×환율
           }
@@ -4371,7 +4398,7 @@ function buildInvest(){
           const{data:fresh}=await sb.from("investment_holdings").select("eval_value_krw").eq("snapshot_date",latestDate);
           const sum=(fresh||[]).reduce((a,r)=>a+(Number(r.eval_value_krw)||0),0);
           const snap=S.invRows&&S.invRows[0];
-          if(snap&&sum>0){const cashV=Number(snap.cash_krw)||0,total=Math.round(sum+cashV);const inv2=snap.total_invested_krw!=null?Number(snap.total_invested_krw):null;const pl=inv2!=null?total-inv2:(Number(snap.total_pl_krw)||0);const rr=inv2&&inv2>0?Math.round(pl/inv2*10000)/100:snap.return_rate_krw;await sb.from("investment_snapshots").update({total_value_krw:total,total_pl_krw:pl,return_rate_krw:rr,exchange_rate:Math.round(fx*100)/100}).eq("user_id",S.session.user.id).eq("snapshot_date",latestDate);}
+          if(snap&&sum>0){const cashV=Number(snap.cash_krw)||0,total=Math.round(sum+cashV);const inv2=snap.total_invested_krw!=null?Number(snap.total_invested_krw):null;const pl=inv2!=null?total-inv2:(Number(snap.total_pl_krw)||0);const rr=inv2&&inv2>0?Math.round(pl/inv2*10000)/100:snap.return_rate_krw;await sb.from("investment_snapshots").update({total_value_krw:total,total_pl_krw:pl,return_rate_krw:rr,exchange_rate:Math.round(fx*100)/100}).eq("user_id",S.session.user.id).in("snapshot_date",[latestDate,td()]);}
         }catch(e){dlog("[정리스냅샷실패]",e);}
         await loadInvest();await loadAllSnapshots(true);
         const ct=document.getElementById("ct");if(ct){ct.innerHTML="";buildInvest().forEach(n=>ct.append(n));}
@@ -4382,12 +4409,14 @@ function buildInvest(){
       const rows=latest.map(x=>{
         const krw=Number(x.eval_value_krw)||0,usd=Number(x.eval_value_usd)||0,fx=Number(x.fx_rate)||0,qty=Number(x.quantity)||0,avg=Number(x.avg_price)||0;
         const calc=usd&&fx?Math.round(usd*fx):null;
-        const bad=calc&&(krw>calc*3||krw<calc/3);
+        const mixed=usdLooksKrw(x);
+        const bad=mixed||(calc&&(krw>calc*3||krw<calc/3));
         // 원인 자동 판별
         let cause="";
         if(bad){
           const perShareUsd=qty>0?usd/qty:0;
-          if(usd<=0)cause="달러평가액이 0/없음 → 종목 직접수정 필요";
+          if(mixed)cause=`달러 칸에 원화가 저장됨(주당 $${Math.round(perShareUsd).toLocaleString()}?!) → 정리 버튼으로 스왑 교정(B)`;
+          else if(usd<=0)cause="달러평가액이 0/없음 → 종목 직접수정 필요";
           else if(fx>3000||fx<500)cause=`환율값 이상(${fx}) → 정리 버튼으로 교정`;
           else if(krw>calc*3)cause="원화값이 과대 → 정리 버튼이면 해결(A)";
           else cause="원화값이 과소 → 정리 버튼이면 해결";
@@ -4396,7 +4425,7 @@ function buildInvest(){
         return{n:x.name||x.ticker,krw,usd,fx,qty,avg,calc,bad,cause};
       }).sort((a,b)=>b.krw-a.krw);
       const sumKrw=rows.reduce((a,r)=>a+r.krw,0);
-      const safeSum=rows.reduce((a,r)=>a+(r.bad&&r.calc?r.calc:r.krw),0);
+      const safeSum=latest.reduce((a,x)=>a+safeEvalKrw(x),0);
       const badRows=rows.filter(r=>r.bad);
       const ov=h("div",{style:{position:"fixed",inset:"0",background:"rgba(40,37,31,.5)",display:"flex",alignItems:"center",justifyContent:"center",padding:"16px",zIndex:"90"}});
       const sh=h("div",{style:{width:"100%",maxWidth:"560px",background:C.w,borderRadius:"18px",padding:"18px 20px",maxHeight:"85vh",overflowY:"auto"}});
