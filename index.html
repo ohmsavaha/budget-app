@@ -668,7 +668,7 @@ function renderDash(){
     h("div",{style:{display:"flex",alignItems:"center",justifyContent:"space-between",marginBottom:"16px"}},
       h("div",{style:{display:"flex",alignItems:"center",gap:"9px"}},
         h("span",{style:{fontSize:"21px"}},SN[Number(S.curYm.split("-")[1])]||"📒"),
-        h("div",{},h("div",{style:{fontSize:"11.5px",color:C.sub}},"나의 가계부 · v112"),h("div",{style:{fontSize:"16.5px",fontWeight:"800",letterSpacing:"-.01em",cursor:"pointer",display:"flex",alignItems:"center",gap:"4px"},onclick:()=>showMonthPicker()},yml(S.curYm),h("span",{style:{fontSize:"10px",color:C.faint}},"▾")))
+        h("div",{},h("div",{style:{fontSize:"11.5px",color:C.sub}},"나의 가계부 · v113"),h("div",{style:{fontSize:"16.5px",fontWeight:"800",letterSpacing:"-.01em",cursor:"pointer",display:"flex",alignItems:"center",gap:"4px"},onclick:()=>showMonthPicker()},yml(S.curYm),h("span",{style:{fontSize:"10px",color:C.faint}},"▾")))
       ),
       h("div",{style:{display:"flex",alignItems:"center",gap:"4px",background:C.w,border:`1px solid ${C.line}`,borderRadius:"999px",padding:"3px 4px"}},prevBtn,todayBtn,nextBtn)
     ),
@@ -5393,7 +5393,27 @@ const VAPID_PUBLIC_KEY="BDb40F1WWXnyEEb02eal8GEdnH6RGSQGOn7TDfspTvCiUbfk6MvLuDri
 function urlB64ToUint8(base64){const pad="=".repeat((4-base64.length%4)%4);const b=(base64+pad).replace(/-/g,"+").replace(/_/g,"/");const raw=atob(b);return Uint8Array.from([...raw].map(c=>c.charCodeAt(0)));}
 function notifSupported(){return "Notification" in window && "serviceWorker" in navigator && "PushManager" in window;}
 // 로컬 즉시 알림 (앱 켜져 있을 때 테스트/확인용)
+// 인앱 알림함 (최근 50개)
+function getNotifLog(){try{return JSON.parse(localStorage.getItem("notif_log")||"[]");}catch{return [];}}
+function addNotifLog(title,body){
+  try{
+    const log=getNotifLog();
+    log.unshift({title,body,ts:Date.now(),read:false});
+    localStorage.setItem("notif_log",JSON.stringify(log.slice(0,50)));
+    updateAppBadge();
+  }catch{}
+}
+function markNotifRead(){try{const log=getNotifLog();log.forEach(n=>n.read=true);localStorage.setItem("notif_log",JSON.stringify(log));updateAppBadge();}catch{}}
+function unreadNotifCount(){return getNotifLog().filter(n=>!n.read).length;}
+// 앱 아이콘 뱃지 (위젯 대안 — 홈 화면 아이콘에 숫자)
+async function updateAppBadge(){
+  try{
+    const n=unreadNotifCount();
+    if("setAppBadge" in navigator){if(n>0)await navigator.setAppBadge(n);else await navigator.clearAppBadge();}
+  }catch{}
+}
 async function showLocalNotif(title,body){
+  addNotifLog(title,body);
   try{
     if(Notification.permission!=="granted")return false;
     const reg=await navigator.serviceWorker.ready;
@@ -5420,7 +5440,7 @@ async function enablePush(){
   }catch(e){dlog("[enablePush]",e);toast("알림 켜기 실패: "+(e.message||"오류"),false);return false;}
 }
 // 알림 종류별 설정 (localStorage)
-const NOTIF_DEFAULTS={cardDue:true,cardDueDays:[1],budgetWarn:true,budgetPcts:[90],noRecord:true,noRecordDays:2,subscription:true,monthEnd:true};
+const NOTIF_DEFAULTS={cardDue:true,cardDueDays:[1],budgetWarn:true,budgetPcts:[90],noRecord:true,noRecordDays:2,subscription:true,monthEnd:true,fixedDue:true,fixedDueDays:[1],investSwing:false,investPct:5,savingGoal:true,shoppingRemind:true,weeklyRecap:true,zeroSpend:true};
 function getNotifPrefs(){try{
   const raw=JSON.parse(localStorage.getItem("notif_prefs")||"{}");
   // 구버전 단일값 → 배열 마이그레이션
@@ -5437,6 +5457,34 @@ function setNotifPrefs(p){
   try{if(S.session)sb.from("push_subscriptions").update({prefs:p}).eq("user_id",S.session.user.id).then(()=>{});}catch{}
 }
 // 알림 설정 화면
+function showNotifLog(){
+  markNotifRead();
+  const log=getNotifLog();
+  const ov=h("div",{style:{position:"fixed",inset:"0",background:"rgba(40,37,31,.45)",display:"flex",alignItems:"flex-end",justifyContent:"center",zIndex:"82"}});
+  ov.onclick=e=>{if(e.target===ov)ov.remove();};
+  const sh=h("div",{style:{width:"100%",maxWidth:"500px",background:C.w,borderRadius:"20px 20px 0 0",maxHeight:"80vh",display:"flex",flexDirection:"column",overflow:"hidden"}});
+  sh.append(h("div",{style:{padding:"18px 20px 12px",flexShrink:"0"}},
+    h("div",{style:{width:"38px",height:"4px",borderRadius:"2px",background:C.line,margin:"0 auto 14px"}}),
+    h("div",{style:{display:"flex",justifyContent:"space-between",alignItems:"center"}},
+      h("span",{style:{fontSize:"17px",fontWeight:"800"}},"📬 알림함"),
+      h("button",{style:{fontSize:"20px",color:C.sub,background:"transparent",border:"none",cursor:"pointer"},onclick:()=>ov.remove()},"✕"))));
+  const body=h("div",{style:{flex:"1",overflowY:"auto",padding:"0 20px 20px"}});
+  if(!log.length){body.append(empty("아직 받은 알림이 없어요.\n알림이 오면 여기에 쌓여요."));}
+  else{
+    log.forEach(n=>{
+      const d=new Date(n.ts);
+      const ago=(()=>{const m=Math.floor((Date.now()-n.ts)/60000);if(m<1)return "방금";if(m<60)return m+"분 전";const h2=Math.floor(m/60);if(h2<24)return h2+"시간 전";return Math.floor(h2/24)+"일 전";})();
+      body.append(h("div",{style:{padding:"13px 2px",borderBottom:`1px solid ${C.line}`}},
+        h("div",{style:{display:"flex",justifyContent:"space-between",alignItems:"baseline",gap:"8px"}},
+          h("div",{style:{fontSize:"13.5px",fontWeight:"700"}},n.title),
+          h("div",{style:{fontSize:"10.5px",color:C.faint,flexShrink:"0"}},ago)),
+        h("div",{style:{fontSize:"12.5px",color:C.sub,marginTop:"3px",lineHeight:"1.5",whiteSpace:"pre-line"}},n.body)));
+    });
+    body.append(h("button",{style:{width:"100%",marginTop:"14px",fontSize:"12px",fontWeight:"600",padding:"10px",borderRadius:"10px",border:`1px solid ${C.line}`,color:C.sub,background:C.w,cursor:"pointer"},onclick:()=>{try{localStorage.removeItem("notif_log");updateAppBadge();}catch{}ov.remove();toast("알림함을 비웠어요");}},"알림함 비우기"));
+  }
+  sh.append(body);
+  ov.append(sh);document.body.append(ov);
+}
 function showNotifSettings(){
   const pushOn=localStorage.getItem("push_on")==="1"&&(typeof Notification!=="undefined"&&Notification.permission==="granted");
   let P=getNotifPrefs();
@@ -5447,7 +5495,9 @@ function showNotifSettings(){
     h("div",{style:{width:"38px",height:"4px",borderRadius:"2px",background:C.line,margin:"0 auto 14px"}}),
     h("div",{style:{display:"flex",justifyContent:"space-between",alignItems:"center"}},
       h("span",{style:{fontSize:"17px",fontWeight:"800"}},"🔔 알림 설정"),
-      h("button",{style:{fontSize:"20px",color:C.sub,background:"transparent",border:"none",cursor:"pointer"},onclick:()=>ov.remove()},"✕")));
+      h("div",{style:{display:"flex",gap:"10px",alignItems:"center"}},
+        h("button",{style:{fontSize:"12.5px",fontWeight:"700",color:C.brand,background:C.soft,border:"none",borderRadius:"8px",padding:"6px 10px",cursor:"pointer"},onclick:()=>{ov.remove();showNotifLog();}},`📬 알림함${unreadNotifCount()>0?" "+unreadNotifCount():""}`),
+        h("button",{style:{fontSize:"20px",color:C.sub,background:"transparent",border:"none",cursor:"pointer"},onclick:()=>ov.remove()},"✕"))));
   const body=h("div",{style:{flex:"1",overflowY:"auto",padding:"0 20px 20px"}});
   const render=()=>{
     body.innerHTML="";
@@ -5489,6 +5539,12 @@ function showNotifSettings(){
     toggleRow("📸","미기록 리마인더","이 기간 지나면 매일 콕 찔러줘요 (기록할 때까지)","noRecord",chipSel("noRecordDays",[{v:2,l:"2일부터"},{v:3,l:"3일부터"},{v:5,l:"5일부터"},{v:7,l:"7일부터"}]));
     toggleRow("🔁","구독 결제 예정","정기결제 나가기 전에 알려줘요","subscription");
     toggleRow("📊","월말 결산 요약","매달 말일에 이번 달 요약을 보내줘요","monthEnd");
+    toggleRow("📌","고정비 납부일","월세·통신비 등 고정비 빠지는 날 알려줘요","fixedDue",chipMulti("fixedDueDays",[{v:0,l:"당일"},{v:1,l:"하루 전"},{v:2,l:"이틀 전"}]));
+    toggleRow("💰","주간 요약","매주 일요일 저녁, 이번 주 지출 요약을 보내줘요","weeklyRecap");
+    toggleRow("🎉","무지출 데이","하루 지출 0원이면 저녁에 축하해줘요","zeroSpend");
+    toggleRow("🐷","저축 목표 달성","저축·청약이 목표액에 도달하면 축하해줘요","savingGoal");
+    toggleRow("🛒","장바구니 리마인더","담아둔 걸 3일 넘게 안 사면 알려줘요","shoppingRemind");
+    toggleRow("📈","투자 급등락","보유 종목이 하루 크게 움직이면 알려줘요","investSwing",chipSel("investPct",[{v:3,l:"±3%"},{v:5,l:"±5%"},{v:10,l:"±10%"}]));
     // 테스트 버튼
     body.append(h("button",{style:{width:"100%",marginTop:"18px",fontSize:"13px",fontWeight:"700",padding:"12px",borderRadius:"11px",border:`1px dashed ${C.line}`,color:C.sub,background:C.w,cursor:"pointer"},onclick:async()=>{const ok=await showLocalNotif("💰 나의 가계부","테스트 알림이에요! 이렇게 폰에 떠요.");if(!ok)toast("먼저 알림을 켜주세요",false);}},"🔔 테스트 알림 보내기"));
     body.append(h("div",{style:{fontSize:"10.5px",color:C.faint,marginTop:"12px",lineHeight:"1.6",textAlign:"center"}},"알림은 앱을 홈 화면에 추가했을 때만 작동해요.\n서버 자동 발송은 곧 추가될 예정이에요."));
@@ -6866,6 +6922,7 @@ function showDutchReceive(d){
   ov.append(sh);document.body.append(ov);
 }
 
-if("serviceWorker" in navigator)window.addEventListener("load",()=>navigator.serviceWorker.register("./sw.js").catch(()=>{}));</script>
+if("serviceWorker" in navigator)window.addEventListener("load",()=>navigator.serviceWorker.register("./sw.js").catch(()=>{}));
+if("setAppBadge" in navigator)window.addEventListener("load",()=>{try{updateAppBadge();}catch{}});</script>
 </body>
 </html>
