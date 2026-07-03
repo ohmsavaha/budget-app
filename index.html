@@ -658,7 +658,7 @@ function renderDash(){
     h("div",{style:{display:"flex",alignItems:"center",justifyContent:"space-between",marginBottom:"16px"}},
       h("div",{style:{display:"flex",alignItems:"center",gap:"9px"}},
         h("span",{style:{fontSize:"21px"}},SN[Number(S.curYm.split("-")[1])]||"📒"),
-        h("div",{},h("div",{style:{fontSize:"11.5px",color:C.sub}},"나의 가계부 · v103"),h("div",{style:{fontSize:"16.5px",fontWeight:"800",letterSpacing:"-.01em",cursor:"pointer",display:"flex",alignItems:"center",gap:"4px"},onclick:()=>showMonthPicker()},yml(S.curYm),h("span",{style:{fontSize:"10px",color:C.faint}},"▾")))
+        h("div",{},h("div",{style:{fontSize:"11.5px",color:C.sub}},"나의 가계부 · v104"),h("div",{style:{fontSize:"16.5px",fontWeight:"800",letterSpacing:"-.01em",cursor:"pointer",display:"flex",alignItems:"center",gap:"4px"},onclick:()=>showMonthPicker()},yml(S.curYm),h("span",{style:{fontSize:"10px",color:C.faint}},"▾")))
       ),
       h("div",{style:{display:"flex",alignItems:"center",gap:"4px",background:C.w,border:`1px solid ${C.line}`,borderRadius:"999px",padding:"3px 4px"}},prevBtn,todayBtn,nextBtn)
     ),
@@ -2817,7 +2817,7 @@ function showEditTxn(t, onDone){
   let isTransferE=/#이체/.test(t.memo||"")||isInternalTransfer(t);
   const trToggle=h("button",{type:"button",style:{width:"100%",marginTop:"9px",fontSize:"13px",fontWeight:"700",padding:"11px",borderRadius:"11px",border:`1px solid ${isTransferE?C.brand:C.line}`,background:isTransferE?"#EEF6F1":C.w,color:isTransferE?C.brand:C.sub,cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center",gap:"6px"}},isTransferE?"⇄ 이체로 표시됨 (지출·수입에서 제외)":"⇄ 이 거래를 이체로 표시");
   trToggle.onclick=()=>{isTransferE=!isTransferE;trToggle.textContent=isTransferE?"⇄ 이체로 표시됨 (지출·수입에서 제외)":"⇄ 이 거래를 이체로 표시";trToggle.style.border=`1px solid ${isTransferE?C.brand:C.line}`;trToggle.style.background=isTransferE?"#EEF6F1":C.w;trToggle.style.color=isTransferE?C.brand:C.sub;};
-  const moWrap=h("div",{},moWrap,trToggle);
+  const moWrap=h("div",{},mo,trToggle);
 
   const accRow=h("div",{style:{display:"flex",gap:"8px"}});
   const drawAcc=()=>{accRow.innerHTML="";["개인","공용"].forEach(a=>{const b=h("button",{style:{flex:"1",fontSize:"14px",fontWeight:"600",padding:"11px",borderRadius:"10px",border:`1px solid ${selAcc===a?C.brand:C.line}`,background:selAcc===a?C.soft:C.w,color:selAcc===a?C.brand:C.sub,cursor:"pointer"},onclick:()=>{selAcc=a;drawAcc();}},a);accRow.append(b);});};
