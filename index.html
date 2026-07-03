@@ -658,7 +658,7 @@ function renderDash(){
     h("div",{style:{display:"flex",alignItems:"center",justifyContent:"space-between",marginBottom:"16px"}},
       h("div",{style:{display:"flex",alignItems:"center",gap:"9px"}},
         h("span",{style:{fontSize:"21px"}},SN[Number(S.curYm.split("-")[1])]||"📒"),
-        h("div",{},h("div",{style:{fontSize:"11.5px",color:C.sub}},"나의 가계부 · v102"),h("div",{style:{fontSize:"16.5px",fontWeight:"800",letterSpacing:"-.01em",cursor:"pointer",display:"flex",alignItems:"center",gap:"4px"},onclick:()=>showMonthPicker()},yml(S.curYm),h("span",{style:{fontSize:"10px",color:C.faint}},"▾")))
+        h("div",{},h("div",{style:{fontSize:"11.5px",color:C.sub}},"나의 가계부 · v103"),h("div",{style:{fontSize:"16.5px",fontWeight:"800",letterSpacing:"-.01em",cursor:"pointer",display:"flex",alignItems:"center",gap:"4px"},onclick:()=>showMonthPicker()},yml(S.curYm),h("span",{style:{fontSize:"10px",color:C.faint}},"▾")))
       ),
       h("div",{style:{display:"flex",alignItems:"center",gap:"4px",background:C.w,border:`1px solid ${C.line}`,borderRadius:"999px",padding:"3px 4px"}},prevBtn,todayBtn,nextBtn)
     ),
@@ -2830,7 +2830,7 @@ function showEditTxn(t, onDone){
   // 결제수단
   let selPayE=t.payment_method||"현금";
   const payWrapE=h("div",{style:{display:"flex",flexWrap:"wrap",gap:"7px"}});
-  const payListE=()=>{const names=["현금",...S.accounts.map(a=>a.name)];if(selPayE&&!names.includes(selPayE))names.push(selPayE);return names;};
+  const payListE=()=>{const cards=S.accounts.filter(a=>a.kind==="카드").map(a=>a.name);const others=S.accounts.filter(a=>a.kind!=="카드").map(a=>a.name);const names=[...cards,...others,"현금"];if(selPayE&&!names.includes(selPayE))names.unshift(selPayE);return names;};
   const drawPayE=()=>{payWrapE.innerHTML="";payListE().forEach(nm=>{const on=selPayE===nm;const a=S.accounts.find(x=>x.name===nm);const icon=nm==="현금"?"💵":(a?(ACC_ICON[a.kind]||"🏦"):"💳");payWrapE.append(h("button",{style:{fontSize:"12.5px",padding:"7px 11px",borderRadius:"999px",border:`1px solid ${on?C.brand:C.line}`,background:on?C.soft:C.w,color:on?C.brand:C.ink,fontWeight:on?"700":"500",cursor:"pointer"},onclick:()=>{selPayE=nm;drawPayE();}},icon+" "+nm));});};
   drawPayE();
   // 더치페이 받음 처리 (연결된 미수령 건)
@@ -2873,7 +2873,8 @@ function showEditTxn(t, onDone){
     dutchSlot,
     h("div",{style:{marginBottom:"14px"}},lbl("금액"),h("div",{style:{display:"flex",alignItems:"center",border:`1px solid ${C.line}`,borderRadius:"12px",padding:"10px 14px"}},h("span",{style:{fontSize:"22px",fontWeight:"700",color:C.faint,marginRight:"6px"}},"₩"),amtEl)),
     lbl("계정"),h("div",{style:{marginBottom:"13px"}},accRow),
-    lbl("결제수단"),h("div",{style:{marginBottom:"13px"}},payWrapE),
+    lbl("💳 실제 결제수단 (카드·계좌)"),h("div",{style:{marginBottom:"6px"}},payWrapE),
+    h("div",{style:{fontSize:"11px",color:C.faint,marginBottom:"13px",lineHeight:"1.55"}},"네이버페이·쿠팡·카카오페이는 결제 '플랫폼'이에요. 실제로 돈이 나간 카드/계좌를 골라주세요. (가맹점 이름은 위에서 수정)"),
     lbl("유형"),h("div",{style:{marginBottom:"13px"}},typ),
     lbl("카테고리"),h("div",{style:{marginBottom:"13px"}},catWrap),
     h("div",{style:{display:"grid",gridTemplateColumns:"1fr 1fr",gap:"10px",marginBottom:"13px"}},h("div",{},lbl("사용처"),mer),h("div",{},lbl("날짜"),dt)),
