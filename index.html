@@ -343,6 +343,12 @@ function showApiKeySetting(){
     cur?h("button",{style:{width:"100%",marginTop:"8px",fontSize:"13px",color:C.over,cursor:"pointer",padding:"8px"},onclick:()=>{setApiKey("");ov.remove();}},"API 키 삭제"):"",
     h("button",{style:{width:"100%",marginTop:"6px",fontSize:"13px",color:C.faint,cursor:"pointer",padding:"6px"},onclick:()=>ov.remove()},"취소")
   );
+  // 알림 버튼
+  const pushOn=localStorage.getItem("push_on")==="1"&&(typeof Notification!=="undefined"&&Notification.permission==="granted");
+  const notifBtn=h("button",{style:{width:"100%",marginTop:"14px",fontSize:"13.5px",fontWeight:"700",padding:"12px",borderRadius:"11px",border:`1px solid ${pushOn?C.line:C.brand}`,color:pushOn?C.sub:"#fff",background:pushOn?C.w:C.brand,cursor:"pointer"}},pushOn?"🔔 알림 켜짐 (끄기)":"🔔 알림 켜기 (결제일·예산)");
+  notifBtn.onclick=async()=>{if(pushOn){await disablePush();}else{await enablePush();}if(typeof showSettings==="function"){ov.remove();}else{notifBtn.textContent="완료! 설정을 다시 열어보세요";}};
+  const notifTestBtn=h("button",{style:{width:"100%",marginTop:"8px",fontSize:"12.5px",fontWeight:"600",padding:"10px",borderRadius:"11px",border:`1px dashed ${C.line}`,color:C.sub,background:C.w,cursor:"pointer"}},"🔔 테스트 알림 보내기");
+  notifTestBtn.onclick=async()=>{const ok=await showLocalNotif("💰 나의 가계부","테스트 알림이에요! 이렇게 폰에 떠요.");if(!ok)toast("먼저 알림을 켜주세요",false);};
   // 백업 버튼들
   const exportBtn=h("button",{style:{width:"100%",marginTop:"10px",fontSize:"13.5px",fontWeight:"700",padding:"12px",borderRadius:"11px",border:`1px solid ${C.brand}`,color:C.brand,background:C.soft,cursor:"pointer"}},"⬇️ 전체 데이터 백업 (계좌·저축·대출 포함)");
   exportBtn.onclick=async()=>{exportBtn.disabled=true;try{await downloadFullBackup(m=>{exportBtn.textContent=m;});}catch(e){exportBtn.textContent="백업 실패: "+(e.message||"오류");}exportBtn.disabled=false;};
@@ -369,6 +375,7 @@ function showApiKeySetting(){
     h("div",{style:{borderTop:`1px solid ${C.line}`,margin:"16px 0 0"}}),
     h("div",{style:{fontSize:"13px",fontWeight:"800",color:C.sub,margin:"12px 0 4px"}},"데이터 백업"),
     h("div",{style:{fontSize:"12px",color:C.faint,marginBottom:"8px",lineHeight:"1.6"}},"내 돈 데이터는 내 손에 사본을 두는 게 안전해요. 정기적으로 백업하세요."),
+    notifBtn,notifTestBtn,
     exportBtn,csvBtn
   );
 
@@ -660,7 +667,7 @@ function renderDash(){
     h("div",{style:{display:"flex",alignItems:"center",justifyContent:"space-between",marginBottom:"16px"}},
       h("div",{style:{display:"flex",alignItems:"center",gap:"9px"}},
         h("span",{style:{fontSize:"21px"}},SN[Number(S.curYm.split("-")[1])]||"📒"),
-        h("div",{},h("div",{style:{fontSize:"11.5px",color:C.sub}},"나의 가계부 · v106"),h("div",{style:{fontSize:"16.5px",fontWeight:"800",letterSpacing:"-.01em",cursor:"pointer",display:"flex",alignItems:"center",gap:"4px"},onclick:()=>showMonthPicker()},yml(S.curYm),h("span",{style:{fontSize:"10px",color:C.faint}},"▾")))
+        h("div",{},h("div",{style:{fontSize:"11.5px",color:C.sub}},"나의 가계부 · v109"),h("div",{style:{fontSize:"16.5px",fontWeight:"800",letterSpacing:"-.01em",cursor:"pointer",display:"flex",alignItems:"center",gap:"4px"},onclick:()=>showMonthPicker()},yml(S.curYm),h("span",{style:{fontSize:"10px",color:C.faint}},"▾")))
       ),
       h("div",{style:{display:"flex",alignItems:"center",gap:"4px",background:C.w,border:`1px solid ${C.line}`,borderRadius:"999px",padding:"3px 4px"}},prevBtn,todayBtn,nextBtn)
     ),
@@ -1269,22 +1276,16 @@ function cardBillingDay(pm){
   return a&&a.billing_day?Number(a.billing_day):null;
 }
 // 메모의 원구매일 태그 (#원구매:YYYY-MM-DD)
+// 실제 구매 시점 추정: 이번 회차 날짜에서 (회차-1)개월 역산
+function estPurchaseDate(t){
+  const base=t.date||td();const n=Number(t.installment_no)||1;
+  if(n<=1)return base;
+  const[y,m,d]=base.split("-").map(Number);
+  const dt=new Date(y,m-1-(n-1),Math.min(d,28));
+  return dt.getFullYear()+"-"+String(dt.getMonth()+1).padStart(2,"0")+"-"+String(dt.getDate()).padStart(2,"0");
+}
 function getOrigDate(t){const m=(t.memo||"").match(/#원구매:(\d{4}-\d{2}-\d{2})/);return m?m[1]:null;}
 function withOrigDate(memo,origDate){const clean=(memo||"").replace(/\s*#원구매:\d{4}-\d{2}-\d{2}/g,"").trim();return (clean+" #원구매:"+origDate).trim();}
-// 이번 달 할부 거래 중 날짜≠카드결제일인 것 찾기
-function computeBillDateFixes(){
-  const fixes=[];const curYm=ym(S.curYm||td());
-  (S.txns||[]).forEach(t=>{
-    if(!t.installment_total)return; // 할부만
-    const pm=t.payment_method||"";
-    const bd=cardBillingDay(pm);
-    if(!bd)return; // 카드 결제일 모르면 skip
-    const cur=t.date||"";
-    const target=`${curYm}-${String(Math.min(bd,28)).padStart(2,"0")}`;
-    if(cur!==target)fixes.push({t,from:cur,to:target,orig:getOrigDate(t)||cur,pm,bd});
-  });
-  return fixes;
-}
 // 자동 할부 정렬: 결제수단이 카드+결제일 있는 할부만 조용히 이동 (안전한 것만)
 async function autoSortInstallments(){
   try{
@@ -1309,7 +1310,7 @@ async function autoSortInstallments(){
     if(!moves.length){localStorage.setItem(gk,"1");return;}
     let ok=0;
     for(const {t,target} of moves){
-      const orig=getOrigDate(t)||t.date;
+      const orig=getOrigDate(t)||estPurchaseDate(t);
       const{error}=await sb.from("transactions").update({date:target,memo:withOrigDate(t.memo,orig)}).eq("id",t.id);
       if(!error)ok++;
     }
@@ -1386,7 +1387,7 @@ function showBillDateSort(){
         const nm=pick[t.id]||t.payment_method||"";
         const bd=cardBillingDay(nm);if(!bd)continue;
         const target=targetOf(bd);if((t.date||"")===target&&nm===(t.payment_method||""))continue;
-        const orig=getOrigDate(t)||t.date;
+        const orig=getOrigDate(t)||estPurchaseDate(t);
         const upd={date:target,memo:withOrigDate(t.memo,orig)};
         if(pick[t.id])upd.payment_method=pick[t.id]; // 실제 카드로 결제수단도 교정
         const{error}=await sb.from("transactions").update(upd).eq("id",t.id);
@@ -1418,13 +1419,13 @@ function buildRecent(){
       h("div",{style:{flex:"1",minWidth:"0"}},
         h("div",{style:{fontSize:"14px",fontWeight:"600",whiteSpace:"nowrap",overflow:"hidden",textOverflow:"ellipsis",display:"flex",alignItems:"center",gap:"6px"}},
           h("span",{style:{whiteSpace:"nowrap",overflow:"hidden",textOverflow:"ellipsis"}},(t.merchant||t.category||t.type)+(t.installment_total?` (${t.installment_no}/${t.installment_total})`:"")),
-          isFuture?h("span",{style:{flexShrink:"0",fontSize:"10px",fontWeight:"800",color:"#9A6B00",background:"#FFF3D6",borderRadius:"5px",padding:"2px 6px"}},"예정"):(isTr?h("span",{style:{flexShrink:"0",fontSize:"10px",fontWeight:"700",color:C.sub,background:"#EFEDE7",borderRadius:"5px",padding:"2px 6px"}},"이체"):"")),
+          isTr?h("span",{title:t.type==="카드대금"?"카드대금은 이미 기록한 소비를 갚는 것이라, 이중계상을 막기 위해 지출에 다시 세지 않아요":"내 계좌 간 이동이라 지출·수입이 아니에요",style:{flexShrink:"0",fontSize:"10px",fontWeight:"700",color:C.sub,background:"#EFEDE7",borderRadius:"5px",padding:"2px 6px",cursor:"help"}},t.type==="카드대금"?"카드값":"이체"):(isFuture?h("span",{style:{flexShrink:"0",fontSize:"10px",fontWeight:"800",color:"#9A6B00",background:"#FFF3D6",borderRadius:"5px",padding:"2px 6px"}},"예정"):"")),
         h("div",{style:{fontSize:"11.5px",color:C.sub,marginTop:"1px"}},`${(t.date||"").slice(5)} · ${t.account} · ${t.type}${getOrigDate(t)?"":(t.memo?` · ${t.memo}`:"")}`,getOrigDate(t)?h("span",{style:{color:C.faint}},` · 🗓️ ${getOrigDate(t).slice(5).replace("-","/")} 구매`):"")
       ),
       h("div",{style:{display:"flex",alignItems:"center",gap:"8px"}},
         h("div",{style:{display:"flex",flexDirection:"column",alignItems:"flex-end"}},
           h("div",{class:"num",style:{fontSize:"14.5px",fontWeight:"700",color:cl,whiteSpace:"nowrap"}},`${sg}${W(t.amount).slice(1)}`),
-          isFuture?h("span",{style:{fontSize:"9.5px",color:"#9A6B00",fontWeight:"700",marginTop:"1px"}},"지출 예정"):""),
+          (isFuture&&!isTr)?h("span",{style:{fontSize:"9.5px",color:"#9A6B00",fontWeight:"700",marginTop:"1px"}},"지출 예정"):(isTr?h("span",{style:{fontSize:"9.5px",color:C.faint,fontWeight:"600",marginTop:"1px"}},t.type==="카드대금"?"카드값 정산":"이체"):"")),
         h("span",{style:{fontSize:"12px",color:C.faint}},"›")
       )
     ));
@@ -2915,7 +2916,7 @@ function showEditTxn(t, onDone){
 
   // 할부 안내
   const installHint=isInstallment?h("div",{style:{background:"#FFFBEE",borderRadius:"10px",padding:"10px 12px",marginBottom:"12px",fontSize:"12.5px",color:C.warn}},`⚠️ 할부 거래 (${t.installment_no||"?"}/${t.installment_total}회차) — 이 회차만 수정돼요`):"";
-  const origDateBadge=_origD2?h("div",{style:{background:"#F0F4FF",borderRadius:"10px",padding:"9px 12px",marginBottom:"12px",fontSize:"12px",color:"#3B5BA5",fontWeight:"700"}},`🗓️ 실제 구매일: ${_origD2} (거래일은 카드 결제일로 정렬됨)`):"";
+  const origDateBadge=_origD2?h("div",{style:{background:"#F0F4FF",borderRadius:"10px",padding:"9px 12px",marginBottom:"12px",fontSize:"12px",color:"#3B5BA5",fontWeight:"700"}},`🛍️ 실제 구매 시점(추정): ${_origD2} · 거래일은 카드 결제일 기준`):"";
 
   const saveBtn=h("button",{style:{flex:"1",background:C.brand,color:C.w,fontSize:"15px",fontWeight:"700",padding:"14px",borderRadius:"13px",border:"none",cursor:"pointer"}},"저장하기");
   saveBtn.onclick=async()=>{
@@ -5386,6 +5387,46 @@ function cardDisplayName(pm){
 }
 window.addEventListener("offline",()=>{try{toast("📴 오프라인이에요 — 조회는 되고, 저장은 연결 후에!",false);}catch{}});
 window.addEventListener("online",()=>{try{toast("✅ 다시 온라인이에요");}catch{}});
+// ── 📱 푸시 알림 시스템 ──
+const VAPID_PUBLIC_KEY="BDb40F1WWXnyEEb02eal8GEdnH6RGSQGOn7TDfspTvCiUbfk6MvLuDric9fB9HLrLyHlQyDu-1VpUdAx4FRBL6c";
+function urlB64ToUint8(base64){const pad="=".repeat((4-base64.length%4)%4);const b=(base64+pad).replace(/-/g,"+").replace(/_/g,"/");const raw=atob(b);return Uint8Array.from([...raw].map(c=>c.charCodeAt(0)));}
+function notifSupported(){return "Notification" in window && "serviceWorker" in navigator && "PushManager" in window;}
+// 로컬 즉시 알림 (앱 켜져 있을 때 테스트/확인용)
+async function showLocalNotif(title,body){
+  try{
+    if(Notification.permission!=="granted")return false;
+    const reg=await navigator.serviceWorker.ready;
+    await reg.showNotification(title,{body,icon:"./icon-192.png",badge:"./icon-192.png",tag:"budget",requireInteraction:false});
+    return true;
+  }catch(e){dlog("[localNotif]",e);return false;}
+}
+// 알림 켜기: 권한 요청 → 구독 → Supabase 저장
+async function enablePush(){
+  if(!notifSupported()){toast("이 브라우저는 알림을 지원하지 않아요. 홈 화면에 앱을 추가했는지 확인하세요.",false);return false;}
+  try{
+    const perm=await Notification.requestPermission();
+    if(perm!=="granted"){toast("알림 권한이 거부됐어요. 설정에서 허용해주세요.",false);return false;}
+    const reg=await navigator.serviceWorker.ready;
+    let sub=await reg.pushManager.getSubscription();
+    if(!sub){sub=await reg.pushManager.subscribe({userVisibleOnly:true,applicationServerKey:urlB64ToUint8(VAPID_PUBLIC_KEY)});}
+    // Supabase 저장
+    const j=sub.toJSON();
+    await sb.from("push_subscriptions").upsert({user_id:S.session.user.id,endpoint:j.endpoint,p256dh:j.keys.p256dh,auth:j.keys.auth,updated_at:new Date().toISOString()},{onConflict:"endpoint"});
+    localStorage.setItem("push_on","1");
+    await showLocalNotif("🔔 알림이 켜졌어요!","이제 결제일·예산 알림을 받을 수 있어요.");
+    toast("🔔 알림을 켰어요!");
+    return true;
+  }catch(e){dlog("[enablePush]",e);toast("알림 켜기 실패: "+(e.message||"오류"),false);return false;}
+}
+async function disablePush(){
+  try{
+    const reg=await navigator.serviceWorker.ready;
+    const sub=await reg.pushManager.getSubscription();
+    if(sub){const ep=sub.endpoint;await sub.unsubscribe();try{await sb.from("push_subscriptions").delete().eq("endpoint",ep);}catch{}}
+    localStorage.removeItem("push_on");
+    toast("알림을 껐어요");
+  }catch(e){dlog("[disablePush]",e);}
+}
 function toast(msg,ok){
   document.querySelectorAll(".app-toast").forEach(e=>e.remove());
   const t=h("div",{class:"app-toast",style:{position:"fixed",bottom:"90px",left:"50%",transform:"translateX(-50%)",background:ok===false?C.over:C.ink,color:"#fff",fontSize:"13px",fontWeight:"700",padding:"12px 18px",borderRadius:"12px",boxShadow:"0 6px 22px rgba(0,0,0,.28)",zIndex:"200",maxWidth:"86%",textAlign:"center",lineHeight:"1.5",opacity:"0",transition:"opacity .2s,transform .2s"}},msg);
