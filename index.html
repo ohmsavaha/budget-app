@@ -343,12 +343,13 @@ function showApiKeySetting(){
     cur?h("button",{style:{width:"100%",marginTop:"8px",fontSize:"13px",color:C.over,cursor:"pointer",padding:"8px"},onclick:()=>{setApiKey("");ov.remove();}},"API 키 삭제"):"",
     h("button",{style:{width:"100%",marginTop:"6px",fontSize:"13px",color:C.faint,cursor:"pointer",padding:"6px"},onclick:()=>ov.remove()},"취소")
   );
-  // 알림 버튼
+  // 알림 설정 버튼
   const pushOn=localStorage.getItem("push_on")==="1"&&(typeof Notification!=="undefined"&&Notification.permission==="granted");
-  const notifBtn=h("button",{style:{width:"100%",marginTop:"14px",fontSize:"13.5px",fontWeight:"700",padding:"12px",borderRadius:"11px",border:`1px solid ${pushOn?C.line:C.brand}`,color:pushOn?C.sub:"#fff",background:pushOn?C.w:C.brand,cursor:"pointer"}},pushOn?"🔔 알림 켜짐 (끄기)":"🔔 알림 켜기 (결제일·예산)");
-  notifBtn.onclick=async()=>{if(pushOn){await disablePush();}else{await enablePush();}if(typeof showSettings==="function"){ov.remove();}else{notifBtn.textContent="완료! 설정을 다시 열어보세요";}};
-  const notifTestBtn=h("button",{style:{width:"100%",marginTop:"8px",fontSize:"12.5px",fontWeight:"600",padding:"10px",borderRadius:"11px",border:`1px dashed ${C.line}`,color:C.sub,background:C.w,cursor:"pointer"}},"🔔 테스트 알림 보내기");
-  notifTestBtn.onclick=async()=>{const ok=await showLocalNotif("💰 나의 가계부","테스트 알림이에요! 이렇게 폰에 떠요.");if(!ok)toast("먼저 알림을 켜주세요",false);};
+  const notifBtn=h("button",{style:{width:"100%",marginTop:"14px",fontSize:"13.5px",fontWeight:"700",padding:"12px",borderRadius:"11px",border:`1px solid ${C.brand}`,color:C.brand,background:C.soft,cursor:"pointer",display:"flex",justifyContent:"space-between",alignItems:"center"}},
+    h("span",{},"🔔 알림 설정"),
+    h("span",{style:{fontSize:"11.5px",color:pushOn?C.brand:C.sub,fontWeight:"600"}},pushOn?"켜짐 ›":"꺼짐 ›"));
+  notifBtn.onclick=()=>{ov.remove();showNotifSettings();};
+  const notifTestBtn="";
   // 백업 버튼들
   const exportBtn=h("button",{style:{width:"100%",marginTop:"10px",fontSize:"13.5px",fontWeight:"700",padding:"12px",borderRadius:"11px",border:`1px solid ${C.brand}`,color:C.brand,background:C.soft,cursor:"pointer"}},"⬇️ 전체 데이터 백업 (계좌·저축·대출 포함)");
   exportBtn.onclick=async()=>{exportBtn.disabled=true;try{await downloadFullBackup(m=>{exportBtn.textContent=m;});}catch(e){exportBtn.textContent="백업 실패: "+(e.message||"오류");}exportBtn.disabled=false;};
@@ -375,7 +376,7 @@ function showApiKeySetting(){
     h("div",{style:{borderTop:`1px solid ${C.line}`,margin:"16px 0 0"}}),
     h("div",{style:{fontSize:"13px",fontWeight:"800",color:C.sub,margin:"12px 0 4px"}},"데이터 백업"),
     h("div",{style:{fontSize:"12px",color:C.faint,marginBottom:"8px",lineHeight:"1.6"}},"내 돈 데이터는 내 손에 사본을 두는 게 안전해요. 정기적으로 백업하세요."),
-    notifBtn,notifTestBtn,
+    notifBtn,
     exportBtn,csvBtn
   );
 
@@ -667,7 +668,7 @@ function renderDash(){
     h("div",{style:{display:"flex",alignItems:"center",justifyContent:"space-between",marginBottom:"16px"}},
       h("div",{style:{display:"flex",alignItems:"center",gap:"9px"}},
         h("span",{style:{fontSize:"21px"}},SN[Number(S.curYm.split("-")[1])]||"📒"),
-        h("div",{},h("div",{style:{fontSize:"11.5px",color:C.sub}},"나의 가계부 · v109"),h("div",{style:{fontSize:"16.5px",fontWeight:"800",letterSpacing:"-.01em",cursor:"pointer",display:"flex",alignItems:"center",gap:"4px"},onclick:()=>showMonthPicker()},yml(S.curYm),h("span",{style:{fontSize:"10px",color:C.faint}},"▾")))
+        h("div",{},h("div",{style:{fontSize:"11.5px",color:C.sub}},"나의 가계부 · v110"),h("div",{style:{fontSize:"16.5px",fontWeight:"800",letterSpacing:"-.01em",cursor:"pointer",display:"flex",alignItems:"center",gap:"4px"},onclick:()=>showMonthPicker()},yml(S.curYm),h("span",{style:{fontSize:"10px",color:C.faint}},"▾")))
       ),
       h("div",{style:{display:"flex",alignItems:"center",gap:"4px",background:C.w,border:`1px solid ${C.line}`,borderRadius:"999px",padding:"3px 4px"}},prevBtn,todayBtn,nextBtn)
     ),
@@ -5417,6 +5418,64 @@ async function enablePush(){
     toast("🔔 알림을 켰어요!");
     return true;
   }catch(e){dlog("[enablePush]",e);toast("알림 켜기 실패: "+(e.message||"오류"),false);return false;}
+}
+// 알림 종류별 설정 (localStorage)
+const NOTIF_DEFAULTS={cardDue:true,cardDueDay:1,budgetWarn:true,budgetPct:90,noRecord:true,noRecordDays:3,subscription:true,monthEnd:true};
+function getNotifPrefs(){try{return {...NOTIF_DEFAULTS,...JSON.parse(localStorage.getItem("notif_prefs")||"{}")};}catch{return {...NOTIF_DEFAULTS};}}
+function setNotifPrefs(p){try{localStorage.setItem("notif_prefs",JSON.stringify(p));}catch{}}
+// 알림 설정 화면
+function showNotifSettings(){
+  const pushOn=localStorage.getItem("push_on")==="1"&&(typeof Notification!=="undefined"&&Notification.permission==="granted");
+  let P=getNotifPrefs();
+  const ov=h("div",{style:{position:"fixed",inset:"0",background:"rgba(40,37,31,.45)",display:"flex",alignItems:"flex-end",justifyContent:"center",zIndex:"80"}});
+  ov.onclick=e=>{if(e.target===ov)ov.remove();};
+  const sh=h("div",{style:{width:"100%",maxWidth:"500px",background:C.w,borderRadius:"20px 20px 0 0",maxHeight:"88vh",display:"flex",flexDirection:"column",overflow:"hidden"}});
+  const head=h("div",{style:{padding:"18px 20px 12px",flexShrink:"0"}},
+    h("div",{style:{width:"38px",height:"4px",borderRadius:"2px",background:C.line,margin:"0 auto 14px"}}),
+    h("div",{style:{display:"flex",justifyContent:"space-between",alignItems:"center"}},
+      h("span",{style:{fontSize:"17px",fontWeight:"800"}},"🔔 알림 설정"),
+      h("button",{style:{fontSize:"20px",color:C.sub,background:"transparent",border:"none",cursor:"pointer"},onclick:()=>ov.remove()},"✕")));
+  const body=h("div",{style:{flex:"1",overflowY:"auto",padding:"0 20px 20px"}});
+  const render=()=>{
+    body.innerHTML="";
+    // 마스터 스위치
+    const masterCard=h("div",{style:{background:pushOn?"#EEF6F1":"#FEF2EE",borderRadius:"14px",padding:"15px",marginBottom:"16px"}});
+    masterCard.append(h("div",{style:{display:"flex",justifyContent:"space-between",alignItems:"center"}},
+      h("div",{},h("div",{style:{fontSize:"14px",fontWeight:"800",color:pushOn?C.brand:C.over}},pushOn?"📱 알림 켜짐":"📴 알림 꺼짐"),
+        h("div",{style:{fontSize:"11px",color:C.sub,marginTop:"3px"}},pushOn?"이 기기로 알림을 받아요":"먼저 알림을 켜야 아래 설정이 작동해요")),
+      h("button",{style:{fontSize:"12.5px",fontWeight:"800",padding:"9px 16px",borderRadius:"10px",border:"none",background:pushOn?C.w:C.brand,color:pushOn?C.sub:"#fff",cursor:"pointer"},onclick:async()=>{if(pushOn){await disablePush();}else{await enablePush();}ov.remove();setTimeout(()=>showNotifSettings(),300);}},pushOn?"끄기":"켜기")));
+    body.append(masterCard);
+    // 개별 토글 헬퍼
+    const toggleRow=(emoji,title,desc,key,extra)=>{
+      const on=P[key];
+      const row=h("div",{style:{padding:"13px 2px",borderBottom:`1px solid ${C.line}`,opacity:pushOn?"1":"0.5"}});
+      row.append(h("div",{style:{display:"flex",justifyContent:"space-between",alignItems:"center"}},
+        h("div",{style:{flex:"1",minWidth:"0",marginRight:"12px"}},
+          h("div",{style:{fontSize:"14px",fontWeight:"700"}},`${emoji} ${title}`),
+          h("div",{style:{fontSize:"11.5px",color:C.sub,marginTop:"2px",lineHeight:"1.5"}},desc)),
+        h("button",{style:{width:"48px",height:"28px",borderRadius:"999px",border:"none",background:on?C.brand:C.line,cursor:pushOn?"pointer":"default",position:"relative",flexShrink:"0",transition:"background .2s"},onclick:()=>{if(!pushOn)return;P[key]=!P[key];setNotifPrefs(P);render();}},
+          h("div",{style:{width:"22px",height:"22px",borderRadius:"999px",background:"#fff",position:"absolute",top:"3px",left:on?"23px":"3px",transition:"left .2s",boxShadow:"0 1px 3px rgba(0,0,0,.2)"}}))));
+      if(on&&extra)row.append(extra());
+      body.append(row);
+    };
+    // 세부 옵션(칩 선택)
+    const chipSel=(key,opts,unit)=>()=>{
+      const wrap=h("div",{style:{display:"flex",gap:"6px",marginTop:"10px",flexWrap:"wrap"}});
+      opts.forEach(o=>{const sel=P[key]===o.v;wrap.append(h("button",{style:{fontSize:"11.5px",fontWeight:"700",padding:"6px 12px",borderRadius:"999px",border:`1px solid ${sel?C.brand:C.line}`,background:sel?C.soft:C.w,color:sel?C.brand:C.sub,cursor:"pointer"},onclick:()=>{P[key]=o.v;setNotifPrefs(P);render();}},o.l));});
+      return wrap;
+    };
+    toggleRow("💳","카드 결제일","카드값 빠지는 날 미리 알려줘요","cardDue",chipSel("cardDueDay",[{v:0,l:"당일"},{v:1,l:"하루 전"},{v:2,l:"이틀 전"}]));
+    toggleRow("📉","예산 초과 경고","이번 달 예산을 많이 쓰면 알려줘요","budgetWarn",chipSel("budgetPct",[{v:80,l:"80%"},{v:90,l:"90%"},{v:100,l:"100%"}]));
+    toggleRow("📸","미기록 리마인더","며칠간 기록이 없으면 콕 찔러줘요","noRecord",chipSel("noRecordDays",[{v:2,l:"2일"},{v:3,l:"3일"},{v:5,l:"5일"},{v:7,l:"7일"}]));
+    toggleRow("🔁","구독 결제 예정","정기결제 나가기 전에 알려줘요","subscription");
+    toggleRow("📊","월말 결산 요약","매달 말일에 이번 달 요약을 보내줘요","monthEnd");
+    // 테스트 버튼
+    body.append(h("button",{style:{width:"100%",marginTop:"18px",fontSize:"13px",fontWeight:"700",padding:"12px",borderRadius:"11px",border:`1px dashed ${C.line}`,color:C.sub,background:C.w,cursor:"pointer"},onclick:async()=>{const ok=await showLocalNotif("💰 나의 가계부","테스트 알림이에요! 이렇게 폰에 떠요.");if(!ok)toast("먼저 알림을 켜주세요",false);}},"🔔 테스트 알림 보내기"));
+    body.append(h("div",{style:{fontSize:"10.5px",color:C.faint,marginTop:"12px",lineHeight:"1.6",textAlign:"center"}},"알림은 앱을 홈 화면에 추가했을 때만 작동해요.\n서버 자동 발송은 곧 추가될 예정이에요."));
+  };
+  render();
+  sh.append(head,body);
+  ov.append(sh);document.body.append(ov);
 }
 async function disablePush(){
   try{
