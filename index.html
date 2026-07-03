@@ -386,12 +386,20 @@ const mRange=y=>{const[a,m]=y.split("-").map(Number);return[`${y}-01`,`${y}-${St
 const kindOf=t=>["소비(일시불)","소비(할부)"].includes(t)?"spend":["정산환급","환불/취소"].includes(t)?"reduce":t==="수입"?"income":["저축/적금","투자"].includes(t)?"save":"flow";
 // 계좌 간 이체 판별: 내 통장↔공용통장 이동은 수입/지출 아님
 const TRANSFER_RE=/생활비\s*입금|월세\s*입금|계좌\s*이체|통장\s*이체|이체\s*입금|공용\s*입금|본인\s*입금/i;
+const PAY_CHARGE_RE=/(카카오페이|네이버페이|토스페이|페이코|삼성페이|쿠페이|스마일페이|엘페이|위비페이)\s*충전|(카카오|네이버|토스)\s*머니\s*충전|머니\s*충전|(사랑상품권|사랑카드|지역화폐|제로페이|온누리|상품권|기프트카드|교통카드)\s*충전|(천안사랑|지역화폐|제로페이|온누리)\s*충전|충전\s*(사랑카드|지역화폐|상품권)/i;
 function isInternalTransfer(t){
   if(!t)return false;
   const m=(t.merchant||"")+" "+(t.memo||"");
-  // 공용입금 타입이거나, 수입인데 이체성 키워드가 있으면 이체로 간주
+  // 수동 지정: 메모에 #이체 태그
+  if(/#이체/.test(t.memo||""))return true;
+  // 카드대금 = 이미 기록된 소비를 정산(빚 갚기) → 이중계상 방지 위해 이체 취급
+  if(t.type==="카드대금")return true;
+  // 공용입금 타입 = 내 계좌 간 이동
   if(t.type==="공용입금")return true;
+  // 수입인데 이체성 키워드 (내 통장으로 들어오는 이동)
   if(t.type==="수입"&&TRANSFER_RE.test(m))return true;
+  // 페이/머니 충전 = 내 자산 안에서 이동 (단, '충전소'는 위 정규식이 안 잡음)
+  if(PAY_CHARGE_RE.test(m))return true;
   return false;
 }
 
@@ -650,7 +658,7 @@ function renderDash(){
     h("div",{style:{display:"flex",alignItems:"center",justifyContent:"space-between",marginBottom:"16px"}},
       h("div",{style:{display:"flex",alignItems:"center",gap:"9px"}},
         h("span",{style:{fontSize:"21px"}},SN[Number(S.curYm.split("-")[1])]||"📒"),
-        h("div",{},h("div",{style:{fontSize:"11.5px",color:C.sub}},"나의 가계부 · v97"),h("div",{style:{fontSize:"16.5px",fontWeight:"800",letterSpacing:"-.01em",cursor:"pointer",display:"flex",alignItems:"center",gap:"4px"},onclick:()=>showMonthPicker()},yml(S.curYm),h("span",{style:{fontSize:"10px",color:C.faint}},"▾")))
+        h("div",{},h("div",{style:{fontSize:"11.5px",color:C.sub}},"나의 가계부 · v99"),h("div",{style:{fontSize:"16.5px",fontWeight:"800",letterSpacing:"-.01em",cursor:"pointer",display:"flex",alignItems:"center",gap:"4px"},onclick:()=>showMonthPicker()},yml(S.curYm),h("span",{style:{fontSize:"10px",color:C.faint}},"▾")))
       ),
       h("div",{style:{display:"flex",alignItems:"center",gap:"4px",background:C.w,border:`1px solid ${C.line}`,borderRadius:"999px",padding:"3px 4px"}},prevBtn,todayBtn,nextBtn)
     ),
@@ -2737,6 +2745,11 @@ function showEditTxn(t, onDone){
   const mer=h("input",{type:"text",value:t.merchant||"",placeholder:"사용처",style:{width:"100%",border:`1px solid ${C.line}`,borderRadius:"10px",padding:"11px 12px",fontSize:"14px"}});
   const dt=h("input",{type:"date",value:t.date||"",style:{width:"100%",border:`1px solid ${C.line}`,borderRadius:"10px",padding:"11px 12px",fontSize:"14px"}});
   const mo=h("input",{type:"text",value:t.memo||"",placeholder:"메모",style:{width:"100%",border:`1px solid ${C.line}`,borderRadius:"10px",padding:"11px 12px",fontSize:"14px"}});
+  // ⇄ 이체 토글 (내 자산 간 이동 = 지출/수입 아님)
+  let isTransferE=/#이체/.test(t.memo||"")||isInternalTransfer(t);
+  const trToggle=h("button",{type:"button",style:{width:"100%",marginTop:"9px",fontSize:"13px",fontWeight:"700",padding:"11px",borderRadius:"11px",border:`1px solid ${isTransferE?C.brand:C.line}`,background:isTransferE?"#EEF6F1":C.w,color:isTransferE?C.brand:C.sub,cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center",gap:"6px"}},isTransferE?"⇄ 이체로 표시됨 (지출·수입에서 제외)":"⇄ 이 거래를 이체로 표시");
+  trToggle.onclick=()=>{isTransferE=!isTransferE;trToggle.textContent=isTransferE?"⇄ 이체로 표시됨 (지출·수입에서 제외)":"⇄ 이 거래를 이체로 표시";trToggle.style.border=`1px solid ${isTransferE?C.brand:C.line}`;trToggle.style.background=isTransferE?"#EEF6F1":C.w;trToggle.style.color=isTransferE?C.brand:C.sub;};
+  const moWrap=h("div",{},moWrap,trToggle);
 
   const accRow=h("div",{style:{display:"flex",gap:"8px"}});
   const drawAcc=()=>{accRow.innerHTML="";["개인","공용"].forEach(a=>{const b=h("button",{style:{flex:"1",fontSize:"14px",fontWeight:"600",padding:"11px",borderRadius:"10px",border:`1px solid ${selAcc===a?C.brand:C.line}`,background:selAcc===a?C.soft:C.w,color:selAcc===a?C.brand:C.sub,cursor:"pointer"},onclick:()=>{selAcc=a;drawAcc();}},a);accRow.append(b);});};
@@ -2763,7 +2776,9 @@ function showEditTxn(t, onDone){
   saveBtn.onclick=async()=>{
     const a=Number(amtEl.value);if(!a||a<=0){alert("금액을 입력해주세요.");return;}
     saveBtn.disabled=true;saveBtn.textContent="저장 중…";
-    const upd={date:dt.value,amount:a,account:selAcc,type:typ.value,category:selCat,merchant:mer.value.trim()||null,memo:mo.value.trim()||null,payment_method:selPayE,household_id:selAcc==="공용"?S.householdId:null};
+    let memoV=(mo.value.trim()||"").replace(/\s*#이체/g,"").trim();
+    if(isTransferE)memoV=(memoV+" #이체").trim();
+    const upd={date:dt.value,amount:a,account:selAcc,type:typ.value,category:selCat,merchant:mer.value.trim()||null,memo:memoV||null,payment_method:selPayE,household_id:selAcc==="공용"?S.householdId:null};
     const{error}=await sb.from("transactions").update(upd).eq("id",t.id);
     if(error){alert("수정 실패: "+error.message);saveBtn.disabled=false;saveBtn.textContent="저장하기";return;}
     ov.remove();if(onDone)await onDone();
