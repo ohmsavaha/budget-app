@@ -668,7 +668,7 @@ function renderDash(){
     h("div",{style:{display:"flex",alignItems:"center",justifyContent:"space-between",marginBottom:"16px"}},
       h("div",{style:{display:"flex",alignItems:"center",gap:"9px"}},
         h("span",{style:{fontSize:"21px"}},SN[Number(S.curYm.split("-")[1])]||"📒"),
-        h("div",{},h("div",{style:{fontSize:"11.5px",color:C.sub}},"나의 가계부 · v111"),h("div",{style:{fontSize:"16.5px",fontWeight:"800",letterSpacing:"-.01em",cursor:"pointer",display:"flex",alignItems:"center",gap:"4px"},onclick:()=>showMonthPicker()},yml(S.curYm),h("span",{style:{fontSize:"10px",color:C.faint}},"▾")))
+        h("div",{},h("div",{style:{fontSize:"11.5px",color:C.sub}},"나의 가계부 · v112"),h("div",{style:{fontSize:"16.5px",fontWeight:"800",letterSpacing:"-.01em",cursor:"pointer",display:"flex",alignItems:"center",gap:"4px"},onclick:()=>showMonthPicker()},yml(S.curYm),h("span",{style:{fontSize:"10px",color:C.faint}},"▾")))
       ),
       h("div",{style:{display:"flex",alignItems:"center",gap:"4px",background:C.w,border:`1px solid ${C.line}`,borderRadius:"999px",padding:"3px 4px"}},prevBtn,todayBtn,nextBtn)
     ),
@@ -5420,8 +5420,17 @@ async function enablePush(){
   }catch(e){dlog("[enablePush]",e);toast("알림 켜기 실패: "+(e.message||"오류"),false);return false;}
 }
 // 알림 종류별 설정 (localStorage)
-const NOTIF_DEFAULTS={cardDue:true,cardDueDay:1,budgetWarn:true,budgetPct:90,noRecord:true,noRecordDays:3,subscription:true,monthEnd:true};
-function getNotifPrefs(){try{return {...NOTIF_DEFAULTS,...JSON.parse(localStorage.getItem("notif_prefs")||"{}")};}catch{return {...NOTIF_DEFAULTS};}}
+const NOTIF_DEFAULTS={cardDue:true,cardDueDays:[1],budgetWarn:true,budgetPcts:[90],noRecord:true,noRecordDays:2,subscription:true,monthEnd:true};
+function getNotifPrefs(){try{
+  const raw=JSON.parse(localStorage.getItem("notif_prefs")||"{}");
+  // 구버전 단일값 → 배열 마이그레이션
+  if(raw.cardDueDay!==undefined&&!raw.cardDueDays){raw.cardDueDays=[raw.cardDueDay];delete raw.cardDueDay;}
+  if(raw.budgetPct!==undefined&&!raw.budgetPcts){raw.budgetPcts=[raw.budgetPct];delete raw.budgetPct;}
+  const p={...NOTIF_DEFAULTS,...raw};
+  if(!Array.isArray(p.cardDueDays))p.cardDueDays=[p.cardDueDays].filter(x=>x!=null);
+  if(!Array.isArray(p.budgetPcts))p.budgetPcts=[p.budgetPcts].filter(x=>x!=null);
+  return p;
+}catch{return {...NOTIF_DEFAULTS};}}
 function setNotifPrefs(p){
   try{localStorage.setItem("notif_prefs",JSON.stringify(p));}catch{}
   // 서버 발송이 참조하도록 DB에도 저장 (구독 있을 때)
@@ -5463,14 +5472,21 @@ function showNotifSettings(){
       body.append(row);
     };
     // 세부 옵션(칩 선택)
+    const chipMulti=(key,opts)=>()=>{
+      const wrap=h("div",{style:{display:"flex",gap:"6px",marginTop:"10px",flexWrap:"wrap"}});
+      const arr=Array.isArray(P[key])?P[key]:[];
+      opts.forEach(o=>{const sel=arr.includes(o.v);wrap.append(h("button",{style:{fontSize:"11.5px",fontWeight:"700",padding:"6px 12px",borderRadius:"999px",border:`1px solid ${sel?C.brand:C.line}`,background:sel?C.soft:C.w,color:sel?C.brand:C.sub,cursor:"pointer"},onclick:()=>{if(!pushOn)return;let a=Array.isArray(P[key])?[...P[key]]:[];if(a.includes(o.v))a=a.filter(x=>x!==o.v);else a.push(o.v);if(!a.length)a=[o.v];P[key]=a.sort((x,y)=>x-y);setNotifPrefs(P);render();}},(sel?"✓ ":"")+o.l));});
+      wrap.append(h("div",{style:{fontSize:"10px",color:C.faint,width:"100%",marginTop:"2px"}},"여러 개 선택 가능"));
+      return wrap;
+    };
     const chipSel=(key,opts,unit)=>()=>{
       const wrap=h("div",{style:{display:"flex",gap:"6px",marginTop:"10px",flexWrap:"wrap"}});
       opts.forEach(o=>{const sel=P[key]===o.v;wrap.append(h("button",{style:{fontSize:"11.5px",fontWeight:"700",padding:"6px 12px",borderRadius:"999px",border:`1px solid ${sel?C.brand:C.line}`,background:sel?C.soft:C.w,color:sel?C.brand:C.sub,cursor:"pointer"},onclick:()=>{P[key]=o.v;setNotifPrefs(P);render();}},o.l));});
       return wrap;
     };
-    toggleRow("💳","카드 결제일","카드값 빠지는 날 미리 알려줘요","cardDue",chipSel("cardDueDay",[{v:0,l:"당일"},{v:1,l:"하루 전"},{v:2,l:"이틀 전"}]));
-    toggleRow("📉","예산 초과 경고","이번 달 예산을 많이 쓰면 알려줘요","budgetWarn",chipSel("budgetPct",[{v:80,l:"80%"},{v:90,l:"90%"},{v:100,l:"100%"}]));
-    toggleRow("📸","미기록 리마인더","며칠간 기록이 없으면 콕 찔러줘요","noRecord",chipSel("noRecordDays",[{v:2,l:"2일"},{v:3,l:"3일"},{v:5,l:"5일"},{v:7,l:"7일"}]));
+    toggleRow("💳","카드 결제일","카드값 빠지는 날 미리 알려줘요 (여러 개 선택 가능)","cardDue",chipMulti("cardDueDays",[{v:0,l:"당일"},{v:1,l:"하루 전"},{v:2,l:"이틀 전"}]));
+    toggleRow("📉","예산 초과 경고","예산을 많이 쓰면 알려줘요 (여러 개 선택 가능)","budgetWarn",chipMulti("budgetPcts",[{v:80,l:"80%"},{v:90,l:"90%"},{v:100,l:"100%"}]));
+    toggleRow("📸","미기록 리마인더","이 기간 지나면 매일 콕 찔러줘요 (기록할 때까지)","noRecord",chipSel("noRecordDays",[{v:2,l:"2일부터"},{v:3,l:"3일부터"},{v:5,l:"5일부터"},{v:7,l:"7일부터"}]));
     toggleRow("🔁","구독 결제 예정","정기결제 나가기 전에 알려줘요","subscription");
     toggleRow("📊","월말 결산 요약","매달 말일에 이번 달 요약을 보내줘요","monthEnd");
     // 테스트 버튼
