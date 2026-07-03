@@ -668,7 +668,7 @@ function renderDash(){
     h("div",{style:{display:"flex",alignItems:"center",justifyContent:"space-between",marginBottom:"16px"}},
       h("div",{style:{display:"flex",alignItems:"center",gap:"9px"}},
         h("span",{style:{fontSize:"21px"}},SN[Number(S.curYm.split("-")[1])]||"📒"),
-        h("div",{},h("div",{style:{fontSize:"11.5px",color:C.sub}},"나의 가계부 · v110"),h("div",{style:{fontSize:"16.5px",fontWeight:"800",letterSpacing:"-.01em",cursor:"pointer",display:"flex",alignItems:"center",gap:"4px"},onclick:()=>showMonthPicker()},yml(S.curYm),h("span",{style:{fontSize:"10px",color:C.faint}},"▾")))
+        h("div",{},h("div",{style:{fontSize:"11.5px",color:C.sub}},"나의 가계부 · v111"),h("div",{style:{fontSize:"16.5px",fontWeight:"800",letterSpacing:"-.01em",cursor:"pointer",display:"flex",alignItems:"center",gap:"4px"},onclick:()=>showMonthPicker()},yml(S.curYm),h("span",{style:{fontSize:"10px",color:C.faint}},"▾")))
       ),
       h("div",{style:{display:"flex",alignItems:"center",gap:"4px",background:C.w,border:`1px solid ${C.line}`,borderRadius:"999px",padding:"3px 4px"}},prevBtn,todayBtn,nextBtn)
     ),
@@ -5412,7 +5412,7 @@ async function enablePush(){
     if(!sub){sub=await reg.pushManager.subscribe({userVisibleOnly:true,applicationServerKey:urlB64ToUint8(VAPID_PUBLIC_KEY)});}
     // Supabase 저장
     const j=sub.toJSON();
-    await sb.from("push_subscriptions").upsert({user_id:S.session.user.id,endpoint:j.endpoint,p256dh:j.keys.p256dh,auth:j.keys.auth,updated_at:new Date().toISOString()},{onConflict:"endpoint"});
+    await sb.from("push_subscriptions").upsert({user_id:S.session.user.id,endpoint:j.endpoint,p256dh:j.keys.p256dh,auth:j.keys.auth,prefs:getNotifPrefs(),updated_at:new Date().toISOString()},{onConflict:"endpoint"});
     localStorage.setItem("push_on","1");
     await showLocalNotif("🔔 알림이 켜졌어요!","이제 결제일·예산 알림을 받을 수 있어요.");
     toast("🔔 알림을 켰어요!");
@@ -5422,7 +5422,11 @@ async function enablePush(){
 // 알림 종류별 설정 (localStorage)
 const NOTIF_DEFAULTS={cardDue:true,cardDueDay:1,budgetWarn:true,budgetPct:90,noRecord:true,noRecordDays:3,subscription:true,monthEnd:true};
 function getNotifPrefs(){try{return {...NOTIF_DEFAULTS,...JSON.parse(localStorage.getItem("notif_prefs")||"{}")};}catch{return {...NOTIF_DEFAULTS};}}
-function setNotifPrefs(p){try{localStorage.setItem("notif_prefs",JSON.stringify(p));}catch{}}
+function setNotifPrefs(p){
+  try{localStorage.setItem("notif_prefs",JSON.stringify(p));}catch{}
+  // 서버 발송이 참조하도록 DB에도 저장 (구독 있을 때)
+  try{if(S.session)sb.from("push_subscriptions").update({prefs:p}).eq("user_id",S.session.user.id).then(()=>{});}catch{}
+}
 // 알림 설정 화면
 function showNotifSettings(){
   const pushOn=localStorage.getItem("push_on")==="1"&&(typeof Notification!=="undefined"&&Notification.permission==="granted");
