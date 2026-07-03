@@ -658,7 +658,7 @@ function renderDash(){
     h("div",{style:{display:"flex",alignItems:"center",justifyContent:"space-between",marginBottom:"16px"}},
       h("div",{style:{display:"flex",alignItems:"center",gap:"9px"}},
         h("span",{style:{fontSize:"21px"}},SN[Number(S.curYm.split("-")[1])]||"📒"),
-        h("div",{},h("div",{style:{fontSize:"11.5px",color:C.sub}},"나의 가계부 · v100 🎉"),h("div",{style:{fontSize:"16.5px",fontWeight:"800",letterSpacing:"-.01em",cursor:"pointer",display:"flex",alignItems:"center",gap:"4px"},onclick:()=>showMonthPicker()},yml(S.curYm),h("span",{style:{fontSize:"10px",color:C.faint}},"▾")))
+        h("div",{},h("div",{style:{fontSize:"11.5px",color:C.sub}},"나의 가계부 · v102"),h("div",{style:{fontSize:"16.5px",fontWeight:"800",letterSpacing:"-.01em",cursor:"pointer",display:"flex",alignItems:"center",gap:"4px"},onclick:()=>showMonthPicker()},yml(S.curYm),h("span",{style:{fontSize:"10px",color:C.faint}},"▾")))
       ),
       h("div",{style:{display:"flex",alignItems:"center",gap:"4px",background:C.w,border:`1px solid ${C.line}`,borderRadius:"999px",padding:"3px 4px"}},prevBtn,todayBtn,nextBtn)
     ),
@@ -1261,8 +1261,73 @@ function buildCatBudgetDonut(){
     h("div",{style:{fontSize:"10.5px",color:C.faint,marginTop:"11px",lineHeight:"1.5"}},note));
   return sx;
 }
+// 결제수단(카드) → 결제일
+function cardBillingDay(pm){
+  const a=(S.accounts||[]).find(x=>x.name===pm&&x.kind==="카드");
+  return a&&a.billing_day?Number(a.billing_day):null;
+}
+// 메모의 원구매일 태그 (#원구매:YYYY-MM-DD)
+function getOrigDate(t){const m=(t.memo||"").match(/#원구매:(\d{4}-\d{2}-\d{2})/);return m?m[1]:null;}
+function withOrigDate(memo,origDate){const clean=(memo||"").replace(/\s*#원구매:\d{4}-\d{2}-\d{2}/g,"").trim();return (clean+" #원구매:"+origDate).trim();}
+// 이번 달 할부 거래 중 날짜≠카드결제일인 것 찾기
+function computeBillDateFixes(){
+  const fixes=[];const curYm=ym(S.curYm||td());
+  (S.txns||[]).forEach(t=>{
+    if(!t.installment_total)return; // 할부만
+    const pm=t.payment_method||"";
+    const bd=cardBillingDay(pm);
+    if(!bd)return; // 카드 결제일 모르면 skip
+    const cur=t.date||"";
+    const target=`${curYm}-${String(Math.min(bd,28)).padStart(2,"0")}`;
+    if(cur!==target)fixes.push({t,from:cur,to:target,orig:getOrigDate(t)||cur,pm,bd});
+  });
+  return fixes;
+}
+function showBillDateSort(){
+  const fixes=computeBillDateFixes();
+  const ov=h("div",{style:{position:"fixed",inset:"0",background:"rgba(40,37,31,.45)",display:"flex",alignItems:"center",justifyContent:"center",padding:"16px",zIndex:"75"}});
+  ov.onclick=e=>{if(e.target===ov)ov.remove();};
+  const sh=h("div",{style:{width:"100%",maxWidth:"480px",background:C.w,borderRadius:"20px",maxHeight:"84vh",display:"flex",flexDirection:"column",overflow:"hidden"}});
+  sh.append(h("div",{style:{padding:"18px 20px 12px",flexShrink:"0"}},
+    h("div",{style:{display:"flex",justifyContent:"space-between",alignItems:"center"}},
+      h("span",{style:{fontSize:"16px",fontWeight:"800"}},"🗓️ 할부 날짜 정렬"),
+      h("button",{style:{fontSize:"20px",color:C.sub,background:"transparent",border:"none",cursor:"pointer"},onclick:()=>ov.remove()},"✕")),
+    h("div",{style:{fontSize:"12px",color:C.sub,marginTop:"5px",lineHeight:"1.6"}},"할부금을 각 카드의 결제일로 옮겨요. 실제 돈이 빠지는 날에 맞춰지고, 원래 구매일은 상세에 보관돼요.")));
+  const body=h("div",{style:{flex:"1",overflowY:"auto",padding:"0 20px"}});
+  if(!fixes.length){
+    body.append(empty("정렬할 할부가 없어요.\n(이미 결제일에 맞거나, 카드 결제일이 입력 안 됨)"));
+    // 카드 결제일 미입력 안내
+    const noBd=(S.txns||[]).filter(t=>t.installment_total&&!cardBillingDay(t.payment_method||"")).length;
+    if(noBd>0)body.append(h("div",{style:{fontSize:"11.5px",color:C.warn,background:"#FFFBEE",borderRadius:"10px",padding:"11px 13px",marginTop:"6px",lineHeight:"1.6"}},`⚠️ 할부 ${noBd}건은 카드 결제일이 없어서 못 옮겨요. 자산 탭에서 카드 결제일을 먼저 입력하세요.`));
+  }else{
+    fixes.forEach(f=>{
+      const c=CM[f.t.category]||CM["기타"];
+      body.append(h("div",{style:{display:"flex",alignItems:"center",gap:"11px",padding:"11px 2px",borderBottom:`1px solid ${C.line}`}},
+        h("span",{style:{fontSize:"17px",flexShrink:"0"}},c.i),
+        h("div",{style:{flex:"1",minWidth:"0"}},
+          h("div",{style:{fontSize:"13.5px",fontWeight:"700",whiteSpace:"nowrap",overflow:"hidden",textOverflow:"ellipsis"}},`${f.t.merchant||f.t.category} · ${f.pm}`),
+          h("div",{style:{fontSize:"11px",color:C.sub,marginTop:"2px"}},`${f.from.slice(5)} → ${f.to.slice(5)} (매월 ${f.bd}일 결제)`)),
+        h("div",{class:"num",style:{fontSize:"13px",fontWeight:"700",flexShrink:"0"}},W(f.t.amount))));
+    });
+  }
+  sh.append(body);
+  const foot=h("div",{style:{padding:"14px 20px 20px",flexShrink:"0"}});
+  if(fixes.length){
+    foot.append(h("button",{style:{width:"100%",fontSize:"14px",fontWeight:"800",padding:"13px",borderRadius:"12px",border:"none",background:C.brand,color:"#fff",cursor:"pointer"},onclick:async()=>{
+      let ok=0;
+      for(const f of fixes){
+        const newMemo=withOrigDate(f.t.memo,f.orig);
+        const{error}=await sb.from("transactions").update({date:f.to,memo:newMemo}).eq("id",f.t.id);
+        if(!error)ok++;
+      }
+      ov.remove();await loadMonth();homeReload();toast(`🗓️ 할부 ${ok}건을 결제일로 정렬했어요`);
+    }},`${fixes.length}건 결제일로 정렬하기`));
+  }
+  sh.append(foot);
+  ov.append(sh);document.body.append(ov);
+}
 function buildRecent(){
-  const recSec=sec("최근 내역",`${S.txns.length}건`);
+  const recSec=sec("최근 내역",`${S.txns.length}건 · 탭하면 수정`);
   const reloadCur=async()=>{await loadMonth();homeReload();};
   if(!S.txns.length)recSec.append(empty("첫 거래를 추가해보세요."));
   else{const _today=td();S.txns.slice(0,S.recentN||15).forEach(t=>{
@@ -1281,7 +1346,7 @@ function buildRecent(){
         h("div",{style:{fontSize:"14px",fontWeight:"600",whiteSpace:"nowrap",overflow:"hidden",textOverflow:"ellipsis",display:"flex",alignItems:"center",gap:"6px"}},
           h("span",{style:{whiteSpace:"nowrap",overflow:"hidden",textOverflow:"ellipsis"}},(t.merchant||t.category||t.type)+(t.installment_total?` (${t.installment_no}/${t.installment_total})`:"")),
           isFuture?h("span",{style:{flexShrink:"0",fontSize:"10px",fontWeight:"800",color:"#9A6B00",background:"#FFF3D6",borderRadius:"5px",padding:"2px 6px"}},"예정"):(isTr?h("span",{style:{flexShrink:"0",fontSize:"10px",fontWeight:"700",color:C.sub,background:"#EFEDE7",borderRadius:"5px",padding:"2px 6px"}},"이체"):"")),
-        h("div",{style:{fontSize:"11.5px",color:C.sub,marginTop:"1px"}},`${(t.date||"").slice(5)} · ${t.account} · ${t.type}${t.memo?` · ${t.memo}`:""}`)
+        h("div",{style:{fontSize:"11.5px",color:C.sub,marginTop:"1px"}},`${(t.date||"").slice(5)} · ${t.account} · ${t.type}${getOrigDate(t)?"":(t.memo?` · ${t.memo}`:"")}`,getOrigDate(t)?h("span",{style:{color:C.faint}},` · 🗓️ ${getOrigDate(t).slice(5).replace("-","/")} 구매`):"")
       ),
       h("div",{style:{display:"flex",alignItems:"center",gap:"8px"}},
         h("div",{style:{display:"flex",flexDirection:"column",alignItems:"flex-end"}},
@@ -2086,6 +2151,8 @@ function buildNextMonthBill(){
     body.append(h("div",{style:{display:"flex",gap:"8px",marginTop:"12px"}},
       h("button",{style:{flex:"1",fontSize:"13px",fontWeight:"700",padding:"10px",borderRadius:"11px",border:`1px solid ${C.line}`,background:C.w,color:C.ink,cursor:"pointer"},onclick:()=>showBillCapture()},"📷 실제 카드대금 입력"),
       h("button",{style:{fontSize:"13px",fontWeight:"700",padding:"10px",borderRadius:"11px",border:`1px solid ${C.line}`,background:C.w,color:C.sub,cursor:"pointer"},onclick:()=>showApiKeySetting()},"⚙️")));
+    {const nFix=computeBillDateFixes().length;
+     if(nFix>0)body.append(h("button",{style:{width:"100%",marginTop:"10px",fontSize:"12.5px",fontWeight:"700",padding:"11px",borderRadius:"11px",border:`1px solid ${C.brand}`,background:"#EEF6F1",color:C.brand,cursor:"pointer"},onclick:()=>showBillDateSort()},`🗓️ 할부 ${nFix}건을 카드 결제일로 정렬하기`));}
     body.append(h("div",{style:{fontSize:"11px",color:C.faint,marginTop:"8px",lineHeight:"1.6"}},
       `전월 사용분이 이 달에 청구되는 구조예요. 카드사 마감일에 따라 일부는 다음 달로 넘어갈 수 있어요. 카드를 탭하면 지난 명세도 볼 수 있어요.`));
   };
@@ -2734,6 +2801,7 @@ function showBillCapture(){
 function showEditTxn(t, onDone){
   let selCat=t.category||"기타", selAcc=t.account||"개인";
   const isInstallment=!!t.installment_total;
+  const _origD2=getOrigDate(t);
 
   const ov=h("div",{style:{position:"fixed",inset:"0",background:"rgba(40,37,31,.42)",display:"flex",alignItems:"center",justifyContent:"center",padding:"16px",zIndex:"60"}});
   const sh=h("div",{style:{width:"100%",maxWidth:"520px",background:C.w,borderRadius:"20px",padding:"18px 20px 28px",maxHeight:"88vh",overflowY:"auto"}});
@@ -2771,6 +2839,7 @@ function showEditTxn(t, onDone){
 
   // 할부 안내
   const installHint=isInstallment?h("div",{style:{background:"#FFFBEE",borderRadius:"10px",padding:"10px 12px",marginBottom:"12px",fontSize:"12.5px",color:C.warn}},`⚠️ 할부 거래 (${t.installment_no||"?"}/${t.installment_total}회차) — 이 회차만 수정돼요`):"";
+  const origDateBadge=_origD2?h("div",{style:{background:"#F0F4FF",borderRadius:"10px",padding:"9px 12px",marginBottom:"12px",fontSize:"12px",color:"#3B5BA5",fontWeight:"700"}},`🗓️ 실제 구매일: ${_origD2} (거래일은 카드 결제일로 정렬됨)`):"";
 
   const saveBtn=h("button",{style:{flex:"1",background:C.brand,color:C.w,fontSize:"15px",fontWeight:"700",padding:"14px",borderRadius:"13px",border:"none",cursor:"pointer"}},"저장하기");
   saveBtn.onclick=async()=>{
@@ -2800,6 +2869,7 @@ function showEditTxn(t, onDone){
       h("button",{style:{fontSize:"20px",color:C.sub},onclick:()=>ov.remove()},"✕")
     ),
     installHint,
+    origDateBadge,
     dutchSlot,
     h("div",{style:{marginBottom:"14px"}},lbl("금액"),h("div",{style:{display:"flex",alignItems:"center",border:`1px solid ${C.line}`,borderRadius:"12px",padding:"10px 14px"}},h("span",{style:{fontSize:"22px",fontWeight:"700",color:C.faint,marginRight:"6px"}},"₩"),amtEl)),
     lbl("계정"),h("div",{style:{marginBottom:"13px"}},accRow),
@@ -6332,6 +6402,8 @@ function showAccountEdit(acc){
   const nameEl=h("input",{type:"text",value:acc?.name||"",placeholder:"예: 카카오뱅크, 신한, 공용통장",style:{width:"100%",border:`1px solid ${C.line}`,borderRadius:"10px",padding:"11px 12px",fontSize:"14px"}});
   const balEl=h("input",{type:"number",inputmode:"numeric",value:acc?.balance??"",placeholder:"0",class:"num",style:{width:"100%",border:`1px solid ${C.line}`,borderRadius:"10px",padding:"11px 12px",fontSize:"14px"}});
   const kindWrap=h("div",{style:{display:"flex",gap:"7px",flexWrap:"wrap"}});
+  const cardUsedNote=h("div",{style:{background:"#F6F4EF",borderRadius:"10px",padding:"11px 13px",fontSize:"11.5px",color:C.sub,lineHeight:"1.6"}},"💳 카드 이용액은 거래 내역에서 자동으로 계산돼요. 대금을 확정하면 이용액이 줄어들어요. 별도 입력이 필요 없어요.");
+  const balWrap=h("div",{style:{marginBottom:"13px"}},lbl("현재 잔액"),balEl);
   // 마이너스통장 설정
   const odPrev=acc?getOD(acc.id):null;
   let odOn=!!(odPrev&&odPrev.on);
@@ -6355,7 +6427,10 @@ function showAccountEdit(acc){
   const fillLink=()=>{linkSel.innerHTML="";linkSel.append(h("option",{value:""},"연결 안 함"));S.accounts.filter(x=>x.kind!=="카드"&&(!acc||x.id!==acc.id)).forEach(x=>{const o=h("option",{value:x.id},x.name);if(acc&&acc.linked_account_id===x.id)o.selected=true;linkSel.append(o);});};
   fillLink();
   cardBlock.append(h("div",{style:{marginBottom:"13px"}},lbl2("결제일 (매월 며칠)"),dayEl),h("div",{style:{marginBottom:"13px"}},lbl2("💳 카드 한도 (선택)"),limitEl),h("div",{style:{marginBottom:"13px"}},lbl2("대금 빠지는 계좌"),linkSel));
-  const drawKind=()=>{kindWrap.innerHTML="";ACC_KINDS.forEach(k=>{const on=kind===k;kindWrap.append(h("button",{style:{fontSize:"13px",padding:"8px 14px",borderRadius:"999px",border:`1px solid ${on?C.brand:C.line}`,background:on?C.soft:C.w,color:on?C.brand:C.ink,fontWeight:on?"700":"500",cursor:"pointer"},onclick:()=>{kind=k;drawKind();}},(ACC_ICON[k]||"")+" "+k));});cardBlock.style.display=kind==="카드"?"":"none";};
+  const drawKind=()=>{kindWrap.innerHTML="";ACC_KINDS.forEach(k=>{const on=kind===k;kindWrap.append(h("button",{style:{fontSize:"13px",padding:"8px 14px",borderRadius:"999px",border:`1px solid ${on?C.brand:C.line}`,background:on?C.soft:C.w,color:on?C.brand:C.ink,fontWeight:on?"700":"500",cursor:"pointer"},onclick:()=>{kind=k;drawKind();}},(ACC_ICON[k]||"")+" "+k));});cardBlock.style.display=kind==="카드"?"":"none";
+    if(kind==="카드"){balWrap.innerHTML="";balWrap.append(lbl("카드 이용액"),cardUsedNote);}
+    else{balWrap.innerHTML="";balWrap.append(lbl("현재 잔액"),balEl);}
+  };
   drawKind();
   const shBtn=h("button",{style:{width:"100%",fontSize:"13px",fontWeight:"700",padding:"11px",borderRadius:"11px",border:`1px solid ${shared?C.brand:C.line}`,background:shared?C.soft:C.w,color:shared?C.brand:C.sub,cursor:"pointer"}});
   const drawSh=()=>{shBtn.textContent=shared?"👫 공용 계좌 (여친과 공유) ✓":"🔒 내 개인 계좌";};drawSh();
@@ -6377,7 +6452,7 @@ function showAccountEdit(acc){
     h("div",{style:{marginBottom:"13px"}},lbl("이름"),nameEl),
     h("div",{style:{marginBottom:"13px"}},lbl("종류"),kindWrap),
     cardBlock,
-    h("div",{style:{marginBottom:"13px"}},lbl("현재 잔액"),balEl),
+    balWrap,
     h("div",{style:{marginBottom:"13px"}},odToggle,odFields),
     h("div",{style:{marginBottom:"4px"}},lbl("공유 여부"),shBtn),
     isEdit?h("button",{style:{width:"100%",marginTop:"12px",fontSize:"13px",color:C.over,fontWeight:"700",padding:"11px",border:`1px solid ${C.over}`,borderRadius:"11px",background:C.w,cursor:"pointer"},onclick:async()=>{if(!confirm(`'${acc.name}' 계좌를 삭제할까요?`))return;await sb.from("accounts").update({is_active:false}).eq("id",acc.id);ov.remove();reloadAssets();}},"🗑️ 계좌 삭제"):"",
