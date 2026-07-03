@@ -650,7 +650,7 @@ function renderDash(){
     h("div",{style:{display:"flex",alignItems:"center",justifyContent:"space-between",marginBottom:"16px"}},
       h("div",{style:{display:"flex",alignItems:"center",gap:"9px"}},
         h("span",{style:{fontSize:"21px"}},SN[Number(S.curYm.split("-")[1])]||"📒"),
-        h("div",{},h("div",{style:{fontSize:"11.5px",color:C.sub}},"나의 가계부"),h("div",{style:{fontSize:"16.5px",fontWeight:"800",letterSpacing:"-.01em",cursor:"pointer",display:"flex",alignItems:"center",gap:"4px"},onclick:()=>showMonthPicker()},yml(S.curYm),h("span",{style:{fontSize:"10px",color:C.faint}},"▾")))
+        h("div",{},h("div",{style:{fontSize:"11.5px",color:C.sub}},"나의 가계부 · v94"),h("div",{style:{fontSize:"16.5px",fontWeight:"800",letterSpacing:"-.01em",cursor:"pointer",display:"flex",alignItems:"center",gap:"4px"},onclick:()=>showMonthPicker()},yml(S.curYm),h("span",{style:{fontSize:"10px",color:C.faint}},"▾")))
       ),
       h("div",{style:{display:"flex",alignItems:"center",gap:"4px",background:C.w,border:`1px solid ${C.line}`,borderRadius:"999px",padding:"3px 4px"}},prevBtn,todayBtn,nextBtn)
     ),
@@ -891,18 +891,20 @@ function buildBudgetStatus(){
   );
   if(isCur&&S.budget>0&&dom>0){
     const daysLeft=Math.max(1,dim-dom+1),today=Math.round(rem/daysLeft);
-    // 예측 개선: 할부·일시성 확정지출은 그대로, 변동지출만 하루평균×남은날
-    //  (월초 할부가 하루평균을 부풀려 예측이 뻥튀기되는 문제 방지)
-    let fixedSpent=0,varSpent=0;
+    // 예측 v2: ①미래 날짜(예약된 할부 스케줄) ②전월 동일 가맹점·금액(매달 반복) ③할부 타입
+    //          → 전부 "확정 지출"로 분리. 나머지 변동지출만 하루평균×전체일수 (뻥튀기 원천 차단)
+    const todayStr2=td();
+    const prevKey=new Set((S.prevTxns||[]).filter(t=>kindOf(t.type)==="spend").map(t=>((t.merchant||"").trim())+"|"+Math.round((Number(t.amount)||0)/100)));
+    let committed=0,varSpent=0;
     (S.txns||[]).forEach(t=>{
       if(kindOf(t.type)!=="spend"||t.account!=="개인"||isExcludedSpend(t)||isFixedExpenseTx(t))return;
       const a=Number(t.amount)||0;
-      if(t.type==="소비(할부)"||t.installment_total)fixedSpent+=a; // 할부=이미 이번달 확정
-      else varSpent+=a;
+      const key=((t.merchant||"").trim())+"|"+Math.round(a/100);
+      const isCommitted=(t.date&&t.date>todayStr2)||t.type==="소비(할부)"||t.installment_total||prevKey.has(key);
+      if(isCommitted)committed+=a;else varSpent+=a;
     });
-    // 변동지출만 페이스 계산 → 남은 날 예측 + 확정 할부 더함
     const varProj=Math.round(varSpent/dom*dim);
-    const proj=Math.round(fixedSpent+varProj),projPct=Math.round(proj/S.budget*100),pover=proj>S.budget,left=Math.max(1,dim-dom);
+    const proj=Math.round(committed+varProj),projPct=Math.round(proj/S.budget*100),pover=proj>S.budget,left=Math.max(1,dim-dom);
     const tcol=rem<=0?C.over:today>=Math.round(S.budget/dim)?C.brand:C.warn,pcol=pover?C.over:projPct>=85?C.warn:C.brand;
     card.append(h("div",{style:{display:"grid",gridTemplateColumns:"1fr 1fr",gap:"10px",marginTop:"16px",paddingTop:"16px",borderTop:`1px solid ${C.line}`}},
       h("div",{style:{cursor:"pointer"},onclick:()=>{const tds=(S.txns||[]).filter(t=>t.date===td()&&kindOf(t.type)==="spend"&&!isExcludedSpend(t));showTxnListModal("오늘 지출 내역",tds);},},h("div",{style:{fontSize:"11px",color:C.sub,marginBottom:"5px"}},"💳 오늘 쓸 수 있는 돈 ›"),
@@ -910,7 +912,7 @@ function buildBudgetStatus(){
       h("div",{},h("div",{style:{fontSize:"11px",color:C.sub,marginBottom:"5px"}},`📊 이 속도면 월말 · ${dom}일차`),
         h("div",{style:{display:"flex",alignItems:"baseline",gap:"5px"}},h("span",{class:"num",style:{fontSize:"22px",fontWeight:"800",color:pcol}},W(proj)),h("span",{style:{fontSize:"11px",fontWeight:"700",color:pcol}},`${projPct}%`))))
     );
-    const instNote=fixedSpent>varSpent&&fixedSpent>0?` (이번 달 확정 할부 ${W(fixedSpent)} 포함)`:"";
+    const instNote=committed>0?` (할부·예약·반복분 확정 ${W(committed)} 포함)`:"";
     card.append(h("div",{style:{fontSize:"11px",color:pover?C.over:C.sub,marginTop:"10px",lineHeight:"1.55"}},
       pover?`이대로면 예산을 ${W(proj-S.budget)} 넘을 것 같아요${instNote}. 남은 ${left}일 동안 하루 ${W(Math.max(0,Math.round((S.budget-budgetSpend)/left)))} 이하로 쓰면 맞출 수 있어요.`:`좋아요 👍 남은 ${left}일 동안 하루 ${W(Math.round((S.budget-budgetSpend)/left))}까지 여유가 있어요${instNote}.`));
   }
