@@ -650,7 +650,7 @@ function renderDash(){
     h("div",{style:{display:"flex",alignItems:"center",justifyContent:"space-between",marginBottom:"16px"}},
       h("div",{style:{display:"flex",alignItems:"center",gap:"9px"}},
         h("span",{style:{fontSize:"21px"}},SN[Number(S.curYm.split("-")[1])]||"📒"),
-        h("div",{},h("div",{style:{fontSize:"11.5px",color:C.sub}},"나의 가계부 · v96"),h("div",{style:{fontSize:"16.5px",fontWeight:"800",letterSpacing:"-.01em",cursor:"pointer",display:"flex",alignItems:"center",gap:"4px"},onclick:()=>showMonthPicker()},yml(S.curYm),h("span",{style:{fontSize:"10px",color:C.faint}},"▾")))
+        h("div",{},h("div",{style:{fontSize:"11.5px",color:C.sub}},"나의 가계부 · v97"),h("div",{style:{fontSize:"16.5px",fontWeight:"800",letterSpacing:"-.01em",cursor:"pointer",display:"flex",alignItems:"center",gap:"4px"},onclick:()=>showMonthPicker()},yml(S.curYm),h("span",{style:{fontSize:"10px",color:C.faint}},"▾")))
       ),
       h("div",{style:{display:"flex",alignItems:"center",gap:"4px",background:C.w,border:`1px solid ${C.line}`,borderRadius:"999px",padding:"3px 4px"}},prevBtn,todayBtn,nextBtn)
     ),
@@ -1257,26 +1257,32 @@ function buildRecent(){
   const recSec=sec("최근 내역",`${S.txns.length}건`);
   const reloadCur=async()=>{await loadMonth();homeReload();};
   if(!S.txns.length)recSec.append(empty("첫 거래를 추가해보세요."));
-  else S.txns.slice(0,S.recentN||15).forEach(t=>{
+  else{const _today=td();S.txns.slice(0,S.recentN||15).forEach(t=>{
     const c=CM[t.category]||CM["기타"],k=kindOf(t.type);
-    const sg=k==="income"||k==="reduce"?"+":k==="spend"?"−":"",cl=k==="income"||k==="reduce"?C.brand:C.ink;
+    const isFuture=(t.date||"")>_today; // 오늘 이후 = 아직 안 나간 돈
+    const isTr=isInternalTransfer(t);
+    const sg=isTr?"⇄ ":k==="income"||k==="reduce"?"+":k==="spend"?"−":"",cl=isTr?C.faint:isFuture?C.sub:k==="income"||k==="reduce"?C.brand:C.ink;
     recSec.append(h("div",{
       style:{display:"flex",alignItems:"center",gap:"12px",padding:"11px 2px",borderBottom:`1px solid ${C.line}`,cursor:"pointer",transition:"background .12s",borderRadius:"4px"},
       onmouseenter:e=>{e.currentTarget.style.background="#F6F4EF";},
       onmouseleave:e=>{e.currentTarget.style.background="transparent";},
       onclick:()=>showEditTxn(t,reloadCur)
     },
-      h("div",{style:{width:"34px",height:"34px",borderRadius:"10px",background:c.c+"1A",display:"flex",alignItems:"center",justifyContent:"center",fontSize:"16px",flexShrink:"0"}},c.i),
+      h("div",{style:{width:"34px",height:"34px",borderRadius:"10px",background:c.c+"1A",display:"flex",alignItems:"center",justifyContent:"center",fontSize:"16px",flexShrink:"0",opacity:isFuture||isTr?"0.55":"1"}},c.i),
       h("div",{style:{flex:"1",minWidth:"0"}},
-        h("div",{style:{fontSize:"14px",fontWeight:"600",whiteSpace:"nowrap",overflow:"hidden",textOverflow:"ellipsis"}},(t.merchant||t.category||t.type)+(t.installment_total?` (${t.installment_no}/${t.installment_total})`:"")),
+        h("div",{style:{fontSize:"14px",fontWeight:"600",whiteSpace:"nowrap",overflow:"hidden",textOverflow:"ellipsis",display:"flex",alignItems:"center",gap:"6px"}},
+          h("span",{style:{whiteSpace:"nowrap",overflow:"hidden",textOverflow:"ellipsis"}},(t.merchant||t.category||t.type)+(t.installment_total?` (${t.installment_no}/${t.installment_total})`:"")),
+          isFuture?h("span",{style:{flexShrink:"0",fontSize:"10px",fontWeight:"800",color:"#9A6B00",background:"#FFF3D6",borderRadius:"5px",padding:"2px 6px"}},"예정"):(isTr?h("span",{style:{flexShrink:"0",fontSize:"10px",fontWeight:"700",color:C.sub,background:"#EFEDE7",borderRadius:"5px",padding:"2px 6px"}},"이체"):"")),
         h("div",{style:{fontSize:"11.5px",color:C.sub,marginTop:"1px"}},`${(t.date||"").slice(5)} · ${t.account} · ${t.type}${t.memo?` · ${t.memo}`:""}`)
       ),
       h("div",{style:{display:"flex",alignItems:"center",gap:"8px"}},
-        h("div",{class:"num",style:{fontSize:"14.5px",fontWeight:"700",color:cl,whiteSpace:"nowrap"}},`${sg}${W(t.amount).slice(1)}`),
+        h("div",{style:{display:"flex",flexDirection:"column",alignItems:"flex-end"}},
+          h("div",{class:"num",style:{fontSize:"14.5px",fontWeight:"700",color:cl,whiteSpace:"nowrap"}},`${sg}${W(t.amount).slice(1)}`),
+          isFuture?h("span",{style:{fontSize:"9.5px",color:"#9A6B00",fontWeight:"700",marginTop:"1px"}},"지출 예정"):""),
         h("span",{style:{fontSize:"12px",color:C.faint}},"›")
       )
     ));
-  });
+  });}
   if(S.txns.length>(S.recentN||15)){
     recSec.append(h("button",{style:{width:"100%",marginTop:"10px",fontSize:"13px",fontWeight:"700",color:C.brand,background:C.soft,border:`1px solid ${C.line}`,borderRadius:"11px",padding:"11px",cursor:"pointer"},onclick:()=>{S.recentN=(S.recentN||15)+30;homeReload();}},`＋ 더 보기 (남은 ${S.txns.length-(S.recentN||15)}건)`));
   }
