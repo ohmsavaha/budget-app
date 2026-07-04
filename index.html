@@ -403,7 +403,9 @@ function showApiKeySetting(){
 }
 
 const W=n=>"₩"+Math.round(Number(n)||0).toLocaleString("ko-KR");
-const td=()=>{const d=new Date();return d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"+String(d.getDate()).padStart(2,"0");};
+const wonKor=n=>{n=Math.round(Number(n)||0);if(n<=0)return"";let s="",r=n;for(const[u,l]of[[100000000,"억"],[10000,"만"]]){const q=Math.floor(r/u);if(q){s+=q.toLocaleString("ko-KR")+l+" ";r%=u;}}if(r||!s)s+=r.toLocaleString("ko-KR");return s.trim()+"원";}; // 1234567 → "123만 4,567원" (금액 입력 실수 방지용)
+const dstr=d=>d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"+String(d.getDate()).padStart(2,"0"); // 로컬(KST) 기준 YYYY-MM-DD — toISOString은 UTC라 새벽에 하루 어긋남
+const td=()=>dstr(new Date());
 const ym=d=>(d||"").slice(0,7);
 const yml=y=>{const[a,m]=y.split("-");return`${a}년 ${Number(m)}월`};
 const shYm=(y,d)=>{const[a,m]=y.split("-").map(Number);const dt=new Date(a,m-1+d,1);return`${dt.getFullYear()}-${String(dt.getMonth()+1).padStart(2,"0")}`};
@@ -610,7 +612,7 @@ async function loadFixed(){
   const{data:inact}=await sb.from("fixed_costs").select("*").eq("user_id",S.session.user.id).eq("is_active",false).order("amount",{ascending:false});
   S.fixedInactive=inact||[];
   try{
-    const dsince=(()=>{const d=new Date();d.setMonth(d.getMonth()-3);return d.toISOString().slice(0,10);})();
+    const dsince=(()=>{const d=new Date();d.setMonth(d.getMonth()-3);return dstr(d);})();
     const{data:rt}=await sb.from("transactions").select("merchant,category,amount,date,type,account,payment_method").gte("date",dsince).order("date",{ascending:false});
     S.fcDiscover=detectRecurring(rt||[]);
   }catch(e){dlog("[자동발견실패]",e);S.fcDiscover=[];}
@@ -686,7 +688,7 @@ function renderDash(){
     h("div",{style:{display:"flex",alignItems:"center",justifyContent:"space-between",marginBottom:"16px"}},
       h("div",{style:{display:"flex",alignItems:"center",gap:"9px"}},
         h("span",{style:{fontSize:"21px"}},SN[Number(S.curYm.split("-")[1])]||"📒"),
-        h("div",{},h("div",{style:{fontSize:"11.5px",color:C.sub}},"🐾 나의 가계부 · v116"),h("div",{style:{fontSize:"16.5px",fontWeight:"800",letterSpacing:"-.01em",cursor:"pointer",display:"flex",alignItems:"center",gap:"4px"},onclick:()=>showMonthPicker()},yml(S.curYm),h("span",{style:{fontSize:"10px",color:C.faint}},"▾")))
+        h("div",{},h("div",{style:{fontSize:"11.5px",color:C.sub}},"🐾 나의 가계부 · v117"),h("div",{style:{fontSize:"16.5px",fontWeight:"800",letterSpacing:"-.01em",cursor:"pointer",display:"flex",alignItems:"center",gap:"4px"},onclick:()=>showMonthPicker()},yml(S.curYm),h("span",{style:{fontSize:"10px",color:C.faint}},"▾")))
       ),
       h("div",{style:{display:"flex",alignItems:"center",gap:"4px",background:C.w,border:`1px solid ${C.line}`,borderRadius:"999px",padding:"3px 4px"}},prevBtn,todayBtn,nextBtn)
     ),
@@ -2467,7 +2469,7 @@ function showCardStatement(pm,opt){
   ov.append(sh);document.body.append(ov);
   (async()=>{
     // 최근 12개월 거래 가져와서 청구월별로 묶기 (청구월 = 사용월+1, 할부분은 그 달)
-    const since=(()=>{const d=new Date();d.setMonth(d.getMonth()-12);return d.toISOString().slice(0,10);})();
+    const since=(()=>{const d=new Date();d.setMonth(d.getMonth()-12);return dstr(d);})();
     let tx=[];
     try{const{data}=await sb.from("transactions").select("amount,type,payment_method,merchant,date,installment_no,installment_total,category").eq("payment_method",pm).gte("date",since).order("date",{ascending:false});tx=(data||[]).filter(t=>["소비(일시불)","소비(할부)"].includes(t.type));}catch(e){}
     // 청구월 = 일시불/그달할부 → 사용월+1, 미래할부분(당월)도 그 청구월에
@@ -2932,11 +2934,11 @@ function showSearch(opt){
     results.forEach(drawRow);
   };
 
-  const _t=new Date(),_ts=_t.toISOString().slice(0,10);
+  const _t=new Date(),_ts=td();
   const _fom=`${ym(_ts)}-01`;
   const _lm=new Date(_t.getFullYear(),_t.getMonth()-1,1),_lmEnd=new Date(_t.getFullYear(),_t.getMonth(),0);
   const _3m=new Date(_t.getFullYear(),_t.getMonth()-2,1);
-  const fmt=d=>d.toISOString().slice(0,10);
+  const fmt=d=>dstr(d);
   const setR=(f,t)=>{fromEl.value=f;toEl.value=t;run();};
   const chip=(lbl,fn)=>h("button",{style:{fontSize:"12px",fontWeight:"600",padding:"7px 12px",borderRadius:"999px",border:`1px solid ${C.line}`,background:C.w,color:C.ink,cursor:"pointer",whiteSpace:"nowrap",flexShrink:"0"},onclick:fn},lbl);
   const chipRow=h("div",{style:{display:"flex",gap:"7px",overflowX:"auto",paddingBottom:"2px",marginTop:"10px"}},
@@ -3102,6 +3104,8 @@ function showEditTxn(t, onDone){
   const lbl=txt=>h("div",{style:{fontSize:"13px",fontWeight:"800",color:C.sub,marginBottom:"6px"}},txt);
 
   const amtEl=h("input",{type:"number",inputmode:"numeric",value:t.amount||"",class:"num",style:{flex:"1",border:"none",fontSize:"24px",fontWeight:"800",color:C.ink,background:"transparent"}});
+  const amtPrevE=h("div",{class:"num",style:{fontSize:"12px",fontWeight:"700",color:C.brand,textAlign:"right",marginTop:"6px",minHeight:"15px"}},wonKor(t.amount));
+  amtEl.addEventListener("input",()=>{amtPrevE.textContent=wonKor(amtEl.value);});
   const typ=h("select",{style:{width:"100%",border:`1px solid ${C.line}`,borderRadius:"10px",padding:"11px 12px",fontSize:"14px",color:C.ink,background:C.w}});
   TYPES.forEach(tp=>{const o=h("option",{value:tp},tp);if(tp===t.type)o.selected=true;typ.append(o);});
   const mer=h("input",{type:"text",value:t.merchant||"",placeholder:"사용처",style:{width:"100%",border:`1px solid ${C.line}`,borderRadius:"10px",padding:"11px 12px",fontSize:"14px"}});
@@ -3196,7 +3200,7 @@ function showEditTxn(t, onDone){
     origDateBadge,
     dutchSlot,
     dutchMakeSlot,
-    h("div",{style:{marginBottom:"14px"}},lbl("금액"),h("div",{style:{display:"flex",alignItems:"center",border:`1px solid ${C.line}`,borderRadius:"12px",padding:"10px 14px"}},h("span",{style:{fontSize:"22px",fontWeight:"700",color:C.faint,marginRight:"6px"}},"₩"),amtEl)),
+    h("div",{style:{marginBottom:"14px"}},lbl("금액"),h("div",{style:{display:"flex",alignItems:"center",border:`1px solid ${C.line}`,borderRadius:"12px",padding:"10px 14px"}},h("span",{style:{fontSize:"22px",fontWeight:"700",color:C.faint,marginRight:"6px"}},"₩"),amtEl),amtPrevE),
     lbl("계정"),h("div",{style:{marginBottom:"13px"}},accRow),
     lbl("💳 실제 결제수단 (카드·계좌)"),h("div",{style:{marginBottom:"6px"}},payWrapE),
     h("div",{style:{fontSize:"11px",color:C.faint,marginBottom:"13px",lineHeight:"1.55"}},"네이버페이·쿠팡·카카오페이는 결제 '플랫폼'이에요. 실제로 돈이 나간 카드/계좌를 골라주세요. (가맹점 이름은 위에서 수정)"),
@@ -3483,7 +3487,7 @@ function showFixedDetail(fc,reload){
   histBox.append(histList);sh.append(histBox);
   (async()=>{
     try{
-      const since=(()=>{const d=new Date();d.setMonth(d.getMonth()-11);return d.toISOString().slice(0,10);})();
+      const since=(()=>{const d=new Date();d.setMonth(d.getMonth()-11);return dstr(d);})();
       const{data}=await sb.from("transactions").select("date,amount,merchant,category,account,type").eq("category",fc.category).eq("account",fc.account).gte("date",since).order("date",{ascending:false});
       const rows=(data||[]).filter(t=>!isIncomeType(t.type));
       const tol=fcTol(fc),fa=Number(fc.amount)||0;
@@ -4092,7 +4096,7 @@ function stockIcon(name,ticker){
   const draw=()=>{
     const days=periods.find(p=>p[0]===period)[1];
     const cutoff=new Date();cutoff.setDate(cutoff.getDate()-days);
-    const cutStr=cutoff.toISOString().slice(0,10);
+    const cutStr=dstr(cutoff);
     const data=rows.filter(r=>period==="전체"||r.snapshot_date>=cutStr);
     const labels=data.map(r=>(r.snapshot_date||"").slice(5));
     const vals=data.map(r=>{const v=Number(curMode==="USD"?r.return_rate_usd:r.return_rate_krw)||0;return Math.abs(v)>500?null:v;}); // ±500% 초과=오염 데이터로 보고 차트에서 제외
@@ -5291,7 +5295,11 @@ function showAdd(preset){
   const addAmt=(v)=>{amt.value=String((Number(amt.value)||0)+v);amt.dispatchEvent(new Event("input"));};
   const amtQuick=h("div",{style:{display:"flex",flexWrap:"wrap",gap:"6px",marginTop:"8px"}},
     ...[["+1천",1000],["+5천",5000],["+1만",10000],["+5만",50000],["+10만",100000]].map(([lb,v])=>h("button",{style:{fontSize:"12px",fontWeight:"700",padding:"6px 11px",borderRadius:"999px",border:`1px solid ${C.line}`,background:C.soft,color:C.ink,cursor:"pointer"},onclick:()=>addAmt(v)},lb)),
-    h("button",{style:{fontSize:"12px",fontWeight:"700",padding:"6px 11px",borderRadius:"999px",border:`1px solid ${C.line}`,background:C.w,color:C.sub,cursor:"pointer"},onclick:()=>{amt.value="";amt.focus();}},"지우기"));
+    h("button",{style:{fontSize:"12px",fontWeight:"700",padding:"6px 11px",borderRadius:"999px",border:`1px solid ${C.line}`,background:C.w,color:C.sub,cursor:"pointer"},onclick:()=>{amt.value="";updAmtPrev();amt.focus();}},"지우기"));
+  // 금액 한글 미리보기 (자릿수 실수 방지)
+  const amtPrev=h("div",{class:"num",style:{fontSize:"12px",fontWeight:"700",color:C.brand,textAlign:"right",marginTop:"6px",minHeight:"15px"}});
+  const updAmtPrev=()=>{amtPrev.textContent=wonKor(amt.value);};
+  amt.addEventListener("input",updAmtPrev);
   const getQuickFavs=()=>{try{return JSON.parse(localStorage.getItem("quick_favs")||"[]");}catch{return[];}};
   const setQuickFavs=(a)=>{try{localStorage.setItem("quick_favs",JSON.stringify(a));}catch{}};
   const pinRow=h("div",{});
@@ -5303,7 +5311,7 @@ function showAdd(preset){
     pinRow.append(h("div",{style:{fontSize:"12px",fontWeight:"700",color:C.sub,marginBottom:"7px"}},"⭐ 즐겨찾기 · 탭하면 한 번에 채워져요"));
     const chips=h("div",{style:{display:"flex",flexWrap:"wrap",gap:"7px"}});
     fp.forEach((f,idx)=>{
-      const label=h("span",{style:{cursor:"pointer"},onclick:()=>{if(f.merchant)mer.value=f.merchant;if(f.cat)selCat=f.cat;if(f.acc)selAcc=f.acc;if(f.pay&&payList().includes(f.pay))selPay=f.pay;if(f.amount)amt.value=String(f.amount);if(f.type){typ.value=f.type;if(typ.onchange)typ.onchange();}drawCats();drawAcc();drawPay();autoHint.style.display="none";}},(f.name||f.merchant||"즐겨찾기")+(f.amount?` · ${shortNum(f.amount)}`:""));
+      const label=h("span",{style:{cursor:"pointer"},onclick:()=>{if(f.merchant)mer.value=f.merchant;if(f.cat)selCat=f.cat;if(f.acc)selAcc=f.acc;if(f.pay&&payList().includes(f.pay))selPay=f.pay;if(f.amount)amt.value=String(f.amount);updAmtPrev();if(f.type){typ.value=f.type;if(typ.onchange)typ.onchange();}drawCats();drawAcc();drawPay();autoHint.style.display="none";}},(f.name||f.merchant||"즐겨찾기")+(f.amount?` · ${shortNum(f.amount)}`:""));
       const del=h("span",{style:{cursor:"pointer",color:C.faint,fontSize:"11px"},onclick:()=>{const a=getQuickFavs();a.splice(idx,1);setQuickFavs(a);drawPins();}},"✕");
       chips.append(h("div",{style:{display:"flex",alignItems:"center",gap:"8px",fontSize:"12.5px",fontWeight:"600",padding:"7px 12px",borderRadius:"999px",border:`1px solid ${C.brand}`,background:C.soft,color:C.brand}},label,del));
     });
@@ -5323,7 +5331,7 @@ function showAdd(preset){
   sh.append(
     h("div",{style:{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:"16px"}},h("span",{style:{fontSize:"17px",fontWeight:"800"}},"빠른 입력"),h("button",{style:{fontSize:"20px",color:C.sub},onclick:()=>ov.remove()},"✕")),
     pinRow,favRow,dlist,
-    h("div",{style:{marginBottom:"14px"}},lbl("금액"),h("div",{style:{display:"flex",alignItems:"center",border:`1px solid ${C.line}`,borderRadius:"12px",padding:"10px 14px"}},h("span",{style:{fontSize:"22px",fontWeight:"700",color:C.faint,marginRight:"6px"}},"₩"),amt),amtQuick),
+    h("div",{style:{marginBottom:"14px"}},lbl("금액"),h("div",{style:{display:"flex",alignItems:"center",border:`1px solid ${C.line}`,borderRadius:"12px",padding:"10px 14px"}},h("span",{style:{fontSize:"22px",fontWeight:"700",color:C.faint,marginRight:"6px"}},"₩"),amt),amtPrev,amtQuick),
     lbl("계정"),h("div",{style:{marginBottom:"13px"}},accRow),
     lbl("결제수단"),h("div",{style:{marginBottom:"13px"}},payWrap),
     lbl("유형"),h("div",{style:{marginBottom:"13px"}},typ,mSel,mHint),
