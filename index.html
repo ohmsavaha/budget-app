@@ -657,7 +657,7 @@ function renderDash(){
   const prevBtn=h("button",{style:{width:"30px",height:"30px",borderRadius:"999px",color:C.sub,fontSize:"18px"},onclick:()=>{S.curYm=shYm(S.curYm,-1);S.calYm=S.curYm;renderDash();}},"‹");
   const todayBtn=h("button",{style:{fontSize:"12px",fontWeight:"700",color:isCur?C.brand:C.sub,padding:"4px 8px"},onclick:()=>{S.curYm=ym(td());S.calYm=S.curYm;renderDash();}},isCur?"현재":"현재로");
   const nextBtn=h("button",{style:{width:"30px",height:"30px",borderRadius:"999px",color:C.sub,fontSize:"18px"},onclick:()=>{S.curYm=shYm(S.curYm,1);S.calYm=S.curYm;renderDash();}},"›");
-  const TAB_DEFS=[["home","🏠 홈"],["spend","💸 지출"],["shared","🤝 공용"],["assets","💰 자산"],["calendar","📅 월간"],["fixed","📌 고정비"],["invest","📈 투자"],["yearly","🗓️ 연간"]];
+  const TAB_DEFS=[["home","🏠 홈"],["spend","💸 지출"],["shared","🤝 공용"],["assets","💰 자산"],["calendar","📅 월간"],["fixed","📌 고정비"],["invest","📈 투자"],["yearly","🗓️ 연간"],["db","🗃️ DB"]];
   const tabBtn=(key,lbl)=>h("button",{
     style:{fontSize:"13px",fontWeight:"700",padding:"8px 16px",borderRadius:"999px",border:`1px solid ${S.tab===key?C.ink:C.line}`,background:S.tab===key?C.ink:C.w,color:S.tab===key?C.w:C.sub,cursor:"pointer",whiteSpace:"nowrap"},
     onclick:()=>{if(REORDER.editing)return;S.tab=key;renderDash();}
@@ -674,7 +674,7 @@ function renderDash(){
     h("div",{style:{display:"flex",alignItems:"center",justifyContent:"space-between",marginBottom:"16px"}},
       h("div",{style:{display:"flex",alignItems:"center",gap:"9px"}},
         h("span",{style:{fontSize:"21px"}},SN[Number(S.curYm.split("-")[1])]||"📒"),
-        h("div",{},h("div",{style:{fontSize:"11.5px",color:C.sub}},"나의 가계부 · v114"),h("div",{style:{fontSize:"16.5px",fontWeight:"800",letterSpacing:"-.01em",cursor:"pointer",display:"flex",alignItems:"center",gap:"4px"},onclick:()=>showMonthPicker()},yml(S.curYm),h("span",{style:{fontSize:"10px",color:C.faint}},"▾")))
+        h("div",{},h("div",{style:{fontSize:"11.5px",color:C.sub}},"나의 가계부 · v115"),h("div",{style:{fontSize:"16.5px",fontWeight:"800",letterSpacing:"-.01em",cursor:"pointer",display:"flex",alignItems:"center",gap:"4px"},onclick:()=>showMonthPicker()},yml(S.curYm),h("span",{style:{fontSize:"10px",color:C.faint}},"▾")))
       ),
       h("div",{style:{display:"flex",alignItems:"center",gap:"4px",background:C.w,border:`1px solid ${C.line}`,borderRadius:"999px",padding:"3px 4px"}},prevBtn,todayBtn,nextBtn)
     ),
@@ -727,6 +727,8 @@ function renderDash(){
     loadCalMonth().then(()=>setCt(...buildCalendarView()));
   } else if(S.tab==="yearly"){
     loadYear().then(()=>setCt(...buildYearly()));
+  } else if(S.tab==="db"){
+    loadDbProducts(true).then(()=>setCt(...buildDbTab()));
   } else {
     Promise.all([loadInvest(),loadAllSnapshots(true)]).then(()=>{setCt(...buildInvest());autoSnapshot();});
   }
@@ -1329,6 +1331,177 @@ async function autoSortInstallments(){
     }
   }catch(e){try{dlog("[autoSort]",e);}catch{}}
 }
+// ── 🗃️ 품목 DB (우리집 가격사전) ──
+const DB_SQL=`create table if not exists products (
+  id uuid primary key default gen_random_uuid(),
+  user_id uuid not null,
+  name text not null,
+  aliases text,
+  category text,
+  note text,
+  created_at timestamptz default now()
+);
+alter table products enable row level security;
+create policy "own_products" on products for all using (auth.uid()=user_id) with check (auth.uid()=user_id);
+create table if not exists price_records (
+  id uuid primary key default gen_random_uuid(),
+  product_id uuid references products(id) on delete cascade,
+  user_id uuid not null,
+  source text,
+  price numeric not null,
+  url text,
+  date date default current_date,
+  created_at timestamptz default now()
+);
+alter table price_records enable row level security;
+create policy "own_prices" on price_records for all using (auth.uid()=user_id) with check (auth.uid()=user_id);`;
+async function loadDbProducts(force){
+  if(S.dbProducts&&!force)return S.dbProducts;
+  try{
+    const[p,r]=await Promise.all([
+      sb.from("products").select("*").order("created_at",{ascending:false}),
+      sb.from("price_records").select("*").order("date",{ascending:false})
+    ]);
+    if(p.error)throw p.error;
+    S.dbProducts=p.data||[];S.dbPrices=r.data||[];S.dbMissing=false;
+  }catch(e){S.dbProducts=S.dbProducts||[];S.dbPrices=S.dbPrices||[];S.dbMissing=true;}
+  return S.dbProducts;
+}
+function dbNorm(x){return (x||"").toLowerCase().replace(/\s+/g,"");}
+function dbBestMatch(q){
+  const n=dbNorm(q);if(!n||n.length<2||!S.dbProducts||!S.dbProducts.length)return null;
+  let best=null,bs=0;
+  S.dbProducts.forEach(p=>{
+    const names=[p.name,...((p.aliases||"").split(","))].map(dbNorm).filter(Boolean);
+    names.forEach(nm=>{
+      let sc=0;
+      if(nm===n)sc=100;
+      else if(nm.includes(n)||n.includes(nm))sc=60+Math.min(30,Math.min(nm.length,n.length)*4);
+      if(sc>bs){bs=sc;best=p;}
+    });
+  });
+  return bs>=60?best:null;
+}
+function dbPricesOf(pid){return (S.dbPrices||[]).filter(r=>r.product_id===pid);}
+function dbLatest(pid){const a=dbPricesOf(pid);return a.length?a[0]:null;}
+function dbLowest(pid){const a=dbPricesOf(pid);if(!a.length)return null;return a.reduce((m,r)=>Number(r.price)<Number(m.price)?r:m,a[0]);}
+function showProductEdit(p,onDone){
+  const ov=h("div",{style:{position:"fixed",inset:"0",background:"rgba(40,37,31,.5)",display:"flex",alignItems:"center",justifyContent:"center",padding:"18px",zIndex:"85"}});
+  ov.onclick=e=>{if(e.target===ov)ov.remove();};
+  const inp={width:"100%",border:`1px solid ${C.line}`,borderRadius:"10px",padding:"11px 12px",fontSize:"14px",marginBottom:"9px"};
+  const nmEl=h("input",{value:p?.name||"",placeholder:"품목 이름 (예: 휴지)",style:inp});
+  const alEl=h("input",{value:p?.aliases||"",placeholder:"별칭 (쉼표로: 화장지,티슈)",style:inp});
+  const ctEl=h("input",{value:p?.category||"",placeholder:"분류 (예: 생활용품)",style:inp});
+  const ntEl=h("input",{value:p?.note||"",placeholder:"특징 메모 (예: 30롤, 3겹)",style:inp});
+  const sv=h("button",{style:{width:"100%",fontSize:"14px",fontWeight:"800",padding:"13px",borderRadius:"12px",border:"none",background:C.brand,color:"#fff",cursor:"pointer"},onclick:async()=>{
+    const nm=nmEl.value.trim();if(!nm){nmEl.focus();return;}
+    const row={user_id:S.session.user.id,name:nm,aliases:alEl.value.trim()||null,category:ctEl.value.trim()||null,note:ntEl.value.trim()||null};
+    const{error}=p?await sb.from("products").update(row).eq("id",p.id):await sb.from("products").insert(row);
+    if(error){toast("저장 실패: "+error.message,false);return;}
+    await loadDbProducts(true);ov.remove();toast(p?"✏️ 수정했어요":"🗃️ 품목 등록!");if(onDone)onDone();
+  }},p?"수정 저장":"품목 등록");
+  const del=p?h("button",{style:{width:"100%",marginTop:"7px",fontSize:"12px",color:C.over,background:"transparent",border:"none",cursor:"pointer",padding:"8px"},onclick:async()=>{
+    if(!confirm(`'${p.name}' 품목과 가격 기록을 모두 삭제할까요?`))return;
+    await sb.from("products").delete().eq("id",p.id);
+    await loadDbProducts(true);ov.remove();toast("삭제했어요");if(onDone)onDone();
+  }},"품목 삭제…"):"";
+  const sh=h("div",{style:{width:"100%",maxWidth:"380px",background:C.w,borderRadius:"18px",padding:"20px"}},
+    h("div",{style:{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:"12px"}},
+      h("span",{style:{fontSize:"15.5px",fontWeight:"800"}},p?"✏️ 품목 수정":"🗃️ 품목 추가"),
+      h("button",{style:{fontSize:"20px",color:C.sub,background:"transparent",border:"none",cursor:"pointer"},onclick:()=>ov.remove()},"✕")),
+    nmEl,alEl,ctEl,ntEl,sv,del);
+  ov.append(sh);document.body.append(ov);setTimeout(()=>nmEl.focus(),60);
+}
+function showProductDetail(pid){
+  const p=(S.dbProducts||[]).find(x=>x.id===pid);if(!p)return;
+  const ov=h("div",{style:{position:"fixed",inset:"0",background:"rgba(40,37,31,.5)",display:"flex",alignItems:"flex-end",justifyContent:"center",zIndex:"84"}});
+  ov.onclick=e=>{if(e.target===ov)ov.remove();};
+  const sh=h("div",{style:{width:"100%",maxWidth:"520px",background:C.w,borderRadius:"20px 20px 0 0",maxHeight:"86vh",display:"flex",flexDirection:"column",overflow:"hidden"}});
+  const body=h("div",{style:{flex:"1",overflowY:"auto",padding:"0 20px 24px"}});
+  const redraw=()=>{
+    const cur=(S.dbProducts||[]).find(x=>x.id===pid);if(!cur){ov.remove();return;}
+    body.innerHTML="";
+    const recs=dbPricesOf(pid);
+    const lo=dbLowest(pid);
+    if(cur.note)body.append(h("div",{style:{fontSize:"12.5px",color:C.sub,background:"#F6F4EF",borderRadius:"10px",padding:"10px 12px",marginBottom:"12px"}},"📝 "+cur.note));
+    body.append(h("div",{style:{fontSize:"12px",fontWeight:"800",color:C.sub,margin:"6px 0 8px"}},`가격 기록 ${recs.length}건${lo?` · 최저 ${W(lo.price)} (${lo.source||""})`:""}`));
+    if(!recs.length)body.append(empty("아직 가격 기록이 없어요.\n아래에서 첫 기록을 추가해보세요."));
+    recs.forEach(r=>{
+      body.append(h("div",{style:{display:"flex",alignItems:"center",gap:"10px",padding:"10px 2px",borderBottom:`1px solid ${C.line}`}},
+        h("div",{style:{flex:"1",minWidth:"0"}},
+          h("div",{style:{fontSize:"13.5px",fontWeight:"700"}},(r.source||"기록")+(lo&&r.id===lo.id?" 🏆":"")),
+          h("div",{style:{fontSize:"11px",color:C.sub,marginTop:"1px"}},(r.date||"").slice(0,10)+(r.url?" · 🔗":""))),
+        r.url?h("button",{style:{fontSize:"11px",color:C.brand,background:C.soft,border:"none",borderRadius:"7px",padding:"5px 8px",cursor:"pointer"},onclick:()=>window.open(r.url,"_blank")},"열기"):"",
+        h("div",{class:"num",style:{fontSize:"14px",fontWeight:"800"}},W(r.price)),
+        h("button",{style:{fontSize:"13px",color:C.faint,background:"transparent",border:"none",cursor:"pointer"},onclick:async()=>{if(!confirm("이 가격 기록을 삭제할까요?"))return;await sb.from("price_records").delete().eq("id",r.id);await loadDbProducts(true);redraw();}},"✕")));
+    });
+    // 가격 기록 추가 폼
+    const inp={flex:"1",border:`1px solid ${C.line}`,borderRadius:"10px",padding:"10px 11px",fontSize:"13px"};
+    const srcEl=h("input",{placeholder:"어디서 (코스트코/쿠팡…)",style:{...inp,minWidth:"0"}});
+    const prEl=h("input",{type:"number",placeholder:"가격",class:"num",style:{...inp,maxWidth:"110px",minWidth:"0"}});
+    const urlEl=h("input",{placeholder:"🔗 링크 (선택 — 인터넷이면 붙여넣기)",style:{width:"100%",border:`1px solid ${C.line}`,borderRadius:"10px",padding:"10px 11px",fontSize:"12.5px",marginTop:"7px"}});
+    const addB=h("button",{style:{flexShrink:"0",fontSize:"13px",fontWeight:"800",padding:"10px 14px",borderRadius:"10px",border:"none",background:C.brand,color:"#fff",cursor:"pointer"},onclick:async()=>{
+      const pr=Number(prEl.value)||0;if(!pr){prEl.focus();return;}
+      const{error}=await sb.from("price_records").insert({user_id:S.session.user.id,product_id:pid,source:srcEl.value.trim()||null,price:pr,url:urlEl.value.trim()||null,date:td()});
+      if(error){toast("저장 실패: "+error.message,false);return;}
+      await loadDbProducts(true);redraw();toast("💰 가격 기록 추가!");
+    }},"추가");
+    body.append(h("div",{style:{marginTop:"14px"}},
+      h("div",{style:{fontSize:"12px",fontWeight:"800",color:C.sub,marginBottom:"7px"}},"➕ 가격 기록 추가"),
+      h("div",{style:{display:"flex",gap:"7px"}},srcEl,prEl,addB),
+      urlEl));
+  };
+  sh.append(h("div",{style:{padding:"16px 20px 10px",flexShrink:"0"}},
+    h("div",{style:{width:"38px",height:"4px",borderRadius:"2px",background:C.line,margin:"0 auto 12px"}}),
+    h("div",{style:{display:"flex",justifyContent:"space-between",alignItems:"center"}},
+      h("span",{style:{fontSize:"16.5px",fontWeight:"800"}},"🗃️ "+p.name+(p.category?` · ${p.category}`:"")),
+      h("div",{style:{display:"flex",gap:"8px",alignItems:"center"}},
+        h("button",{style:{fontSize:"12px",fontWeight:"700",color:C.brand,background:C.soft,border:"none",borderRadius:"8px",padding:"6px 10px",cursor:"pointer"},onclick:()=>{ov.remove();showProductEdit(p,()=>showProductDetail(pid));}},"✏️ 수정"),
+        h("button",{style:{fontSize:"20px",color:C.sub,background:"transparent",border:"none",cursor:"pointer"},onclick:()=>ov.remove()},"✕")))),body);
+  redraw();
+  ov.append(sh);document.body.append(ov);
+}
+function buildDbTab(){
+  const card=sec("🗃️ 품목 DB","우리집 가격사전");
+  const wrap=h("div",{});
+  if(S.dbMissing){
+    wrap.append(
+      h("div",{style:{fontSize:"12.5px",color:C.sub,lineHeight:"1.7",marginBottom:"10px"}},"품목 DB를 쓰려면 1분 설정이 필요해요.\n① 아래 버튼으로 SQL 복사 ② Supabase SQL Editor에 붙여넣기 ③ Run ④ 앱 새로고침"),
+      h("button",{style:{width:"100%",fontSize:"13px",fontWeight:"800",padding:"11px",borderRadius:"11px",border:"none",background:C.brand,color:"#fff",cursor:"pointer",marginBottom:"7px"},onclick:async()=>{try{await navigator.clipboard.writeText(DB_SQL);toast("📋 SQL 복사됨 — Supabase에 붙여넣고 Run!");}catch{prompt("아래 SQL을 복사하세요",DB_SQL);}}},"📋 설정 SQL 복사"),
+      h("button",{style:{width:"100%",fontSize:"12px",fontWeight:"700",padding:"10px",borderRadius:"11px",border:`1px solid ${C.line}`,background:C.w,color:C.sub,cursor:"pointer"},onclick:async()=>{const u="https://supabase.com/dashboard/project/axlxdkybghxcltilsqgj/sql/new";try{await navigator.clipboard.writeText(u);toast("🔗 SQL Editor 주소 복사됨");}catch{prompt("주소",u);}}},"🔗 SQL Editor 주소 복사"));
+    card.append(wrap);return [card];
+  }
+  const inpS=h("input",{placeholder:"🔍 품목 검색 (예: 휴지)",style:{flex:"1",border:`1px solid ${C.line}`,borderRadius:"11px",padding:"11px 13px",fontSize:"14px",minWidth:"0"}});
+  const addB=h("button",{style:{flexShrink:"0",fontSize:"13px",fontWeight:"800",padding:"11px 14px",borderRadius:"11px",border:"none",background:C.brand,color:"#fff",cursor:"pointer"},onclick:()=>showProductEdit(null,()=>{drawList();})},"＋ 품목");
+  const listWrap=h("div",{style:{marginTop:"12px"}});
+  const drawList=()=>{
+    listWrap.innerHTML="";
+    const q=dbNorm(inpS.value);
+    const items=(S.dbProducts||[]).filter(p=>{
+      if(!q)return true;
+      return [p.name,p.aliases||"",p.category||""].some(x=>dbNorm(x).includes(q));
+    });
+    if(!items.length){listWrap.append(empty(q?"검색 결과가 없어요.":"아직 품목이 없어요.\n'＋ 품목'으로 첫 품목을 등록해보세요!\n(예: 휴지, 세제, 물티슈)"));return;}
+    items.forEach(p=>{
+      const lt=dbLatest(p.id),lo=dbLowest(p.id),cnt=dbPricesOf(p.id).length;
+      listWrap.append(h("div",{style:{display:"flex",alignItems:"center",gap:"11px",padding:"12px 2px",borderBottom:`1px solid ${C.line}`,cursor:"pointer",borderRadius:"6px"},
+        onmouseenter:e=>{e.currentTarget.style.background="#F6F4EF";},onmouseleave:e=>{e.currentTarget.style.background="transparent";},
+        onclick:()=>showProductDetail(p.id)},
+        h("div",{style:{width:"36px",height:"36px",borderRadius:"10px",background:C.soft,display:"flex",alignItems:"center",justifyContent:"center",fontSize:"17px",flexShrink:"0"}},"🗃️"),
+        h("div",{style:{flex:"1",minWidth:"0"}},
+          h("div",{style:{fontSize:"14px",fontWeight:"700",whiteSpace:"nowrap",overflow:"hidden",textOverflow:"ellipsis"}},p.name,p.category?h("span",{style:{fontSize:"10.5px",fontWeight:"700",color:C.sub,background:"#EFEDE7",borderRadius:"5px",padding:"2px 6px",marginLeft:"6px"}},p.category):""),
+          h("div",{style:{fontSize:"11.5px",color:C.sub,marginTop:"2px"}},lt?`최근 ${lt.source||"기록"} ${W(lt.price)} (${(lt.date||"").slice(5,10)})`:"가격 기록 없음")),
+        h("div",{style:{textAlign:"right",flexShrink:"0"}},
+          lo?h("div",{class:"num",style:{fontSize:"14px",fontWeight:"800",color:C.brand}},W(lo.price)):h("div",{style:{fontSize:"12px",color:C.faint}},"—"),
+          h("div",{style:{fontSize:"10px",color:C.faint,marginTop:"1px"}},cnt?`${cnt}건 · 최저`:"기록 추가 ›"))));
+    });
+  };
+  inpS.oninput=drawList;
+  wrap.append(h("div",{style:{display:"flex",gap:"8px"}},inpS,addB),listWrap);
+  drawList();
+  card.append(wrap);
+  return [card];
+}
 function showBillDateSort(){
   // 이번 달 할부 전체를 3분류: 카드결제일있음 / 카드미지정(플랫폼) / 이미정렬됨
   const curYm=ym(S.curYm||td());
@@ -1548,8 +1721,22 @@ function buildShoppingList(){
       if(e2){toast("추가 실패: "+(e2.message||""),false);return;}
       toast(`🛒 '${nm}' 담았어요`);render();
     }},"담기");
+    const dbHint=h("div",{style:{display:"none",fontSize:"11.5px",fontWeight:"700",color:C.brand,background:"#EEF6F1",borderRadius:"9px",padding:"8px 11px",marginTop:"7px",cursor:"pointer",lineHeight:"1.55"}});
+    let _dbHintPrice=null;
+    dbHint.onclick=()=>{if(_dbHintPrice!=null){priceEl.value=_dbHintPrice;toast("💰 예상가 채웠어요");}};
+    nameEl.oninput=async()=>{
+      const q=nameEl.value.trim();
+      if(q.length<2){dbHint.style.display="none";return;}
+      if(S.dbProducts===undefined&&!S._dbLd){S._dbLd=true;await loadDbProducts();S._dbLd=false;}
+      const m=dbBestMatch(q);
+      if(!m){dbHint.style.display="none";return;}
+      const lt=dbLatest(m.id),lo=dbLowest(m.id);
+      _dbHintPrice=lt?Number(lt.price):null;
+      dbHint.textContent=`🗃️ ${m.name}${lt?` · 최근 ${lt.source||"기록"} ${W(lt.price)} (${(lt.date||"").slice(5,10)})`:""}${(lo&&lt&&Number(lo.price)<Number(lt.price))?` · 최저 ${W(lo.price)}`:""}${lt?" — 탭하면 예상가 입력":""}`;
+      dbHint.style.display="block";
+    };
     nameEl.onkeydown=e=>{if(e.key==="Enter")addBtn.click();};
-    body.append(h("div",{style:{display:"flex",gap:"6px",marginBottom:"10px"}},nameEl,priceEl,kindBtn,addBtn));
+    body.append(h("div",{style:{display:"flex",gap:"6px",marginBottom:"10px"}},nameEl,priceEl,kindBtn,addBtn),dbHint);
     if(!todo.length&&!done.length){body.append(empty("사야 할 걸 미리 적어두면 마트에서 안 까먹어요 🛒"));return;}
     const req=todo.filter(x=>x.kind==="필수"),wish=todo.filter(x=>x.kind!=="필수");
     const psum=a=>a.reduce((x,y)=>x+(Number(y.est_price)||0),0);
