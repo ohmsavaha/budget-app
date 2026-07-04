@@ -318,42 +318,28 @@ const saveHoldings=h=>{try{localStorage.setItem("portfolio_holdings",JSON.string
 function showApiKeySetting(){
   const cur=getApiKey();
   const ov=h("div",{style:{position:"fixed",inset:"0",background:"rgba(40,37,31,.55)",display:"flex",alignItems:"center",justifyContent:"center",zIndex:"70",padding:"24px"}});
-  const box=h("div",{style:{width:"100%",maxWidth:"400px",background:C.w,borderRadius:"18px",padding:"24px",maxHeight:"88vh",overflowY:"auto"}});
-  const inp=h("input",{type:"password",value:cur,placeholder:"sk-ant-api03-…",style:{width:"100%",border:`1px solid ${C.line}`,borderRadius:"10px",padding:"11px 12px",fontSize:"14px",marginBottom:"12px"}});
-  const sv=h("button",{style:{width:"100%",background:C.brand,color:C.w,fontSize:"15px",fontWeight:"700",padding:"13px",borderRadius:"12px",border:"none",cursor:"pointer"}},"저장");
-  sv.onclick=()=>{setApiKey(inp.value);ov.remove();alert("API 키가 저장됐어요 ✅");};
-  const cfg=getSharedCfg();
-  const ratioEl=h("input",{type:"number",value:cfg.ratio||50,min:"1",max:"100",style:{width:"100%",border:`1px solid ${C.line}`,borderRadius:"10px",padding:"10px 12px",fontSize:"14px",marginBottom:"10px"}});
-  const budgetEl=h("input",{type:"number",value:cfg.sharedBudget||0,style:{width:"100%",border:`1px solid ${C.line}`,borderRadius:"10px",padding:"10px 12px",fontSize:"14px",marginBottom:"10px"}});
+  ov.onclick=e=>{if(e.target===ov)ov.remove();};
+  const box=h("div",{style:{width:"100%",maxWidth:"400px",background:C.w,borderRadius:"18px",padding:"22px 24px",maxHeight:"88vh",overflowY:"auto"}});
+  const secHd=t=>h("div",{style:{fontSize:"11px",fontWeight:"800",color:C.faint,margin:"18px 0 8px",letterSpacing:".4px"}},t);
+  const inpSt={width:"100%",border:`1px solid ${C.line}`,borderRadius:"10px",padding:"10px 12px",fontSize:"14px",marginBottom:"8px"};
 
-  box.append(
-    h("div",{style:{fontSize:"17px",fontWeight:"800",marginBottom:"6px"}},"⚙️ 설정"),
-    h("div",{style:{fontSize:"13px",fontWeight:"800",color:C.sub,marginBottom:"6px"}},"Anthropic API 키"),
-    h("div",{style:{fontSize:"12px",color:C.faint,marginBottom:"8px",lineHeight:"1.7"}},
-      "스크린샷 AI 분석용. anthropic.com/console → API Keys에서 발급 (무료 크레딧 제공)"
-    ),
-    inp,
-    h("div",{style:{borderTop:`1px solid ${C.line}`,margin:"16px 0"}}),
-    h("div",{style:{fontSize:"13px",fontWeight:"800",color:C.sub,marginBottom:"6px"}},"공용 예산 (원/월)"),
-    budgetEl,
-    h("div",{style:{fontSize:"13px",fontWeight:"800",color:C.sub,marginBottom:"6px"}},"내 공용 부담 비율 (%)"),
-    h("div",{style:{fontSize:"12px",color:C.faint,marginBottom:"6px"}},"공용 지출에서 내가 부담하는 비율 (기본 50%)"),
-    ratioEl,
-    sv,
-    cur?h("button",{style:{width:"100%",marginTop:"8px",fontSize:"13px",color:C.over,cursor:"pointer",padding:"8px"},onclick:()=>{setApiKey("");ov.remove();}},"API 키 삭제"):"",
-    h("button",{style:{width:"100%",marginTop:"6px",fontSize:"13px",color:C.faint,cursor:"pointer",padding:"6px"},onclick:()=>ov.remove()},"취소")
-  );
-  // 알림 설정 버튼
+  // ── 🔔 알림 (최상단) ──
   const pushOn=localStorage.getItem("push_on")==="1"&&(typeof Notification!=="undefined"&&Notification.permission==="granted");
-  const notifBtn=h("button",{style:{width:"100%",marginTop:"14px",fontSize:"13.5px",fontWeight:"700",padding:"12px",borderRadius:"11px",border:`1px solid ${C.brand}`,color:C.brand,background:C.soft,cursor:"pointer",display:"flex",justifyContent:"space-between",alignItems:"center"}},
+  const notifBtn=h("button",{style:{width:"100%",fontSize:"13.5px",fontWeight:"700",padding:"12px",borderRadius:"11px",border:`1px solid ${C.brand}`,color:C.brand,background:C.soft,cursor:"pointer",display:"flex",justifyContent:"space-between",alignItems:"center"}},
     h("span",{},"🔔 알림 설정"),
     h("span",{style:{fontSize:"11.5px",color:pushOn?C.brand:C.sub,fontWeight:"600"}},pushOn?"켜짐 ›":"꺼짐 ›"));
   notifBtn.onclick=()=>{ov.remove();showNotifSettings();};
-  const notifTestBtn="";
-  // 백업 버튼들
-  const exportBtn=h("button",{style:{width:"100%",marginTop:"10px",fontSize:"13.5px",fontWeight:"700",padding:"12px",borderRadius:"11px",border:`1px solid ${C.brand}`,color:C.brand,background:C.soft,cursor:"pointer"}},"⬇️ 전체 데이터 백업 (계좌·저축·대출 포함)");
-  exportBtn.onclick=async()=>{exportBtn.disabled=true;try{await downloadFullBackup(m=>{exportBtn.textContent=m;});}catch(e){exportBtn.textContent="백업 실패: "+(e.message||"오류");}exportBtn.disabled=false;};
 
+  // ── 👥 공용 ──
+  const cfg=getSharedCfg();
+  const budgetEl=h("input",{type:"number",value:cfg.sharedBudget||0,class:"num",style:inpSt});
+  const ratioEl=h("input",{type:"number",value:cfg.ratio||50,min:"1",max:"100",class:"num",style:inpSt});
+  const shSv=h("button",{style:{width:"100%",background:C.brand,color:"#fff",fontSize:"13.5px",fontWeight:"800",padding:"12px",borderRadius:"11px",border:"none",cursor:"pointer",marginTop:"2px"}},"👥 공용 설정 저장");
+  shSv.onclick=async()=>{saveSharedCfg({ratio:Number(ratioEl.value)||50,sharedBudget:Number(budgetEl.value)||0});toast("👥 공용 설정 저장 완료!");ov.remove();try{await loadMonth();if(typeof homeReload==="function")homeReload();}catch{}};
+
+  // ── 💾 데이터 ──
+  const exportBtn=h("button",{style:{width:"100%",fontSize:"13.5px",fontWeight:"700",padding:"12px",borderRadius:"11px",border:`1px solid ${C.brand}`,color:C.brand,background:C.soft,cursor:"pointer"}},"⬇️ 전체 데이터 백업 (계좌·저축·대출 포함)");
+  exportBtn.onclick=async()=>{exportBtn.disabled=true;try{await downloadFullBackup(m=>{exportBtn.textContent=m;});}catch(e){exportBtn.textContent="백업 실패: "+(e.message||"오류");}exportBtn.disabled=false;};
   const csvBtn=h("button",{style:{width:"100%",marginTop:"8px",fontSize:"13.5px",fontWeight:"700",padding:"12px",borderRadius:"11px",border:`1px solid ${C.line}`,color:C.ink,background:C.w,cursor:"pointer"}},"📊 거래내역 CSV 내보내기 (엑셀용)");
   csvBtn.onclick=async()=>{
     csvBtn.textContent="만드는 중…";csvBtn.disabled=true;
@@ -361,10 +347,7 @@ function showApiKeySetting(){
     const rows=txns||[];
     const head=["날짜","계정","유형","카테고리","금액","사용처","메모","결제수단"];
     const csvRows=[head.join(",")];
-    rows.forEach(t=>{
-      const line=[t.date,t.account,t.type,t.category,t.amount,(t.merchant||"").replace(/,/g," "),(t.memo||"").replace(/,/g," "),(t.payment_method||"")].join(",");
-      csvRows.push(line);
-    });
+    rows.forEach(t=>{csvRows.push([t.date,t.account,t.type,t.category,t.amount,(t.merchant||"").replace(/,/g," "),(t.memo||"").replace(/,/g," "),(t.payment_method||"")].join(","));});
     const blob=new Blob(["\uFEFF"+csvRows.join("\n")],{type:"text/csv;charset=utf-8"});
     const url=URL.createObjectURL(blob);
     const a=document.createElement("a");a.href=url;a.download=`거래내역_${td()}.csv`;a.click();
@@ -372,17 +355,40 @@ function showApiKeySetting(){
     csvBtn.textContent=`✅ ${rows.length}건 CSV 완료`;csvBtn.disabled=false;
   };
 
-  box.append(
-    h("div",{style:{borderTop:`1px solid ${C.line}`,margin:"16px 0 0"}}),
-    h("div",{style:{fontSize:"13px",fontWeight:"800",color:C.sub,margin:"12px 0 4px"}},"데이터 백업"),
-    h("div",{style:{fontSize:"12px",color:C.faint,marginBottom:"8px",lineHeight:"1.6"}},"내 돈 데이터는 내 손에 사본을 두는 게 안전해요. 정기적으로 백업하세요."),
-    notifBtn,
-    exportBtn,csvBtn
-  );
+  // ── 🤖 API (맨 아래 · 접어두기 · 삭제는 확인창) ──
+  let apiOpen=false;
+  const inp=h("input",{type:"password",value:cur,placeholder:"sk-ant-api03-…",style:inpSt});
+  const apiSv=h("button",{style:{width:"100%",background:C.ink,color:"#fff",fontSize:"13px",fontWeight:"700",padding:"11px",borderRadius:"10px",border:"none",cursor:"pointer"}},"API 키 저장");
+  apiSv.onclick=()=>{setApiKey(inp.value);toast("🤖 API 키 저장 완료!");};
+  const apiDel=cur?h("button",{style:{width:"100%",marginTop:"6px",fontSize:"12px",color:C.over,cursor:"pointer",padding:"8px",background:"transparent",border:"none"},onclick:()=>{
+    if(!confirm("API 키를 정말 삭제할까요?\n스크린샷 AI 분석 기능이 꺼져요."))return;
+    setApiKey("");toast("API 키를 삭제했어요");ov.remove();
+  }},"API 키 삭제…"):"";
+  const apiBody=h("div",{style:{display:"none",marginTop:"8px",background:"#F9F8F4",borderRadius:"12px",padding:"12px"}},
+    h("div",{style:{fontSize:"11.5px",color:C.faint,marginBottom:"8px",lineHeight:"1.7"}},"카드 명세서 스크린샷 AI 분석용이에요. anthropic.com/console → API Keys에서 발급 (무료 크레딧 제공). 평소엔 건드릴 일 없어요."),
+    inp,apiSv,apiDel);
+  const apiToggle=h("button",{style:{width:"100%",fontSize:"12.5px",fontWeight:"700",padding:"11px",borderRadius:"11px",border:`1px dashed ${C.line}`,color:C.sub,background:C.w,cursor:"pointer",textAlign:"left"}},"🤖 API 키 설정 (고급) ▸");
+  apiToggle.onclick=()=>{apiOpen=!apiOpen;apiBody.style.display=apiOpen?"block":"none";apiToggle.textContent=apiOpen?"🤖 API 키 설정 (고급) ▾":"🤖 API 키 설정 (고급) ▸";};
 
-  // 저장 버튼에 공용설정 저장도 포함
-  sv.onclick=()=>{setApiKey(inp.value);saveSharedCfg({ratio:Number(ratioEl.value)||50,sharedBudget:Number(budgetEl.value)||0});ov.remove();alert("저장됐어요 ✅");};
-  ov.append(box);document.body.append(ov);inp.focus();
+  const closeBtn=h("button",{style:{width:"100%",marginTop:"16px",fontSize:"13px",color:C.faint,cursor:"pointer",padding:"8px",background:"transparent",border:"none"},onclick:()=>ov.remove()},"닫기");
+
+  box.append(
+    h("div",{style:{fontSize:"17px",fontWeight:"800"}},"⚙️ 설정"),
+    secHd("🔔 알림"),
+    notifBtn,
+    secHd("👥 공용 (예산·부담 비율)"),
+    h("div",{style:{fontSize:"11.5px",fontWeight:"700",color:C.sub,marginBottom:"4px"}},"공용 예산 (원/월)"),
+    budgetEl,
+    h("div",{style:{fontSize:"11.5px",fontWeight:"700",color:C.sub,marginBottom:"4px"}},"내 공용 부담 비율 (%)"),
+    ratioEl,
+    shSv,
+    secHd("💾 데이터"),
+    exportBtn,csvBtn,
+    secHd("🤖 고급"),
+    apiToggle,apiBody,
+    closeBtn
+  );
+  ov.append(box);document.body.append(ov);
 }
 
 const W=n=>"₩"+Math.round(Number(n)||0).toLocaleString("ko-KR");
@@ -668,7 +674,7 @@ function renderDash(){
     h("div",{style:{display:"flex",alignItems:"center",justifyContent:"space-between",marginBottom:"16px"}},
       h("div",{style:{display:"flex",alignItems:"center",gap:"9px"}},
         h("span",{style:{fontSize:"21px"}},SN[Number(S.curYm.split("-")[1])]||"📒"),
-        h("div",{},h("div",{style:{fontSize:"11.5px",color:C.sub}},"나의 가계부 · v113"),h("div",{style:{fontSize:"16.5px",fontWeight:"800",letterSpacing:"-.01em",cursor:"pointer",display:"flex",alignItems:"center",gap:"4px"},onclick:()=>showMonthPicker()},yml(S.curYm),h("span",{style:{fontSize:"10px",color:C.faint}},"▾")))
+        h("div",{},h("div",{style:{fontSize:"11.5px",color:C.sub}},"나의 가계부 · v114"),h("div",{style:{fontSize:"16.5px",fontWeight:"800",letterSpacing:"-.01em",cursor:"pointer",display:"flex",alignItems:"center",gap:"4px"},onclick:()=>showMonthPicker()},yml(S.curYm),h("span",{style:{fontSize:"10px",color:C.faint}},"▾")))
       ),
       h("div",{style:{display:"flex",alignItems:"center",gap:"4px",background:C.w,border:`1px solid ${C.line}`,borderRadius:"999px",padding:"3px 4px"}},prevBtn,todayBtn,nextBtn)
     ),
