@@ -688,7 +688,7 @@ function renderDash(){
     h("div",{style:{display:"flex",alignItems:"center",justifyContent:"space-between",marginBottom:"16px"}},
       h("div",{style:{display:"flex",alignItems:"center",gap:"9px"}},
         h("span",{style:{fontSize:"21px"}},SN[Number(S.curYm.split("-")[1])]||"📒"),
-        h("div",{},h("div",{style:{fontSize:"11.5px",color:C.sub}},"🐾 나의 가계부 · v120"),h("div",{style:{fontSize:"16.5px",fontWeight:"800",letterSpacing:"-.01em",cursor:"pointer",display:"flex",alignItems:"center",gap:"4px"},onclick:()=>showMonthPicker()},yml(S.curYm),h("span",{style:{fontSize:"10px",color:C.faint}},"▾")))
+        h("div",{},h("div",{style:{fontSize:"11.5px",color:C.sub}},"🐾 나의 가계부 · v121"),h("div",{style:{fontSize:"16.5px",fontWeight:"800",letterSpacing:"-.01em",cursor:"pointer",display:"flex",alignItems:"center",gap:"4px"},onclick:()=>showMonthPicker()},yml(S.curYm),h("span",{style:{fontSize:"10px",color:C.faint}},"▾")))
       ),
       h("div",{style:{display:"flex",alignItems:"center",gap:"4px",background:C.w,border:`1px solid ${C.line}`,borderRadius:"999px",padding:"3px 4px"}},prevBtn,todayBtn,nextBtn)
     ),
@@ -5271,7 +5271,8 @@ function showAdd(preset){
   const mSel=h("select",{style:{width:"100%",border:`1px solid ${C.line}`,borderRadius:"10px",padding:"11px 12px",fontSize:"14px",color:C.ink,background:C.w,display:"none"}});
   ["2","3","4","5","6","9","12","18","24"].forEach(m=>mSel.append(h("option",{value:m},m+"개월")));
   const mHint=h("div",{style:{fontSize:"11.5px",color:C.sub,marginTop:"5px",display:"none"}},"입력 금액을 개월수로 나눠 자동 생성돼요.");
-  typ.onchange=()=>{const on=typ.value==="소비(할부)";mSel.style.display=on?"":"none";mHint.style.display=on?"":"none";};
+  const updMHint=()=>{const on=typ.value==="소비(할부)";mSel.style.display=on?"":"none";mHint.style.display=on?"":"none";if(on)mHint.textContent=selAcc==="공용"?"🤝 공용 할부는 산 날짜에 전액 1건으로 기록돼요 (카드값은 개인 청구에서 처리).":"입력 금액을 개월수로 나눠 카드 결제일에 자동 생성돼요.";};
+  typ.onchange=updMHint;
   const autoHint=h("div",{style:{fontSize:"11.5px",color:C.brand,marginTop:"5px",fontWeight:"600",display:"none"}});
   const mer=h("input",{type:"text",placeholder:"예: 트레이더스",style:{width:"100%",border:`1px solid ${C.line}`,borderRadius:"10px",padding:"11px 12px",fontSize:"14px"}});
   mer.oninput=()=>{
@@ -5286,7 +5287,7 @@ function showAdd(preset){
   const dt=h("input",{type:"date",value:dft,style:{width:"100%",border:`1px solid ${C.line}`,borderRadius:"10px",padding:"11px 12px",fontSize:"14px"}});
   const mo=h("input",{type:"text",placeholder:"계란 우유 라면…",style:{width:"100%",border:`1px solid ${C.line}`,borderRadius:"10px",padding:"11px 12px",fontSize:"14px"}});
   const accRow=h("div",{style:{display:"flex",gap:"8px"}});
-  const drawAcc=()=>{accRow.innerHTML="";["개인","공용"].forEach(a=>{const b=h("button",{style:{flex:"1",fontSize:"14px",fontWeight:"600",padding:"11px",borderRadius:"10px",border:`1px solid ${selAcc===a?C.brand:C.line}`,background:selAcc===a?C.soft:C.w,color:selAcc===a?C.brand:C.sub,cursor:"pointer"},onclick:()=>{selAcc=a;drawAcc();}},a);accRow.append(b);});};
+  const drawAcc=()=>{accRow.innerHTML="";["개인","공용"].forEach(a=>{const b=h("button",{style:{flex:"1",fontSize:"14px",fontWeight:"600",padding:"11px",borderRadius:"10px",border:`1px solid ${selAcc===a?C.brand:C.line}`,background:selAcc===a?C.soft:C.w,color:selAcc===a?C.brand:C.sub,cursor:"pointer"},onclick:()=>{selAcc=a;drawAcc();if(typeof updMHint==="function")updMHint();}},a);accRow.append(b);});};
   drawAcc();
   const catWrap=h("div",{style:{display:"flex",flexWrap:"wrap",gap:"7px"}});
   const drawCats=()=>{catWrap.innerHTML="";CATS.forEach(c=>{const b=h("button",{style:{fontSize:"12.5px",padding:"7px 11px",borderRadius:"999px",border:`1px solid ${selCat===c.n?c.c:C.line}`,background:selCat===c.n?c.c+"1A":C.w,color:selCat===c.n?c.c:C.ink,fontWeight:selCat===c.n?"700":"500",cursor:"pointer"},onclick:()=>{selCat=c.n;drawCats();}},c.i+" "+c.n);catWrap.append(b);});};
@@ -5317,7 +5318,11 @@ function showAdd(preset){
     const uid=()=>crypto.randomUUID?.()??("r"+Date.now()+Math.random().toString(36).slice(2));
     const hid=selAcc==="공용"?S.householdId:null;
     const pm=selPay;
-    if(n>1){const gid=uid(),per=Math.round(a/n);for(let i=0;i<n;i++){const base=ym(dt.value);const d=shYm(base,i)+"-"+dt.value.slice(8);rows.push({user_id:S.session.user.id,household_id:hid,date:d,account:selAcc,type:typ.value,amount:per,category:selCat,merchant:mer.value.trim()||null,memo:mo.value.trim()||null,payment_method:pm,installment_group_id:gid,installment_no:i+1,installment_total:n});}}
+    if(n>1&&selAcc==="공용"){
+      // 공용 할부는 '산 날짜'에 전액 1건으로 인식 (무조건). 할부는 결제자 카드 사정 → 개인 청구에서 별도 처리
+      const im=(mo.value.trim()?mo.value.trim()+" ":"")+`(${n}개월 할부·${pm||"카드"} 결제 → 산 날 일괄인식) #할부통합`;
+      rows.push({user_id:S.session.user.id,household_id:hid,date:dt.value,account:"공용",type:"소비(일시불)",amount:a,category:selCat,merchant:mer.value.trim()||null,memo:im,payment_method:pm});
+    } else if(n>1){const gid=uid(),per=Math.round(a/n);for(let i=0;i<n;i++){const base=ym(dt.value);const d=shYm(base,i)+"-"+dt.value.slice(8);rows.push({user_id:S.session.user.id,household_id:hid,date:d,account:selAcc,type:typ.value,amount:per,category:selCat,merchant:mer.value.trim()||null,memo:mo.value.trim()||null,payment_method:pm,installment_group_id:gid,installment_no:i+1,installment_total:n});}}
     else rows.push({user_id:S.session.user.id,household_id:hid,date:dt.value,account:selAcc,type:typ.value,amount:a,category:selCat,merchant:mer.value.trim()||null,memo:mo.value.trim()||null,payment_method:pm});
     if(dutchOn&&n===1){
       const{data:ins,error}=await sb.from("transactions").insert(rows[0]).select().single();
