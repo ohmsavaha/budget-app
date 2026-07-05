@@ -688,7 +688,7 @@ function renderDash(){
     h("div",{style:{display:"flex",alignItems:"center",justifyContent:"space-between",marginBottom:"16px"}},
       h("div",{style:{display:"flex",alignItems:"center",gap:"9px"}},
         h("span",{style:{fontSize:"21px"}},SN[Number(S.curYm.split("-")[1])]||"📒"),
-        h("div",{},h("div",{style:{fontSize:"11.5px",color:C.sub}},"🐾 나의 가계부 · v121"),h("div",{style:{fontSize:"16.5px",fontWeight:"800",letterSpacing:"-.01em",cursor:"pointer",display:"flex",alignItems:"center",gap:"4px"},onclick:()=>showMonthPicker()},yml(S.curYm),h("span",{style:{fontSize:"10px",color:C.faint}},"▾")))
+        h("div",{},h("div",{style:{fontSize:"11.5px",color:C.sub}},"🐾 나의 가계부 · v122"),h("div",{style:{fontSize:"16.5px",fontWeight:"800",letterSpacing:"-.01em",cursor:"pointer",display:"flex",alignItems:"center",gap:"4px"},onclick:()=>showMonthPicker()},yml(S.curYm),h("span",{style:{fontSize:"10px",color:C.faint}},"▾")))
       ),
       h("div",{style:{display:"flex",alignItems:"center",gap:"4px",background:C.w,border:`1px solid ${C.line}`,borderRadius:"999px",padding:"3px 4px"}},prevBtn,todayBtn,nextBtn)
     ),
@@ -3192,28 +3192,45 @@ function showEditTxn(t, onDone){
     if(kindOf(t.type)!=="spend"||isInternalTransfer(t))return;
     const{data:dm}=await sb.from("dutch_splits").select("id").eq("transaction_id",t.id).limit(1);
     if(dm&&dm.length)return;
+    const total=Number(t.amount)||0;
+    const isShared=t.account==="공용";
     let openM=false;
-    const nEl=h("input",{type:"number",value:"2",min:"2",class:"num",style:{width:"70px",border:`1px solid ${C.line}`,borderRadius:"9px",padding:"9px 10px",fontSize:"13.5px",textAlign:"center"}});
     const rEl=h("input",{type:"number",class:"num",style:{flex:"1",minWidth:"0",border:`1px solid ${C.line}`,borderRadius:"9px",padding:"9px 11px",fontSize:"13.5px"}});
-    const calc=()=>{const n=Math.max(2,Number(nEl.value)||2);rEl.value=Math.round((Number(t.amount)||0)*(n-1)/n);};calc();
-    nEl.oninput=calc;
+    rEl.value=isShared?total:Math.round(total/2);
     const mk=h("button",{style:{width:"100%",marginTop:"8px",fontSize:"13px",fontWeight:"800",padding:"11px",borderRadius:"10px",border:"none",background:C.brand,color:"#fff",cursor:"pointer"},onclick:async()=>{
-      const recv=Number(rEl.value)||0;if(!recv){rEl.focus();return;}
-      const total=Number(t.amount)||0;
-      const{error}=await sb.from("dutch_splits").insert({user_id:S.session.user.id,household_id:S.householdId||null,date:t.date||td(),place:t.merchant||t.category||"나눠내기",total,my_share:Math.max(0,total-recv),to_receive:recv,is_shared:t.account==="공용",received:false,transaction_id:t.id});
+      const recv=Number(rEl.value)||0;if(recv<=0){rEl.focus();return;}
+      const{error}=await sb.from("dutch_splits").insert({user_id:S.session.user.id,household_id:S.householdId||null,date:t.date||td(),place:t.merchant||t.category||(isShared?"대신결제":"나눠내기"),total,my_share:Math.max(0,total-recv),to_receive:recv,is_shared:isShared,received:false,transaction_id:t.id});
       if(error){toast("실패: "+error.message,false);return;}
       ov.remove();toast(`💸 받을 돈 ${W(recv)} 걸었어요!`);
       try{const{data:ds}=await sb.from("dutch_splits").select("*").eq("received",false);S.pendingSplits=ds||[];}catch{}
       if(onDone)onDone();
     }},"받을 돈 걸기");
-    const bodyM=h("div",{style:{display:"none",marginTop:"8px",background:"#F0F7F3",borderRadius:"11px",padding:"11px 12px"}},
-      h("div",{style:{display:"flex",gap:"8px",alignItems:"center",marginBottom:"4px"}},
-        h("span",{style:{fontSize:"12px",fontWeight:"700",color:C.sub,flexShrink:"0"}},"인원"),nEl,
-        h("span",{style:{fontSize:"12px",fontWeight:"700",color:C.sub,flexShrink:"0"}},"받을 돈"),rEl),
-      h("div",{style:{fontSize:"10.5px",color:C.faint,lineHeight:"1.5",margin:"6px 0 2px"}},"내 카드로 선결제한 걸 나눠 받는 기능이에요. 받으면 '정산환급'으로 내 소비에서 자동 차감돼요."),
-      mk);
-    const tg=h("button",{style:{width:"100%",fontSize:"12.5px",fontWeight:"700",padding:"10px",borderRadius:"10px",border:`1px dashed ${C.line}`,background:C.w,color:C.sub,cursor:"pointer",textAlign:"left"}},"💸 나눠 받기 (1/n 선결제 정산) ▸");
-    tg.onclick=()=>{openM=!openM;bodyM.style.display=openM?"block":"none";tg.textContent=openM?"💸 나눠 받기 (1/n 선결제 정산) ▾":"💸 나눠 받기 (1/n 선결제 정산) ▸";};
+    let bodyM,tg;
+    if(isShared){
+      // 🤝 공용 물건을 내 카드로 대신 결제 → 전액/절반/직접 돌려받기
+      const preset=(lb,v)=>h("button",{style:{flex:"1",fontSize:"12.5px",fontWeight:"800",padding:"9px",borderRadius:"9px",border:`1px solid ${C.brand}`,background:C.w,color:C.brand,cursor:"pointer"},onclick:()=>{rEl.value=v;}},lb);
+      bodyM=h("div",{style:{display:"none",marginTop:"8px",background:"#F0F7F3",borderRadius:"11px",padding:"11px 12px"}},
+        h("div",{style:{fontSize:"11px",fontWeight:"700",color:C.sub,marginBottom:"6px"}},"돌려받을 금액을 고르거나 직접 입력"),
+        h("div",{style:{display:"flex",gap:"6px",marginBottom:"8px"}},preset("전액",total),preset("절반",Math.round(total/2))),
+        h("div",{style:{display:"flex",gap:"8px",alignItems:"center"}},h("span",{style:{fontSize:"12px",fontWeight:"700",color:C.sub,flexShrink:"0"}},"받을 돈"),rEl,h("span",{style:{fontSize:"11px",color:C.faint,flexShrink:"0"}},"원")),
+        h("div",{style:{fontSize:"10.5px",color:C.faint,lineHeight:"1.55",margin:"7px 0 2px"}},"내 카드로 대신 낸 공용 물건을 공용통장·다혜한테 돌려받을 때 써요. 받으면 내 계좌 잔액이 늘고, 공용 지출은 전액 그대로 유지돼요."),
+        mk);
+      tg=h("button",{style:{width:"100%",fontSize:"12.5px",fontWeight:"700",padding:"10px",borderRadius:"10px",border:`1px dashed ${C.brand}`,background:"#F0F7F3",color:C.brand,cursor:"pointer",textAlign:"left"}},"💸 내가 대신 냈어요 — 정산받기 ▸");
+      tg.onclick=()=>{openM=!openM;bodyM.style.display=openM?"block":"none";tg.textContent=openM?"💸 내가 대신 냈어요 — 정산받기 ▾":"💸 내가 대신 냈어요 — 정산받기 ▸";};
+    }else{
+      // 👤 개인 더치페이 1/n (기존)
+      const nEl=h("input",{type:"number",value:"2",min:"2",class:"num",style:{width:"70px",border:`1px solid ${C.line}`,borderRadius:"9px",padding:"9px 10px",fontSize:"13.5px",textAlign:"center"}});
+      const calc=()=>{const n=Math.max(2,Number(nEl.value)||2);rEl.value=Math.round(total*(n-1)/n);};calc();
+      nEl.oninput=calc;
+      bodyM=h("div",{style:{display:"none",marginTop:"8px",background:"#F0F7F3",borderRadius:"11px",padding:"11px 12px"}},
+        h("div",{style:{display:"flex",gap:"8px",alignItems:"center",marginBottom:"4px"}},
+          h("span",{style:{fontSize:"12px",fontWeight:"700",color:C.sub,flexShrink:"0"}},"인원"),nEl,
+          h("span",{style:{fontSize:"12px",fontWeight:"700",color:C.sub,flexShrink:"0"}},"받을 돈"),rEl),
+        h("div",{style:{fontSize:"10.5px",color:C.faint,lineHeight:"1.5",margin:"6px 0 2px"}},"내 카드로 선결제한 걸 나눠 받는 기능이에요. 받으면 '정산환급'으로 내 소비에서 자동 차감돼요."),
+        mk);
+      tg=h("button",{style:{width:"100%",fontSize:"12.5px",fontWeight:"700",padding:"10px",borderRadius:"10px",border:`1px dashed ${C.line}`,background:C.w,color:C.sub,cursor:"pointer",textAlign:"left"}},"💸 나눠 받기 (1/n 선결제 정산) ▸");
+      tg.onclick=()=>{openM=!openM;bodyM.style.display=openM?"block":"none";tg.textContent=openM?"💸 나눠 받기 (1/n 선결제 정산) ▾":"💸 나눠 받기 (1/n 선결제 정산) ▸";};
+    }
     dutchMakeSlot.append(h("div",{style:{margin:"0 0 12px"}},tg,bodyM));
   }catch(e){}})();
   // 더치페이 받음 처리 (연결된 미수령 건)
@@ -7558,8 +7575,12 @@ function showDutchReceive(d){
     const{error:e1}=await sb.from("dutch_splits").update({received:true,received_account_id:selAccId}).eq("id",d.id);
     // 2) 계좌 잔액 +받을돈
     const{error:e2}=await sb.from("accounts").update({balance:Number(acc.balance||0)+Number(d.to_receive)}).eq("id",selAccId);
-    // 3) 정산환급 기록 → 내 소비가 내 몫으로 줄어듦
-    const{error:e3}=await sb.from("transactions").insert({user_id:S.session.user.id,household_id:d.is_shared?S.householdId:null,date:td(),account:d.is_shared?"공용":"개인",type:"정산환급",amount:Number(d.to_receive),category:"정산환급",merchant:(d.place||"더치페이")+" 정산받음",memo:"더치페이 환급"});
+    // 3) 정산 기록. 공용 대신결제 = 이체(내 계좌로 환급, 공용 지출은 전액 유지). 개인 더치페이 = 정산환급(내 소비 차감).
+    const{error:e3}=await sb.from("transactions").insert(
+      d.is_shared
+        ? {user_id:S.session.user.id,household_id:null,date:td(),account:"개인",type:"이체",amount:Number(d.to_receive),category:"금융/이체",merchant:(d.place||"공용")+" 대신결제 정산받음",memo:"공용 대신결제 환급 #이체"}
+        : {user_id:S.session.user.id,household_id:null,date:td(),account:"개인",type:"정산환급",amount:Number(d.to_receive),category:"정산환급",merchant:(d.place||"더치페이")+" 정산받음",memo:"더치페이 환급"}
+    );
     if(e1||e2||e3){alert("처리 실패: "+((e1||e2||e3).message));sv.disabled=false;sv.textContent="받음 처리하기";return;}
     ov.remove();reloadAssets();
   };
@@ -7567,7 +7588,7 @@ function showDutchReceive(d){
     h("div",{style:{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:"6px"}},h("span",{style:{fontSize:"17px",fontWeight:"800"}},"📥 받음 처리"),h("button",{style:{fontSize:"20px",color:C.sub},onclick:()=>ov.remove()},"✕")),
     h("div",{style:{background:C.soft,borderRadius:"12px",padding:"13px 15px",marginBottom:"16px",fontSize:"13px",lineHeight:"1.7"}},h("div",{style:{fontWeight:"700",marginBottom:"4px"}},d.place||"나눠내기"),`받을 돈 `,h("span",{class:"num",style:{fontWeight:"800",color:C.brand}},W(d.to_receive)),`이 들어왔어요. 어느 계좌로 받았나요?`),
     lbl("받은 계좌"),accWrap,
-    h("div",{style:{fontSize:"11.5px",color:C.faint,marginTop:"10px",lineHeight:"1.6"}},"선택한 계좌 잔액이 늘어나고, 이번 달 소비에서 이 금액만큼 빠져서 '내 몫'만 남아요."),
+    h("div",{style:{fontSize:"11.5px",color:C.faint,marginTop:"10px",lineHeight:"1.6"}},d.is_shared?"선택한 계좌 잔액이 이 금액만큼 늘어나요. 공용 지출은 전액 그대로 유지돼요 (대신 낸 돈을 돌려받는 것뿐이에요).":"선택한 계좌 잔액이 늘어나고, 이번 달 소비에서 이 금액만큼 빠져서 '내 몫'만 남아요."),
     sv
   );
   ov.append(sh);document.body.append(ov);
