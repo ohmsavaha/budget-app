@@ -688,7 +688,7 @@ function renderDash(){
     h("div",{style:{display:"flex",alignItems:"center",justifyContent:"space-between",marginBottom:"16px"}},
       h("div",{style:{display:"flex",alignItems:"center",gap:"9px"}},
         h("span",{style:{fontSize:"21px"}},SN[Number(S.curYm.split("-")[1])]||"📒"),
-        h("div",{},h("div",{style:{fontSize:"11.5px",color:C.sub}},"🐾 나의 가계부 · v122"),h("div",{style:{fontSize:"16.5px",fontWeight:"800",letterSpacing:"-.01em",cursor:"pointer",display:"flex",alignItems:"center",gap:"4px"},onclick:()=>showMonthPicker()},yml(S.curYm),h("span",{style:{fontSize:"10px",color:C.faint}},"▾")))
+        h("div",{},h("div",{style:{fontSize:"11.5px",color:C.sub}},"🐾 나의 가계부 · v123"),h("div",{style:{fontSize:"16.5px",fontWeight:"800",letterSpacing:"-.01em",cursor:"pointer",display:"flex",alignItems:"center",gap:"4px"},onclick:()=>showMonthPicker()},yml(S.curYm),h("span",{style:{fontSize:"10px",color:C.faint}},"▾")))
       ),
       h("div",{style:{display:"flex",alignItems:"center",gap:"4px",background:C.w,border:`1px solid ${C.line}`,borderRadius:"999px",padding:"3px 4px"}},prevBtn,todayBtn,nextBtn)
     ),
@@ -1116,7 +1116,7 @@ function buildCardSpend(){
   const rows=Object.entries(byCard).sort((a,b)=>b[1]-a[1]);
   if(!rows.length)return null;
   const tot=rows.reduce((x,[,v])=>x+v,0);
-  const s=sec("💳 이번 달 결제수단별 사용액",`카드·현금·계좌 ${rows.length}개`);
+  const s=sec("💳 이번 달 결제수단별 사용액",h("button",{style:{fontSize:"11.5px",fontWeight:"700",color:C.brand,background:C.soft,border:"none",borderRadius:"8px",padding:"5px 9px",cursor:"pointer"},onclick:()=>showCardGroupManager(()=>{const ct=document.getElementById("ct");if(ct&&S.tab==="spend"){ct.innerHTML="";buildSpend().forEach(n=>ct.append(n));}})},"🔧 카드 묶기"));
   const PALETTE=["#2E7D50","#C2553D","#D2A24C","#5B7FB0","#9B7BD4","#7BA88E","#B8AE9C"];
   const top=rows.slice(0,6),oth=rows.slice(6).reduce((a,[,v])=>a+v,0);
   const segs=[...top.map(([pm,v],i)=>({n:pm,v,c:PALETTE[i%PALETTE.length]})),...(oth>0?[{n:"기타",v:oth,c:"#CFC7B8"}]:[])];
@@ -1613,6 +1613,7 @@ function buildRecent(){
       h("div",{style:{flex:"1",minWidth:"0"}},
         h("div",{style:{fontSize:"14px",fontWeight:"600",whiteSpace:"nowrap",overflow:"hidden",textOverflow:"ellipsis",display:"flex",alignItems:"center",gap:"6px"}},
           h("span",{style:{whiteSpace:"nowrap",overflow:"hidden",textOverflow:"ellipsis"}},(t.merchant||t.category||t.type)+(t.installment_total?` (${t.installment_no}/${t.installment_total})`:"")),
+          (t.account==="공용"&&k==="spend"&&!isTr)?h("span",{title:"공용 소비예요. 내 실부담은 절반(50%)만 잡혀요",style:{flexShrink:"0",fontSize:"10px",fontWeight:"800",color:"#1B7B7B",background:"#E3F2EF",borderRadius:"5px",padding:"2px 6px",cursor:"help"}},"공용"):"",
           isTr?h("span",{title:t.type==="카드대금"?"카드대금은 이미 기록한 소비를 갚는 것이라, 이중계상을 막기 위해 지출에 다시 세지 않아요":"내 계좌 간 이동이라 지출·수입이 아니에요",style:{flexShrink:"0",fontSize:"10px",fontWeight:"700",color:C.sub,background:"#EFEDE7",borderRadius:"5px",padding:"2px 6px",cursor:"help"}},t.type==="카드대금"?"카드값":"이체"):(isFuture?h("span",{style:{flexShrink:"0",fontSize:"10px",fontWeight:"800",color:"#9A6B00",background:"#FFF3D6",borderRadius:"5px",padding:"2px 6px"}},"예정"):"")),
         h("div",{style:{fontSize:"11.5px",color:C.sub,marginTop:"1px"}},`${(t.date||"").slice(5)} · ${t.account} · ${t.type}${getOrigDate(t)?"":(t.memo?` · ${t.memo}`:"")}`,getOrigDate(t)?h("span",{style:{color:C.faint}},` · 🗓️ ${getOrigDate(t).slice(5).replace("-","/")} 구매`):"")
       ),
@@ -5731,6 +5732,37 @@ function cardGroupOf(pm){
   if(!isCreditCard(pm))return pm; // 계좌·페이·체크는 그대로
   for(const[re,g]of CARD_ISSUERS){if(re.test(pm))return g;}
   return pm;
+}
+// 카드 수동 묶기 관리 (단독 카드도 카드사로 합치기)
+function showCardGroupManager(onDone){
+  const pms=[...new Set([...(S.txns||[]).map(t=>t.payment_method),...(S.accounts||[]).map(a=>a.name)].filter(Boolean))].filter(pm=>isCreditCard(pm)).sort();
+  const ov=h("div",{style:{position:"fixed",inset:"0",background:"rgba(40,37,31,.42)",display:"flex",alignItems:"center",justifyContent:"center",padding:"16px",zIndex:"62"}});
+  const sh=h("div",{style:{width:"100%",maxWidth:"460px",background:C.w,borderRadius:"20px",padding:"18px 20px 24px",maxHeight:"84vh",overflowY:"auto"}});
+  const draw=()=>{
+    sh.innerHTML="";
+    sh.append(h("div",{style:{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:"6px"}},
+      h("span",{style:{fontSize:"16px",fontWeight:"800"}},"💳 카드 묶기"),
+      h("button",{style:{fontSize:"20px",color:C.sub,background:"transparent",border:"none",cursor:"pointer"},onclick:()=>{ov.remove();if(onDone)onDone();}},"✕")));
+    sh.append(h("div",{style:{fontSize:"11.5px",color:C.sub,lineHeight:"1.6",marginBottom:"12px"}},"세부 카드(로카·하이패스·복지카드 등)를 실제 카드사로 합쳐서 봐요. 청구·사용액이 카드사 단위로 묶여요."));
+    const groups=[...new Set([...pms.map(cardGroupOf),"우리카드","롯데카드","삼성카드","KB국민카드","현대카드","신한카드","하나카드","NH농협카드"])];
+    if(!pms.length)sh.append(empty("이번 달 사용한 카드가 없어요."));
+    pms.forEach(pm=>{
+      const cur=cardGroupOf(pm);const merged=cur!==pm;
+      const sel=h("select",{style:{fontSize:"12px",border:`1px solid ${C.line}`,borderRadius:"8px",padding:"6px 7px",background:C.w,maxWidth:"150px",flexShrink:"0"}});
+      [pm,...groups.filter(g=>g!==pm)].forEach(g=>{const o=h("option",{value:g},g===pm?`${g} (따로)`:g);if(cur===g)o.selected=true;sel.append(o);});
+      sel.append(h("option",{value:"__new"},"➕ 새 카드사명…"));
+      sel.onchange=()=>{let v=sel.value;if(v==="__new"){v=(prompt("합칠 카드사 이름 (예: 우리카드)","")||"").trim();if(!v){sel.value=cur;return;}}setCardGroup(pm,v===pm?"":v);toast(`💳 ${pm.length>10?pm.slice(0,10)+"…":pm} → ${v}`);draw();};
+      sh.append(h("div",{style:{display:"flex",alignItems:"center",gap:"8px",padding:"9px 2px",borderBottom:`1px solid ${C.line}`}},
+        h("div",{style:{flex:"1",minWidth:"0"}},
+          h("div",{style:{fontSize:"12.5px",fontWeight:"600",whiteSpace:"nowrap",overflow:"hidden",textOverflow:"ellipsis"}},pm),
+          merged?h("div",{style:{fontSize:"10.5px",color:C.brand,marginTop:"1px"}},`→ ${cur}로 묶임`):h("div",{style:{fontSize:"10.5px",color:C.faint,marginTop:"1px"}},"따로 표시")),
+        sel));
+    });
+    sh.append(h("button",{style:{width:"100%",marginTop:"14px",fontSize:"13px",fontWeight:"700",padding:"12px",borderRadius:"11px",border:"none",background:C.brand,color:"#fff",cursor:"pointer"},onclick:()=>{ov.remove();if(onDone)onDone();}},"완료"));
+  };
+  draw();
+  ov.onclick=e=>{if(e.target===ov){ov.remove();if(onDone)onDone();}};
+  ov.append(sh);document.body.append(ov);
 }
 window.addEventListener("offline",()=>{try{toast("📴 오프라인이에요 — 조회는 되고, 저장은 연결 후에!",false);}catch{}});
 window.addEventListener("online",()=>{try{toast("✅ 다시 온라인이에요");}catch{}});
