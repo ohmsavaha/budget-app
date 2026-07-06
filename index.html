@@ -365,6 +365,7 @@ function showApiKeySetting(){
     URL.revokeObjectURL(url);
     csvBtn.textContent=`✅ ${rows.length}건 CSV 완료`;csvBtn.disabled=false;
   };
+  const dupBtn=h("button",{style:{width:"100%",marginTop:"8px",fontSize:"13.5px",fontWeight:"700",padding:"12px",borderRadius:"11px",border:`1px solid ${C.warn}`,color:C.warn,background:"#FFFBEE",cursor:"pointer"},onclick:()=>{ov.remove();showDupCleaner();}},"🧹 중복 거래 정리 (뱅샐 중복 찾기)");
 
   // ── 🤖 API (맨 아래 · 접어두기 · 삭제는 확인창) ──
   let apiOpen=false;
@@ -394,7 +395,7 @@ function showApiKeySetting(){
     ratioEl,
     shSv,
     secHd("💾 데이터"),
-    exportBtn,csvBtn,
+    exportBtn,csvBtn,dupBtn,
     secHd("🤖 고급"),
     apiToggle,apiBody,
     closeBtn
@@ -688,7 +689,7 @@ function renderDash(){
     h("div",{style:{display:"flex",alignItems:"center",justifyContent:"space-between",marginBottom:"16px"}},
       h("div",{style:{display:"flex",alignItems:"center",gap:"9px"}},
         h("span",{style:{fontSize:"21px"}},SN[Number(S.curYm.split("-")[1])]||"📒"),
-        h("div",{},h("div",{style:{fontSize:"11.5px",color:C.sub}},"🐾 나의 가계부 · v123"),h("div",{style:{fontSize:"16.5px",fontWeight:"800",letterSpacing:"-.01em",cursor:"pointer",display:"flex",alignItems:"center",gap:"4px"},onclick:()=>showMonthPicker()},yml(S.curYm),h("span",{style:{fontSize:"10px",color:C.faint}},"▾")))
+        h("div",{},h("div",{style:{fontSize:"11.5px",color:C.sub}},"🐾 나의 가계부 · v124"),h("div",{style:{fontSize:"16.5px",fontWeight:"800",letterSpacing:"-.01em",cursor:"pointer",display:"flex",alignItems:"center",gap:"4px"},onclick:()=>showMonthPicker()},yml(S.curYm),h("span",{style:{fontSize:"10px",color:C.faint}},"▾")))
       ),
       h("div",{style:{display:"flex",alignItems:"center",gap:"4px",background:C.w,border:`1px solid ${C.line}`,borderRadius:"999px",padding:"3px 4px"}},prevBtn,todayBtn,nextBtn)
     ),
@@ -765,6 +766,63 @@ function calcStatsFor(txns){
 }
 
 // ── HOME ──
+// ── 🧹 중복 거래 정리 (같은 날·금액·가맹점·계정이 여러 번) ──
+function showDupCleaner(){
+  const ov=h("div",{style:{position:"fixed",inset:"0",background:"rgba(40,37,31,.42)",display:"flex",alignItems:"center",justifyContent:"center",padding:"16px",zIndex:"70"}});
+  const sh=h("div",{style:{width:"100%",maxWidth:"560px",background:C.w,borderRadius:"20px",maxHeight:"88vh",display:"flex",flexDirection:"column",overflow:"hidden"}});
+  let touched=false;
+  sh.append(h("div",{style:{display:"flex",justifyContent:"space-between",alignItems:"center",padding:"16px 20px 8px",flexShrink:"0"}},
+    h("div",{},h("div",{style:{fontSize:"16px",fontWeight:"800"}},"🧹 중복 거래 정리"),h("div",{style:{fontSize:"11px",color:C.sub,marginTop:"2px"}},"같은 날·같은 금액·같은 가맹점")),
+    h("button",{style:{fontSize:"22px",color:C.sub,cursor:"pointer",background:"transparent",border:"none"},onclick:async()=>{ov.remove();if(touched){await loadMonth();homeReload();}}},"✕")));
+  const body=h("div",{style:{flex:"1",overflowY:"auto",padding:"4px 18px 22px"}});
+  sh.append(body);body.append(h("div",{class:"center"},h("div",{class:"spin"})));
+  ov.append(sh);document.body.append(ov);
+  let groups=[];
+  const load=async()=>{
+    let rows=[],from=0;
+    try{while(true){const{data,error}=await sb.from("transactions").select("id,date,amount,merchant,payment_method,account,type,memo").in("type",["소비(일시불)","소비(할부)"]).range(from,from+999);if(error)throw error;if(!data||!data.length)break;rows=rows.concat(data);if(data.length<1000)break;from+=1000;}}
+    catch(e){body.innerHTML="";body.append(empty("불러오기 실패: "+(e.message||"오류")));return;}
+    const g={};rows.forEach(t=>{const k=[t.date,t.amount,(t.merchant||"").trim(),t.account].join("|");(g[k]=g[k]||[]).push(t);});
+    groups=Object.values(g).filter(rs=>rs.length>=2).sort((a,b)=>Number(b[0].amount)-Number(a[0].amount));
+    groups.forEach(rs=>rs.sort((a,b)=>((b.memo?2:0)+(/taptap|LOCA|로카/i.test(b.payment_method||"")?0:1))-((a.memo?2:0)+(/taptap|LOCA|로카/i.test(a.payment_method||"")?0:1))));
+    draw();
+  };
+  const draw=()=>{
+    body.innerHTML="";
+    if(!groups.length){body.append(empty("중복 의심 거래가 없어요! 👍\n(같은 날·같은 금액·같은 가맹점이 두 번 이상인 게 없어요)"));return;}
+    const extra=groups.reduce((s,rs)=>s+rs.length-1,0);
+    const won=groups.reduce((s,rs)=>s+(rs.length-1)*Number(rs[0].amount),0);
+    body.append(h("div",{style:{background:"#FFFBEE",border:`1px solid ${C.warn}`,borderRadius:"12px",padding:"12px 14px",marginBottom:"12px",fontSize:"12px",lineHeight:"1.65",color:"#8A6D1B"}},
+      h("div",{style:{fontWeight:"800",marginBottom:"3px"}},`${groups.length}개 그룹 · 중복 의심 ${extra}건 (최대 ${W(won)})`),
+      "⚠️ 진짜 중복이면 삭제하고, 실제로 같은 날 두 번 쓴 거면 그냥 두세요. ",h("b",{},"'유지' 1건은 남고")," 나머지만 지워져요."));
+    groups.forEach(rs=>{
+      const gEl=h("div",{style:{border:`1px solid ${C.line}`,borderRadius:"12px",padding:"10px 12px",marginBottom:"9px"}});
+      gEl.append(h("div",{style:{fontSize:"12.5px",fontWeight:"800",marginBottom:"6px"}},`${(rs[0].date||"").slice(5)} · ${W(rs[0].amount)} · ${rs[0].merchant||"?"}`,h("span",{style:{fontSize:"10.5px",fontWeight:"700",color:rs[0].account==="공용"?"#1B7B7B":C.sub,marginLeft:"6px"}},rs[0].account),h("span",{style:{fontSize:"10.5px",color:C.faint,marginLeft:"6px"}},`${rs.length}개`)));
+      rs.forEach((t,i)=>{
+        const rowEl=h("div",{style:{display:"flex",alignItems:"center",gap:"8px",padding:"6px 0",borderTop:i?`1px solid ${C.line}`:"none"}},
+          h("div",{style:{flex:"1",minWidth:"0"}},h("div",{style:{fontSize:"11.5px",whiteSpace:"nowrap",overflow:"hidden",textOverflow:"ellipsis"}},t.payment_method||"결제수단?",t.memo?h("span",{style:{color:C.faint}},` · ${t.memo}`):"")),
+          i===0?h("span",{style:{fontSize:"10.5px",fontWeight:"800",color:C.brand,background:C.soft,borderRadius:"6px",padding:"3px 8px",flexShrink:"0"}},"유지")
+               :h("button",{style:{fontSize:"11.5px",fontWeight:"700",color:C.over,background:"#FBEDE9",border:"none",borderRadius:"7px",padding:"5px 11px",cursor:"pointer",flexShrink:"0"},onclick:async(ev)=>{
+                  const btn=ev.currentTarget;btn.textContent="…";btn.disabled=true;
+                  const{error}=await sb.from("transactions").delete().eq("id",t.id);
+                  if(error){btn.textContent="삭제";btn.disabled=false;toast("삭제 실패: "+error.message,false);return;}
+                  touched=true;const gi=groups.indexOf(rs);rs.splice(i,1);if(rs.length<2)groups.splice(gi,1);draw();toast("🗑️ 1건 삭제");
+                }},"삭제"));
+        gEl.append(rowEl);
+      });
+      if(rs.length>2)gEl.append(h("button",{style:{width:"100%",marginTop:"6px",fontSize:"11.5px",fontWeight:"700",color:C.over,background:"transparent",border:`1px dashed ${C.over}`,borderRadius:"8px",padding:"7px",cursor:"pointer"},onclick:async(ev)=>{
+        if(!confirm(`이 그룹에서 '유지' 1건 빼고 ${rs.length-1}건을 모두 삭제할까요?`))return;
+        ev.currentTarget.disabled=true;
+        const dels=rs.slice(1).map(x=>x.id);
+        const{error}=await sb.from("transactions").delete().in("id",dels);
+        if(error){toast("삭제 실패: "+error.message,false);return;}
+        touched=true;const gi=groups.indexOf(rs);groups.splice(gi,1);draw();toast(`🗑️ ${dels.length}건 삭제`);
+      }},`이 그룹 ${rs.length-1}건 한번에 삭제`));
+      body.append(gEl);
+    });
+  };
+  load();
+}
 async function downloadFullBackup(setStatus){
   setStatus&&setStatus("백업 만드는 중…");
   const tables=["transactions","fixed_costs","investment_snapshots","monthly_budgets","accounts","savings","loans","dutch_splits"];
