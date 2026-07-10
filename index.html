@@ -366,6 +366,7 @@ function showApiKeySetting(){
     csvBtn.textContent=`✅ ${rows.length}건 CSV 완료`;csvBtn.disabled=false;
   };
   const dupBtn=h("button",{style:{width:"100%",marginTop:"8px",fontSize:"13.5px",fontWeight:"700",padding:"12px",borderRadius:"11px",border:`1px solid ${C.warn}`,color:C.warn,background:"#FFFBEE",cursor:"pointer"},onclick:()=>{ov.remove();showDupCleaner();}},"🧹 중복 거래 정리 (뱅샐 중복 찾기)");
+  const icsBtn=h("button",{style:{width:"100%",marginTop:"8px",fontSize:"13.5px",fontWeight:"700",padding:"12px",borderRadius:"11px",border:`1px solid ${C.line}`,color:C.ink,background:C.w,cursor:"pointer"},onclick:e=>downloadPaydayICS(e.currentTarget)},"📅 결제일을 아이폰 캘린더로 (.ics)");
 
   // ── 🤖 API (맨 아래 · 접어두기 · 삭제는 확인창) ──
   let apiOpen=false;
@@ -395,7 +396,7 @@ function showApiKeySetting(){
     ratioEl,
     shSv,
     secHd("💾 데이터"),
-    exportBtn,csvBtn,dupBtn,
+    exportBtn,csvBtn,dupBtn,icsBtn,
     secHd("🤖 고급"),
     apiToggle,apiBody,
     closeBtn
@@ -689,7 +690,7 @@ function renderDash(){
     h("div",{style:{display:"flex",alignItems:"center",justifyContent:"space-between",marginBottom:"16px"}},
       h("div",{style:{display:"flex",alignItems:"center",gap:"9px"}},
         h("span",{style:{fontSize:"21px"}},SN[Number(S.curYm.split("-")[1])]||"📒"),
-        h("div",{},h("div",{style:{fontSize:"11.5px",color:C.sub}},"🐾 나의 가계부 · v126"),h("div",{style:{fontSize:"16.5px",fontWeight:"800",letterSpacing:"-.01em",cursor:"pointer",display:"flex",alignItems:"center",gap:"4px"},onclick:()=>showMonthPicker()},yml(S.curYm),h("span",{style:{fontSize:"10px",color:C.faint}},"▾")))
+        h("div",{},h("div",{style:{fontSize:"11.5px",color:C.sub}},"🐾 나의 가계부 · v127"),h("div",{style:{fontSize:"16.5px",fontWeight:"800",letterSpacing:"-.01em",cursor:"pointer",display:"flex",alignItems:"center",gap:"4px"},onclick:()=>showMonthPicker()},yml(S.curYm),h("span",{style:{fontSize:"10px",color:C.faint}},"▾")))
       ),
       h("div",{style:{display:"flex",alignItems:"center",gap:"4px",background:C.w,border:`1px solid ${C.line}`,borderRadius:"999px",padding:"3px 4px"}},prevBtn,todayBtn,nextBtn)
     ),
@@ -767,6 +768,42 @@ function calcStatsFor(txns){
 }
 
 // ── HOME ──
+// ── 📅 아이폰 캘린더 연동: 고정비·카드 결제일 → .ics (월 반복 일정) ──
+async function downloadPaydayICS(btn){
+  try{
+    if(btn){btn.disabled=true;btn.textContent="만드는 중…";}
+    const[fc,sfc]=await Promise.all([
+      sb.from("fixed_costs").select("name,amount,billing_day").eq("user_id",S.session.user.id).eq("is_active",true),
+      sb.from("shared_fixed_costs").select("name,amount,billing_day").eq("is_active",true)
+    ]);
+    const cards=(S.accounts||[]).filter(a=>a.kind==="카드"&&a.billing_day);
+    const pad=n=>String(n).padStart(2,"0");
+    const now=new Date(),y=now.getFullYear(),m=now.getMonth()+1;
+    const evs=[];
+    const esc=s=>String(s||"").replace(/([,;\\])/g,"\\$1");
+    const mk=(name,day,amt,src,i)=>{
+      const d=Math.min(Math.max(1,Number(day)||0),28);if(!d)return;
+      evs.push(["BEGIN:VEVENT",
+        `UID:${src}-${i}-${d}@budget-app.paw`,
+        `DTSTART;VALUE=DATE:${y}${pad(m)}${pad(d)}`,
+        `RRULE:FREQ=MONTHLY;BYMONTHDAY=${d}`,
+        `SUMMARY:💸 ${esc(name)}${amt?` (${wonKor(amt)})`:""}`,
+        "BEGIN:VALARM","TRIGGER:-PT15H","ACTION:DISPLAY",`DESCRIPTION:내일 ${esc(name)} 결제일이에요`,"END:VALARM",
+        "END:VEVENT"].join("\r\n"));
+    };
+    (fc.data||[]).forEach((f,i)=>mk(f.name,f.billing_day,f.amount,"fc",i));
+    (sfc.data||[]).forEach((f,i)=>mk("공용 "+f.name,f.billing_day,f.amount,"sfc",i));
+    cards.forEach((a,i)=>mk(a.name+" 카드값",a.billing_day,0,"card",i));
+    if(!evs.length){toast("결제일이 등록된 고정비·카드가 없어요",false);return;}
+    const ics=["BEGIN:VCALENDAR","VERSION:2.0","PRODID:-//nagagyebu//paw//KR","CALSCALE:GREGORIAN","X-WR-CALNAME:🐾 가계부 결제일",...evs,"END:VCALENDAR"].join("\r\n");
+    const blob=new Blob([ics],{type:"text/calendar;charset=utf-8"});
+    const f=new File([blob],"가계부_결제일.ics",{type:"text/calendar"});
+    if(navigator.canShare&&navigator.canShare({files:[f]})){try{await navigator.share({files:[f],title:"가계부 결제일"});toast("📅 캘린더에 추가해주세요!");return;}catch(e){if(e.name==="AbortError")return;}}
+    const url=URL.createObjectURL(blob);const aEl=document.createElement("a");aEl.href=url;aEl.download="가계부_결제일.ics";aEl.click();URL.revokeObjectURL(url);
+    toast(`📅 ${evs.length}개 결제일 저장! 파일을 열면 캘린더에 추가돼요`);
+  }catch(e){toast("캘린더 파일 생성 실패: "+(e.message||e),false);}
+  finally{if(btn){btn.disabled=false;btn.textContent="📅 결제일을 아이폰 캘린더로 (.ics)";}}
+}
 // ── 🧹 중복 거래 정리 (같은 날·금액·가맹점·계정이 여러 번) ──
 function showDupCleaner(){
   const ov=h("div",{style:{position:"fixed",inset:"0",background:"rgba(40,37,31,.42)",display:"flex",alignItems:"center",justifyContent:"center",padding:"16px",zIndex:"70"}});
@@ -1049,8 +1086,60 @@ function buildMonthSettle(st,prevSt,cfg){
   const subRow=h("div",{style:{display:"flex",flexWrap:"wrap",gap:"7px",marginTop:"11px"}});
   [pill("💰 저축·투자",W(st.save),"#4169B1"),pill("🤝 공용소비",W(st.cNet),"#1B7B7B"),cmp("개인소비",st.pNet,prevSt.pNet)].filter(Boolean).forEach(x=>subRow.append(x));
   s.append(subRow);
-  s.append(h("button",{style:{width:"100%",marginTop:"13px",fontSize:"13px",fontWeight:"700",color:C.brand,background:C.soft,border:`1px solid ${C.brand}`,borderRadius:"11px",padding:"11px",cursor:"pointer"},onclick:()=>showMonthClose()},"📋 이 달 결산·마감 ›"));
+  s.append(h("div",{style:{display:"flex",gap:"8px",marginTop:"13px"}},
+    h("button",{style:{flex:"1",fontSize:"13px",fontWeight:"700",color:C.brand,background:C.soft,border:`1px solid ${C.brand}`,borderRadius:"11px",padding:"11px",cursor:"pointer"},onclick:()=>showMonthClose()},"📋 이 달 결산·마감 ›"),
+    h("button",{title:"결산을 이미지로 만들어 카톡·문자로 공유해요",style:{fontSize:"13px",fontWeight:"700",color:C.ink,background:C.w,border:`1px solid ${C.line}`,borderRadius:"11px",padding:"11px 14px",cursor:"pointer"},onclick:()=>shareMonthReport(st,cfg)},"📤 공유")));
   return s;
+}
+// ── 📤 월간 결산 이미지 공유 (카톡·iMessage 등) ──
+async function shareMonthReport(st,cfg){
+  try{
+    cfg=cfg||getSharedCfg();
+    const ratio=(cfg.ratio||50)/100;
+    const myShared=Math.round(st.cNet*ratio),total=st.pNet+myShared,net=st.income-total-st.save;
+    const scale=2,CW=380,CH=520;
+    const cv=document.createElement("canvas");cv.width=CW*scale;cv.height=CH*scale;
+    const x=cv.getContext("2d");
+    if(!x.roundRect)x.roundRect=function(a,b,c2,d2){this.rect(a,b,c2,d2);return this;};
+    x.scale(scale,scale);
+    x.fillStyle="#F6F4EF";x.fillRect(0,0,CW,CH);
+    x.fillStyle="#fff";x.strokeStyle="#ECE7DD";x.lineWidth=1;
+    x.beginPath();x.roundRect(16,16,CW-32,CH-32,18);x.fill();x.stroke();
+    x.textBaseline="top";
+    x.fillStyle="#8C857A";x.font="700 12px -apple-system,'Apple SD Gothic Neo',sans-serif";x.fillText("🐾 나의 가계부",36,40);
+    x.fillStyle="#28251F";x.font="800 22px -apple-system,'Apple SD Gothic Neo',sans-serif";x.fillText(`${yml(S.curYm)} 결산`,36,58);
+    x.fillStyle="#8C857A";x.font="600 11px sans-serif";x.fillText("실질 총지출 (개인 + 공용 내 몫)",36,102);
+    x.fillStyle="#28251F";x.font="800 32px sans-serif";x.fillText(W(total),36,118);
+    const row=(lbl,val,yy,col)=>{x.fillStyle="#8C857A";x.font="600 13px sans-serif";x.fillText(lbl,36,yy);x.fillStyle=col||"#28251F";x.font="800 14px sans-serif";x.textAlign="right";x.fillText(val,CW-36,yy);x.textAlign="left";};
+    let yy=172;
+    row("💼 수입",W(st.income),yy,"#1E6E52");yy+=27;
+    row("👤 개인 소비",W(st.pNet),yy);yy+=27;
+    row(`🤝 공용 내 몫 (${cfg.ratio||50}%)`,W(myShared),yy);yy+=27;
+    row("💰 저축·투자",W(st.save),yy,"#4169B1");yy+=27;
+    row(net>=0?"📈 순잉여":"📉 순적자",W(Math.abs(net)),yy,net>=0?"#1E6E52":"#C2553D");yy+=36;
+    x.strokeStyle="#ECE7DD";x.beginPath();x.moveTo(36,yy-12);x.lineTo(CW-36,yy-12);x.stroke();
+    const agg={};(S.txns||[]).forEach(t=>{if(kindOf(t.type)!=="spend"||isExcludedSpend(t)||isInternalTransfer(t))return;const k2=t.category||"기타";agg[k2]=(agg[k2]||0)+(Number(t.amount)||0);});
+    const top=Object.entries(agg).sort((a,b)=>b[1]-a[1]).slice(0,4);
+    x.fillStyle="#8C857A";x.font="700 12px sans-serif";x.fillText("많이 쓴 곳 TOP",36,yy);yy+=22;
+    const maxV=top.length?top[0][1]:1;
+    top.forEach(([nm,v])=>{
+      const c=CM[nm]||CM["기타"];
+      x.fillStyle="#28251F";x.font="600 12px sans-serif";x.fillText(`${c.i} ${nm}`,36,yy);
+      x.textAlign="right";x.font="800 12px sans-serif";x.fillText(shortNum(v),CW-36,yy);x.textAlign="left";
+      x.fillStyle="#EFEDE7";x.beginPath();x.roundRect(36,yy+17,CW-72,6,3);x.fill();
+      x.fillStyle=c.c;x.beginPath();x.roundRect(36,yy+17,Math.max(8,(CW-72)*v/maxV),6,3);x.fill();
+      yy+=37;
+    });
+    x.fillStyle="#B7B0A4";x.font="600 10px sans-serif";x.fillText(`${td()} 기준 · 짜장 🐈‍⬛ 후추 🐈 마요 🐈`,36,CH-44);
+    const blob=await new Promise(res=>cv.toBlob(res,"image/png"));
+    const file=new File([blob],`가계부_${S.curYm}_결산.png`,{type:"image/png"});
+    if(navigator.canShare&&navigator.canShare({files:[file]})){
+      try{await navigator.share({files:[file],title:`${yml(S.curYm)} 결산`});return;}
+      catch(e){if(e&&e.name==="AbortError")return;}
+    }
+    const url=URL.createObjectURL(blob);const aEl=document.createElement("a");aEl.href=url;aEl.download=file.name;aEl.click();URL.revokeObjectURL(url);
+    toast("📤 리포트 이미지를 저장했어요");
+  }catch(e){toast("이미지 생성 실패: "+(e.message||e),false);}
 }
 
 // ② 소비 아닌 것 같은 거래 자동 감지
