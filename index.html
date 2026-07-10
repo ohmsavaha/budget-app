@@ -366,7 +366,8 @@ function showApiKeySetting(){
     csvBtn.textContent=`✅ ${rows.length}건 CSV 완료`;csvBtn.disabled=false;
   };
   const dupBtn=h("button",{style:{width:"100%",marginTop:"8px",fontSize:"13.5px",fontWeight:"700",padding:"12px",borderRadius:"11px",border:`1px solid ${C.warn}`,color:C.warn,background:"#FFFBEE",cursor:"pointer"},onclick:()=>{ov.remove();showDupCleaner();}},"🧹 중복 거래 정리 (뱅샐 중복 찾기)");
-  const icsBtn=h("button",{style:{width:"100%",marginTop:"8px",fontSize:"13.5px",fontWeight:"700",padding:"12px",borderRadius:"11px",border:`1px solid ${C.line}`,color:C.ink,background:C.w,cursor:"pointer"},onclick:e=>downloadPaydayICS(e.currentTarget)},"📅 결제일을 아이폰 캘린더로 (.ics)");
+  const icsBtn=h("button",{style:{width:"100%",marginTop:"8px",fontSize:"13.5px",fontWeight:"700",padding:"12px",borderRadius:"11px",border:`1px solid ${C.line}`,color:C.ink,background:C.w,cursor:"pointer"},onclick:e=>downloadPaydayICS(e.currentTarget)},"📅 결제일을 캘린더로 (.ics · 구글·아이폰)");
+  const repairBtn=h("button",{style:{width:"100%",marginTop:"8px",fontSize:"13.5px",fontWeight:"700",padding:"12px",borderRadius:"11px",border:`1px solid ${C.brand}`,color:C.brand,background:C.soft,cursor:"pointer"},onclick:e=>repairSharedHousehold(e.currentTarget)},"🔗 공용 공유 복구 (다혜와 안 보이던 거래 연결)");
 
   // ── 🤖 API (맨 아래 · 접어두기 · 삭제는 확인창) ──
   let apiOpen=false;
@@ -396,7 +397,9 @@ function showApiKeySetting(){
     ratioEl,
     shSv,
     secHd("💾 데이터"),
-    exportBtn,csvBtn,dupBtn,icsBtn,
+    exportBtn,csvBtn,dupBtn,repairBtn,icsBtn,
+    secHd("🔗 연동 · 공유"),
+    h("div",{style:{fontSize:"11px",color:C.faint,lineHeight:"1.6",marginBottom:"2px"}},"결제일 캘린더(.ics)는 구글·아이폰 둘 다 돼요. 홈 결산의 📤로 이미지·📝로 노션 붙여넣기. iOS 단축어 자동등록은 shortcut 폴더 안내 참고."),
     secHd("🤖 고급"),
     apiToggle,apiBody,
     closeBtn
@@ -690,7 +693,7 @@ function renderDash(){
     h("div",{style:{display:"flex",alignItems:"center",justifyContent:"space-between",marginBottom:"16px"}},
       h("div",{style:{display:"flex",alignItems:"center",gap:"9px"}},
         h("span",{style:{fontSize:"21px"}},SN[Number(S.curYm.split("-")[1])]||"📒"),
-        h("div",{},h("div",{style:{fontSize:"11.5px",color:C.sub}},"🐾 나의 가계부 · v127"),h("div",{style:{fontSize:"16.5px",fontWeight:"800",letterSpacing:"-.01em",cursor:"pointer",display:"flex",alignItems:"center",gap:"4px"},onclick:()=>showMonthPicker()},yml(S.curYm),h("span",{style:{fontSize:"10px",color:C.faint}},"▾")))
+        h("div",{},h("div",{style:{fontSize:"11.5px",color:C.sub}},"🐾 나의 가계부 · v128"),h("div",{style:{fontSize:"16.5px",fontWeight:"800",letterSpacing:"-.01em",cursor:"pointer",display:"flex",alignItems:"center",gap:"4px"},onclick:()=>showMonthPicker()},yml(S.curYm),h("span",{style:{fontSize:"10px",color:C.faint}},"▾")))
       ),
       h("div",{style:{display:"flex",alignItems:"center",gap:"4px",background:C.w,border:`1px solid ${C.line}`,borderRadius:"999px",padding:"3px 4px"}},prevBtn,todayBtn,nextBtn)
     ),
@@ -803,6 +806,43 @@ async function downloadPaydayICS(btn){
     toast(`📅 ${evs.length}개 결제일 저장! 파일을 열면 캘린더에 추가돼요`);
   }catch(e){toast("캘린더 파일 생성 실패: "+(e.message||e),false);}
   finally{if(btn){btn.disabled=false;btn.textContent="📅 결제일을 아이폰 캘린더로 (.ics)";}}
+}
+// ── 🔗 공용 거래 공유 복구: household_id 없는 공용 거래를 가구에 연결(다혜와 공유) ──
+async function repairSharedHousehold(btn){
+  const orig=btn?btn.textContent:"";
+  try{
+    if(btn){btn.disabled=true;btn.textContent="복구 중…";}
+    if(!S.householdId){const{data:hm}=await sb.from("household_members").select("household_id").eq("user_id",S.session.user.id).maybeSingle();S.householdId=hm?.household_id||null;}
+    if(!S.householdId){toast("공유 가구 정보가 없어요. 공용 탭을 먼저 열어주세요.",false);return;}
+    const{data,error}=await sb.from("transactions").update({household_id:S.householdId}).eq("account","공용").is("household_id",null).eq("user_id",S.session.user.id).select("id");
+    if(error){toast("복구 실패: "+error.message,false);return;}
+    const n=(data||[]).length;
+    toast(n?`🔗 공용 거래 ${n}건을 다혜님과 공유 연결했어요!`:"이미 다 공유돼 있어요 👍");
+  }catch(e){toast("복구 실패: "+(e.message||e),false);}
+  finally{if(btn){btn.disabled=false;btn.textContent=orig;}}
+}
+// ── 📝 노션용 마크다운 결산 복사 ──
+async function copyMonthReportMd(st,cfg){
+  cfg=cfg||getSharedCfg();const ratio=(cfg.ratio||50)/100;
+  const myShared=Math.round(st.cNet*ratio),total=st.pNet+myShared,net=st.income-total-st.save;
+  const agg={};(S.txns||[]).forEach(t=>{if(kindOf(t.type)!=="spend"||isExcludedSpend(t)||isInternalTransfer(t))return;const k=t.category||"기타";agg[k]=(agg[k]||0)+(Number(t.amount)||0);});
+  const top=Object.entries(agg).sort((a,b)=>b[1]-a[1]).slice(0,6);
+  const L=[`# 🐾 ${yml(S.curYm)} 가계부 결산`,"",
+    `| 항목 | 금액 |`,`| --- | --- |`,
+    `| 💼 수입 | ${W(st.income)} |`,
+    `| 🎯 실질 총지출 | ${W(total)} |`,
+    `| 👤 개인 소비 | ${W(st.pNet)} |`,
+    `| 🤝 공용 내 몫 (${cfg.ratio||50}%) | ${W(myShared)} |`,
+    `| 💰 저축·투자 | ${W(st.save)} |`,
+    `| ${net>=0?"📈 순잉여":"📉 순적자"} | ${W(Math.abs(net))} |`,"",
+    `## 카테고리 TOP`,...top.map(([n,v])=>`- ${(CM[n]||CM["기타"]).i} ${n}: ${W(v)}`),"",
+    `_${td()} · 나의 가계부 앱_`].join("\n");
+  try{await navigator.clipboard.writeText(L);toast("📝 노션·메모에 붙여넣기 하세요! (복사 완료)");}
+  catch(e){
+    const ta=h("textarea",{style:{position:"fixed",inset:"0",width:"100%",height:"100%",zIndex:"99",fontSize:"12px",padding:"40px 16px"}});ta.value=L;
+    const ov=h("div",{style:{position:"fixed",inset:"0",zIndex:"98",background:C.w}},h("button",{style:{position:"fixed",top:"8px",right:"12px",zIndex:"100",fontSize:"22px",cursor:"pointer",background:"transparent",border:"none"},onclick:()=>ov.remove()},"✕"),ta);
+    document.body.append(ov);ta.select();toast("전체 선택해서 복사하세요",false);
+  }
 }
 // ── 🧹 중복 거래 정리 (같은 날·금액·가맹점·계정이 여러 번) ──
 function showDupCleaner(){
@@ -1088,7 +1128,8 @@ function buildMonthSettle(st,prevSt,cfg){
   s.append(subRow);
   s.append(h("div",{style:{display:"flex",gap:"8px",marginTop:"13px"}},
     h("button",{style:{flex:"1",fontSize:"13px",fontWeight:"700",color:C.brand,background:C.soft,border:`1px solid ${C.brand}`,borderRadius:"11px",padding:"11px",cursor:"pointer"},onclick:()=>showMonthClose()},"📋 이 달 결산·마감 ›"),
-    h("button",{title:"결산을 이미지로 만들어 카톡·문자로 공유해요",style:{fontSize:"13px",fontWeight:"700",color:C.ink,background:C.w,border:`1px solid ${C.line}`,borderRadius:"11px",padding:"11px 14px",cursor:"pointer"},onclick:()=>shareMonthReport(st,cfg)},"📤 공유")));
+    h("button",{title:"결산을 이미지로 만들어 카톡·문자로 공유해요",style:{fontSize:"13px",fontWeight:"700",color:C.ink,background:C.w,border:`1px solid ${C.line}`,borderRadius:"11px",padding:"11px 13px",cursor:"pointer"},onclick:()=>shareMonthReport(st,cfg)},"📤"),
+    h("button",{title:"노션·메모에 붙여넣을 표로 복사",style:{fontSize:"13px",fontWeight:"700",color:C.ink,background:C.w,border:`1px solid ${C.line}`,borderRadius:"11px",padding:"11px 13px",cursor:"pointer"},onclick:()=>copyMonthReportMd(st,cfg)},"📝")));
   return s;
 }
 // ── 📤 월간 결산 이미지 공유 (카톡·iMessage 등) ──
@@ -6363,7 +6404,7 @@ function showImport(){
   };
   saveBtn.onclick=async()=>{
     saveBtn.disabled=true;saveBtn.textContent="저장 중…";
-    const rows=importData.filter(t=>Number(t.amount)>0&&t.date).map(t=>({user_id:S.session.user.id,date:t.date,account:t.account||"개인",type:t.type||"소비(일시불)",amount:Number(t.amount),category:t.category||"기타",merchant:t.merchant||null,memo:t.memo||null,payment_method:t.payment_method||null}));
+    const rows=importData.filter(t=>Number(t.amount)>0&&t.date).map(t=>({user_id:S.session.user.id,household_id:(t.account||"개인")==="공용"?(S.householdId||null):null,date:t.date,account:t.account||"개인",type:t.type||"소비(일시불)",amount:Number(t.amount),category:t.category||"기타",merchant:t.merchant||null,memo:t.memo||null,payment_method:t.payment_method||null}));
     // 중복 방지: 이미 등록된 (날짜·금액·가맹점) 거래는 자동 스킵
       let dupSkipped=0;
       try{
