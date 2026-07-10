@@ -689,7 +689,7 @@ function renderDash(){
     h("div",{style:{display:"flex",alignItems:"center",justifyContent:"space-between",marginBottom:"16px"}},
       h("div",{style:{display:"flex",alignItems:"center",gap:"9px"}},
         h("span",{style:{fontSize:"21px"}},SN[Number(S.curYm.split("-")[1])]||"📒"),
-        h("div",{},h("div",{style:{fontSize:"11.5px",color:C.sub}},"🐾 나의 가계부 · v125"),h("div",{style:{fontSize:"16.5px",fontWeight:"800",letterSpacing:"-.01em",cursor:"pointer",display:"flex",alignItems:"center",gap:"4px"},onclick:()=>showMonthPicker()},yml(S.curYm),h("span",{style:{fontSize:"10px",color:C.faint}},"▾")))
+        h("div",{},h("div",{style:{fontSize:"11.5px",color:C.sub}},"🐾 나의 가계부 · v126"),h("div",{style:{fontSize:"16.5px",fontWeight:"800",letterSpacing:"-.01em",cursor:"pointer",display:"flex",alignItems:"center",gap:"4px"},onclick:()=>showMonthPicker()},yml(S.curYm),h("span",{style:{fontSize:"10px",color:C.faint}},"▾")))
       ),
       h("div",{style:{display:"flex",alignItems:"center",gap:"4px",background:C.w,border:`1px solid ${C.line}`,borderRadius:"999px",padding:"3px 4px"}},prevBtn,todayBtn,nextBtn)
     ),
@@ -6455,6 +6455,50 @@ function catSay(idx,text){
   );
 }
 
+// ── ⚖️ 올해 분담 리포트: 기여(입금+대신결제−환급) vs 부담 몫 ──
+function buildYearSettleReport(){
+  const card=sec("⚖️ 올해 분담 리포트",h("span",{style:{fontSize:"11px",color:C.faint}},`${S.curYm.slice(0,4)}년 누적`));
+  const body=h("div",{});card.append(body);
+  body.append(h("div",{class:"center"},h("div",{class:"spin"})));
+  (async()=>{try{
+    const yr=S.curYm.slice(0,4);
+    const[a,b]=await Promise.all([
+      sb.from("transactions").select("date,amount,type,merchant,payment_method").eq("account","공용").gte("date",yr+"-01-01").lte("date",yr+"-12-31"),
+      sb.from("dutch_splits").select("to_receive,received,date").eq("is_shared",true).eq("received",true).gte("date",yr+"-01-01")
+    ]);
+    let T=0,red=0;const paid={"정근":0,"여친":0};const dep={"정근":0,"여친":0};
+    (a.data||[]).forEach(t=>{
+      const k=sharedKindOf(t),amt=Number(t.amount)||0;
+      if(k==="spend"){T+=amt;const pm=t.payment_method||"";if(pm&&!/공용/.test(pm))paid[/여친|다혜/.test(pm)?"여친":"정근"]+=amt;}
+      else if(k==="reduce")red+=amt;
+      else if(k==="deposit")dep[/여친|다혜/.test(t.merchant||"")?"여친":"정근"]+=amt;
+    });
+    T-=red;
+    const refund=(b.data||[]).reduce((s,d)=>s+Number(d.to_receive||0),0);
+    const contrib={"정근":dep["정근"]+paid["정근"]-refund,"여친":dep["여친"]+paid["여친"]};
+    const cfg=getSharedCfg();const rt=(cfg.ratio||50)/100;
+    const share={"정근":Math.round(T*rt),"여친":Math.round(T*(1-rt))};
+    body.innerHTML="";
+    if(T<=0){body.append(empty("올해 공용 지출이 아직 없어요."));return;}
+    body.append(h("div",{style:{display:"flex",justifyContent:"space-between",fontSize:"12px",marginBottom:"10px"}},
+      h("span",{style:{color:C.sub,fontWeight:"700"}},"올해 공용 지출 (환급 제외)"),h("span",{class:"num",style:{fontWeight:"800"}},W(T))));
+    const row=(nm,ic)=>{
+      const d=contrib[nm]-share[nm];
+      return h("div",{style:{flex:"1",background:"#F6F4EF",borderRadius:"12px",padding:"11px 12px"}},
+        h("div",{style:{fontSize:"11px",color:C.sub,marginBottom:"4px"}},`${ic} ${nm} 낸 돈`),
+        h("div",{class:"num",style:{fontSize:"15px",fontWeight:"800"}},W(contrib[nm])),
+        h("div",{style:{fontSize:"10px",color:C.faint,marginTop:"2px"}},`부담 몫 ${W(share[nm])}`),
+        h("div",{class:"num",style:{fontSize:"10.5px",fontWeight:"800",marginTop:"3px",color:d>=0?C.brand:C.over}},d>=0?`+${shortNum(d)} 더 냄`:`−${shortNum(Math.abs(d))} 부족`));
+    };
+    body.append(h("div",{style:{display:"flex",gap:"8px",marginBottom:"10px"}},row("정근","🙂"),row("여친","🥰")));
+    const gap=contrib["정근"]-share["정근"];
+    const rl=`${cfg.ratio||50}:${100-(cfg.ratio||50)}`;
+    const msg=Math.abs(gap)<10000?`⚖️ ${rl} 비율에 거의 딱 맞아요!`:(gap>0?`💡 여친이 ${W(gap)} 채우면 ${rl} 균형이에요`:`💡 정근이 ${W(Math.abs(gap))} 채우면 ${rl} 균형이에요`);
+    body.append(h("div",{style:{fontSize:"12px",fontWeight:"700",color:Math.abs(gap)<10000?C.brand:"#3B5BA5",background:Math.abs(gap)<10000?"#EEF6F1":"#F0F4FF",borderRadius:"10px",padding:"10px 12px",lineHeight:"1.5"}},msg));
+    body.append(h("div",{style:{fontSize:"10px",color:C.faint,marginTop:"7px",lineHeight:"1.5"}},"낸 돈 = 통장 입금 + 개인 카드로 대신 낸 공용 소비 − 정산으로 돌려받은 돈 · 비율은 설정→공용에서 바꿔요"));
+  }catch(e){dlog("[분담리포트 실패]",e);body.innerHTML="";body.append(empty("불러오기 실패"));}})();
+  return card;
+}
 // ── 🤝 공용 상세 시트 + 새로고침 ──
 async function refreshSharedAll(){
   S.shViewKey=null;S.shViewYearKey=null;
@@ -6729,6 +6773,9 @@ function buildShared(){
 
   // ③ 정산 도우미
   out.push(buildSettlement());
+
+  // ③-A ⚖️ 올해 분담 리포트 (누가 얼마 냈나 vs 부담 비율)
+  out.push(buildYearSettleReport());
 
   // ③-B 이체로 기록된 멤버 입금 → 공용입금 전환 제안 (게이지에 잡히게)
   {const cand=S.sharedTxns.filter(t=>t.type==="이체"&&/정근|다혜|여친|입금/.test(t.merchant||""));
