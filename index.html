@@ -689,7 +689,7 @@ function renderDash(){
     h("div",{style:{display:"flex",alignItems:"center",justifyContent:"space-between",marginBottom:"16px"}},
       h("div",{style:{display:"flex",alignItems:"center",gap:"9px"}},
         h("span",{style:{fontSize:"21px"}},SN[Number(S.curYm.split("-")[1])]||"📒"),
-        h("div",{},h("div",{style:{fontSize:"11.5px",color:C.sub}},"🐾 나의 가계부 · v124"),h("div",{style:{fontSize:"16.5px",fontWeight:"800",letterSpacing:"-.01em",cursor:"pointer",display:"flex",alignItems:"center",gap:"4px"},onclick:()=>showMonthPicker()},yml(S.curYm),h("span",{style:{fontSize:"10px",color:C.faint}},"▾")))
+        h("div",{},h("div",{style:{fontSize:"11.5px",color:C.sub}},"🐾 나의 가계부 · v125"),h("div",{style:{fontSize:"16.5px",fontWeight:"800",letterSpacing:"-.01em",cursor:"pointer",display:"flex",alignItems:"center",gap:"4px"},onclick:()=>showMonthPicker()},yml(S.curYm),h("span",{style:{fontSize:"10px",color:C.faint}},"▾")))
       ),
       h("div",{style:{display:"flex",alignItems:"center",gap:"4px",background:C.w,border:`1px solid ${C.line}`,borderRadius:"999px",padding:"3px 4px"}},prevBtn,todayBtn,nextBtn)
     ),
@@ -760,7 +760,8 @@ function calcStatsFor(txns){
     const isShared=t.account==="공용"||t.payment_method==="공용통장"||t.payment_method==="공용카드"||t.payment_method==="공용통장 자동출금"||t.payment_method==="공용통장 지로출금";
     if(isShared){if(k==="spend")cS+=a;else if(k==="reduce")cR+=a;}
     else{if(k==="spend")pS+=a;else if(k==="reduce")pR+=a;}
-    if(k==="income")inc+=a;if(k==="save")sav+=a;
+    if(k==="income"&&!isShared)inc+=a; // 공용통장 입금(생활비 등)은 내 수입 아님
+    if(k==="save")sav+=a;
   }
   return{pNet:pS-pR,cNet:cS-cR,income:inc,save:sav,balance:inc-(pS-pR)-(cS-cR)-sav};
 }
@@ -1990,9 +1991,59 @@ function buildCatBudgetCombined(){
   spendCard.insertBefore(h("div",{style:{height:"10px",borderBottom:`1px solid ${C.line}`,marginBottom:"10px"}}),anchor);
   return spendCard;
 }
+// ── 🎯 지출 탭 히어로: 실질 총지출(개인+공용 내 몫) + 무지출 + 6개월 추이 ──
+function buildSpendHero(){
+  const st=calcStatsFor(S.txns),prevSt=calcStatsFor(S.prevTxns),cfg=getSharedCfg();
+  const ratio=(cfg.ratio||50)/100;
+  const myShared=Math.round(st.cNet*ratio),total=st.pNet+myShared;
+  const prevTotal=prevSt.pNet+Math.round(prevSt.cNet*ratio);
+  const _t=td(),isCur=S.curYm===ym(_t);
+  const elapsed=isCur?Number(_t.slice(8,10)):new Date(Number(S.curYm.slice(0,4)),Number(S.curYm.slice(5,7)),0).getDate();
+  const dailyAvg=elapsed>0?Math.round(total/elapsed):0;
+  const spendDays=new Set((S.txns||[]).filter(t=>kindOf(t.type)==="spend"&&!isExcludedSpend(t)&&!isInternalTransfer(t)&&(!isCur||(t.date||"")<=_t)).map(t=>(t.date||"").slice(8,10)));
+  const noSpend=Math.max(0,elapsed-spendDays.size);
+  const s=sec("🎯 실질 총지출",h("span",{style:{fontSize:"11px",color:C.faint}},"개인 + 공용 내 몫"));
+  const diff=prevTotal>0?total-prevTotal:null;
+  s.append(h("div",{style:{display:"flex",alignItems:"flex-end",justifyContent:"space-between",cursor:"pointer"},onclick:()=>showSpendBreakdown(st,cfg)},
+    h("div",{},
+      h("div",{class:"num",style:{fontSize:"30px",fontWeight:"800",letterSpacing:"-.03em",lineHeight:"1.05"}},W(total)),
+      h("div",{style:{fontSize:"11.5px",color:C.sub,marginTop:"5px"}},`개인 ${shortNum(st.pNet)} + 공용 내 몫 ${shortNum(myShared)} · 자세히 ›`)),
+    diff!=null?h("div",{style:{textAlign:"right",flexShrink:"0"}},
+      h("div",{class:"num",style:{fontSize:"12px",fontWeight:"800",color:diff>0?C.over:C.brand}},`${diff>0?"▲":"▼"} ${shortNum(Math.abs(diff))}`),
+      h("div",{style:{fontSize:"10px",color:C.faint}},"전월 대비")):""));
+  const chip=(ic,lbl,val,col)=>h("div",{style:{flex:"1",textAlign:"center",padding:"8px 4px",background:"#F6F4EF",borderRadius:"10px"}},h("div",{style:{fontSize:"9.5px",color:C.faint,marginBottom:"2px"}},ic+" "+lbl),h("div",{class:"num",style:{fontSize:"12.5px",fontWeight:"800",color:col||C.ink}},val));
+  s.append(h("div",{style:{display:"flex",gap:"7px",marginTop:"12px"}},
+    chip("📅","하루 평균",W(dailyAvg)),
+    chip("🌱","무지출",`${noSpend}일`,noSpend>=5?C.brand:C.ink),
+    chip("🤝","공용 전체",shortNum(st.cNet),"#1B7B7B")));
+  // 최근 6개월 실질 지출 추이 (비동기 로드)
+  const trendBox=h("div",{style:{marginTop:"12px"}});s.append(trendBox);
+  (async()=>{try{
+    const months=[];for(let i=5;i>=0;i--)months.push(shYm(S.curYm,-i));
+    const fs=mRange(months[0])[0],fe=mRange(months[5])[1];
+    const{data}=await sb.from("transactions").select("date,amount,type,account,payment_method,merchant,category,memo").gte("date",fs).lte("date",fe);
+    const perM={};months.forEach(m=>perM[m]={p:0,c:0,pr:0,cr:0});
+    (data||[]).forEach(t=>{
+      const m=ym(t.date||"");if(!perM[m])return;
+      if(isExcludedSpend(t)||isInternalTransfer(t))return;
+      const k=kindOf(t.type),a=Number(t.amount)||0;
+      const sh2=t.account==="공용"||/공용/.test(t.payment_method||"");
+      if(k==="spend"){if(sh2)perM[m].c+=a;else perM[m].p+=a;}
+      else if(k==="reduce"){if(sh2)perM[m].cr+=a;else perM[m].pr+=a;}
+    });
+    const vals=months.map(m=>Math.max(0,perM[m].p-perM[m].pr)+Math.round(Math.max(0,perM[m].c-perM[m].cr)*ratio));
+    if(vals.every(v=>!v))return;
+    trendBox.append(h("div",{style:{fontSize:"10.5px",color:C.faint,marginBottom:"5px"}},"최근 6개월 실질 지출"));
+    const box=h("div",{style:{height:"110px"}});const cv=document.createElement("canvas");box.append(cv);trendBox.append(box);
+    if(!window.Chart)return;
+    new window.Chart(cv,{type:"bar",data:{labels:months.map(m=>Number(m.slice(5))+"월"),datasets:[{data:vals,backgroundColor:months.map(m=>m===S.curYm?C.brand:"rgba(30,110,82,.32)"),borderRadius:4,barPercentage:.62,categoryPercentage:.8}]},
+      options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:{displayColors:false,callbacks:{label:c=>" "+W(c.parsed.y)}}},scales:{x:{grid:{display:false},ticks:{font:{size:10},color:"#9b958a"}},y:{display:false,beginAtZero:true}}}});
+  }catch(e){dlog("[추이 로드실패]",e);}})();
+  return s;
+}
 function buildSpend(){
   const st=calcStatsFor(S.txns),prevSt=calcStatsFor(S.prevTxns);
-  const cards=[buildNextMonthBill(),buildCardSpend(),buildSubscriptions(),buildCatBudgetCombined(),buildFoodAnalysis(),buildCatReport(),buildShoppingList(),buildExcludeSuggest(),buildRecent(),...buildMovedCards("spend")].filter(Boolean);
+  const cards=[buildSpendHero(),buildNextMonthBill(),buildCardSpend(),buildSubscriptions(),buildCatBudgetCombined(),buildFoodAnalysis(),buildCatReport(),buildShoppingList(),buildExcludeSuggest(),buildRecent(),...buildMovedCards("spend")].filter(Boolean);
   return reorderCards("spend",cards);
 }
 function buildHome(){
@@ -2427,21 +2478,34 @@ function buildNextMonthBill(){
     const[bs,be]=mRange(bym);               // 당월 범위 (할부 분할분 등)
     body.innerHTML="";
     body.append(h("div",{class:"center"},h("div",{class:"spin"})));
-    // 두 구간 거래 로드
-    let useTx=[],billTx=[],actualTx=[];
+    // 두 구간 거래 로드 + 공용 할부통합 건(산 날 전액 1건)은 청구에서만 가상 회차로 분할
+    let useTx=[],billTx=[],actualTx=[],lumpTx=[];
     try{
-      const[a,b]=await Promise.all([
+      const[a,b,l]=await Promise.all([
         sb.from("transactions").select("amount,type,payment_method,merchant,date,installment_no,installment_total,category,account").gte("date",us).lte("date",ue),
-        sb.from("transactions").select("amount,type,payment_method,merchant,date,installment_no,installment_total,category,account").gte("date",bs).lte("date",be)
+        sb.from("transactions").select("amount,type,payment_method,merchant,date,installment_no,installment_total,category,account").gte("date",bs).lte("date",be),
+        sb.from("transactions").select("amount,type,payment_method,merchant,date,category,account,memo").ilike("memo","%#할부통합%").gte("date",shYm(bym,-25)+"-01")
       ]);
-      useTx=(a.data||[]).filter(t=>["소비(일시불)","소비(할부)"].includes(t.type)&&isCardPm(t.payment_method));
+      const isLump=t=>/#할부통합/.test(t.memo||"");
+      useTx=(a.data||[]).filter(t=>["소비(일시불)","소비(할부)"].includes(t.type)&&isCardPm(t.payment_method)&&!isLump(t));
       // 당월에 찍힌 할부 분할분만 (일시불 중복 방지: 당월 사용분은 '다음달' 청구라 여기선 제외)
       billTx=(b.data||[]).filter(t=>t.type==="소비(할부)"&&isCardPm(t.payment_method));
       actualTx=(b.data||[]).filter(t=>t.type==="카드대금");
+      // 할부통합: 구매월 기준 k회차(1..N)가 이 청구월에 해당하면 원금/N 만큼 반영
+      const mDiff=(y1,y2)=>{const[a1,b1]=y1.split("-").map(Number),[a2,b2]=y2.split("-").map(Number);return (a1-a2)*12+(b1-b2);};
+      (l.data||[]).forEach(t=>{
+        if(!isCardPm(t.payment_method))return;
+        const n=Math.max(2,Number(((t.memo||"").match(/(\d+)개월\s*할부/)||[])[1])||3); // 회차수 (메모에 없으면 3)
+        const k=mDiff(bym,ym(t.date||""));
+        if(k>=1&&k<=n){
+          const per=Math.round(Number(t.amount)/n);
+          lumpTx.push({...t,amount:per,installment_no:k,installment_total:n,merchant:(t.merchant||"")+"",type:"소비(할부)"});
+        }
+      });
     }catch(e){dlog("[청구로드실패]",e);}
 
-    // 합산: 전월 사용분 전체 + 당월 할부분
-    const all=[...useTx,...billTx];
+    // 합산: 전월 사용분 전체 + 당월 할부분 + 할부통합 가상회차
+    const all=[...useTx,...billTx,...lumpTx];
     const amtOf=t=>(Number(t.amount)||0)*accountShare(t.payment_method); // 공용은 절반만 내 청구
     const total=all.reduce((x,t)=>x+amtOf(t),0);
     const byCard={};
@@ -6368,10 +6432,10 @@ function showImport(){
 // ════════════════════ 🤝 공용 탭 ════════════════════
 function sharedKindOf(t){
   const ty=t.type;
-  if(ty==="공용입금")return "deposit";
+  if(ty==="공용입금"||ty==="수입")return "deposit"; // 공용 통장에 들어온 돈 = 입금 (수입으로 기록돼도 지출 아님)
   if(["소비(일시불)","소비(할부)"].includes(ty))return "spend";
   if(["정산환급","환불/취소"].includes(ty))return "reduce";
-  if(ty==="이체")return "flow";
+  if(["이체","카드대금","저축/적금","투자"].includes(ty))return "flow"; // 카드값·저축은 공용 지출로 세지 않음 (이중계상 방지)
   return "spend";
 }
 // 고정비 납부 자동 감지: 같은 카테고리+비슷한 금액의 공용 소비가 이번달에 있으면 납부됨
@@ -6611,6 +6675,22 @@ function buildShared(){
       )
     )
   );
+  // 공용 월 예산 게이지 (설정→공용 예산)
+  {const cfgS=getSharedCfg();const bud=Number(cfgS.sharedBudget)||0;
+   if(bud>0){
+     const pctRaw=Math.round(netSpend/bud*100);
+     const col=pctRaw>=100?C.over:pctRaw>=80?C.warn:C.brand;
+     const dLeft=(()=>{const now=td();if(ym(now)!==S.curYm)return 0;const last=new Date(Number(S.curYm.slice(0,4)),Number(S.curYm.slice(5,7)),0).getDate();return Math.max(0,last-Number(now.slice(8,10)));})();
+     const remain=bud-netSpend;
+     hero.append(h("div",{style:{marginTop:"14px"}},
+       h("div",{style:{display:"flex",justifyContent:"space-between",fontSize:"11px",marginBottom:"5px"}},
+         h("span",{style:{fontWeight:"700",color:C.sub}},"이번 달 공용 예산"),
+         h("span",{class:"num",style:{fontWeight:"800",color:col}},`${pctRaw}% · ${W(netSpend)} / ${W(bud)}`)),
+       h("div",{style:{height:"8px",background:"#EFEDE7",borderRadius:"999px",overflow:"hidden"}},
+         h("div",{style:{width:Math.min(100,pctRaw)+"%",height:"100%",background:col,borderRadius:"999px",transition:"width .3s"}})),
+       h("div",{style:{fontSize:"10.5px",color:remain>=0?C.faint:C.over,marginTop:"4px",textAlign:"right"}},
+         remain>=0?(dLeft>0?`남은 ${W(remain)} · 하루 ${W(Math.floor(remain/Math.max(1,dLeft)))}씩 쓸 수 있어요`:`남은 ${W(remain)}`):`⚠️ 예산 초과 ${W(Math.abs(remain))}`)));
+   }}
   out.push(hero);
 
   // ①-B 공용 달력(월/년) + 카테고리 도넛
@@ -6649,6 +6729,24 @@ function buildShared(){
 
   // ③ 정산 도우미
   out.push(buildSettlement());
+
+  // ③-B 이체로 기록된 멤버 입금 → 공용입금 전환 제안 (게이지에 잡히게)
+  {const cand=S.sharedTxns.filter(t=>t.type==="이체"&&/정근|다혜|여친|입금/.test(t.merchant||""));
+   if(cand.length){
+     const bn=h("div",{style:{background:"#F0F4FF",border:"1px solid #C9D6F2",borderRadius:"14px",padding:"12px 14px",marginTop:"12px"}});
+     bn.append(h("div",{style:{fontSize:"12px",fontWeight:"800",color:"#3B5BA5",marginBottom:"4px"}},"💡 생활비 입금 아닌가요?"),
+       h("div",{style:{fontSize:"11px",color:"#3B5BA5",marginBottom:"8px",lineHeight:"1.5"}},"'이체'로 기록돼 입금 게이지에 안 잡혀요. 생활비 입금이 맞으면 탭해서 바꿔주세요."));
+     cand.slice(0,4).forEach(t=>{
+       bn.append(h("button",{style:{width:"100%",textAlign:"left",display:"flex",justifyContent:"space-between",alignItems:"center",gap:"8px",fontSize:"12px",fontWeight:"700",padding:"9px 11px",borderRadius:"9px",border:"1px solid #C9D6F2",background:"#fff",color:C.ink,cursor:"pointer",marginBottom:"6px"},onclick:async(ev)=>{
+         ev.currentTarget.disabled=true;
+         const{error}=await sb.from("transactions").update({type:"공용입금"}).eq("id",t.id);
+         if(error){toast("실패: "+error.message,false);ev.currentTarget.disabled=false;return;}
+         toast(`💰 ${t.merchant} ${W(t.amount)} → 공용입금`);
+         await loadShared();const ct=document.getElementById("ct");if(ct&&S.tab==="shared"){ct.innerHTML="";buildShared().forEach(n=>ct.append(n));}
+       }},h("span",{style:{minWidth:"0",whiteSpace:"nowrap",overflow:"hidden",textOverflow:"ellipsis"}},`${(t.date||"").slice(5)} · ${t.merchant}`),h("span",{class:"num",style:{flexShrink:"0",color:"#3B5BA5"}},`${W(t.amount)} → 공용입금`)));
+     });
+     out.push(bn);
+   }}
 
   // ④ 생활비 입금
   out.push(buildDepositSection(depByPerson,st));
