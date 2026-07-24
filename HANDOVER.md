@@ -1,0 +1,333 @@
+# 🐾 나의 가계부 — 개발자 인수인계 문서
+
+> 이 문서 하나로 코드를 처음 보는 개발자가 전체를 파악하고 리뷰할 수 있도록 작성했습니다.
+> 작성 기준: **v128** (2026-07). 앱 라이브: https://ohmsavaha.github.io/budget-app/
+
+---
+
+## 0. 30초 요약 (TL;DR)
+
+- **무엇**: 개인/커플용 가계부 PWA. 정근(본인) + 다혜(파트너)가 공용 지출을 함께 관리. 한국어 UI("🐾 나의 가계부").
+- **구조**: **단일 파일 `index.html` (약 7,965줄)** 안에 전부. `<script type="module">` 하나. **프레임워크 없음, 빌드 없음.** 자체 하이퍼스크립트 `h()` 함수로 DOM 조립.
+- **백엔드**: Supabase (프로젝트 `axlxdkybghxcltilsqgj`) — Postgres + Auth + RLS + Realtime 미사용. 클라이언트에서 직접 `@supabase/supabase-js`로 접근.
+- **배포**: GitHub Pages (`main` 브랜치 = 곧 프로덕션). CI 없음. `git push` = 배포.
+- **인증**: Supabase Auth (이메일/비번). 2인 계정, `household_members`로 공용 데이터 공유.
+- **AI**: 사용자 본인 Anthropic API 키로 Claude Vision 호출(카드 명세서/영수증 스크린샷 → 거래 추출).
+
+> ⚠️ **리뷰어가 가장 먼저 알아야 할 것**: 이 앱은 프레임워크 없이 `h()`로 짠 대형 단일 파일이고, **회계 규칙(§6)이 도메인의 핵심**이며 함부로 바꾸면 안 됩니다. 코드 스타일보다 회계 정합성이 우선입니다.
+
+---
+
+## 1. 기술 스택 & 설계 배경
+
+| 항목 | 선택 | 이유 |
+|---|---|---|
+| 프론트 | Vanilla JS + 자체 `h()` | 비개발자(정근)가 AI와 함께 유지보수. 빌드/툴체인 없이 파일 하나만 고치면 됨 |
+| 렌더 | 명령형 재렌더 (상태 `S` 변경 → `renderDash()`) | React 없이도 충분한 규모. 가상돔 없음 |
+| 백엔드 | Supabase (BaaS) | 서버 코드 최소화. RLS로 보안, Auth 내장 |
+| 배포 | GitHub Pages | 무료, 정적 호스팅, 커밋=배포 |
+| 차트 | Chart.js (CDN, esm/cdnjs) | 도넛·라인·바 |
+| 엑셀 | SheetJS(xlsx) — **CDN 지연 로드** | 가져오기 때만 로드 |
+| 저장 | Supabase(공유 데이터) + localStorage(개인 설정·기기별) | 아래 §5 참고 |
+
+### 하드코딩된 자격증명 (의도된 것 — 안전함)
+`index.html` 상단(약 47행)에 있음:
+```js
+const SURL="https://axlxdkybghxcltilsqgj.supabase.co";
+const SKEY="sb_publishable_..."; // publishable(anon) 키 — 공개용, RLS가 보호
+const VAPID_PUBLIC_KEY="B..."; // 푸시 공개키 — 공개용
+```
+- 이 둘은 **공개돼도 안전한 키**입니다(anon publishable, VAPID public). 실제 보호는 **RLS**가 합니다(§5.3에서 검증됨).
+- **service_role 키는 리포지토리에 없습니다.** iOS 단축어용 Edge Function(`shortcut/`)에서만 Supabase Secrets로 주입되며 서버에서만 삽니다. 절대 브라우저에 노출 금지.
+- 사용자 Anthropic API 키는 localStorage(`anthropic_key`)에만, 기기별 저장(동기화 안 됨).
+
+---
+
+## 2. 실행 · 배포 · 검증
+
+### 실행 (로컬)
+정적 파일이라 어떤 정적 서버로도 열림:
+```bash
+python -m http.server 8321   # 또는 npx serve, 또는 VS Code Live Server
+# → http://localhost:8321
+```
+(원저자 환경엔 node/python이 없어, Claude Code의 PowerShell HttpListener 프리뷰 서버 `.claude/server.ps1`를 씀. 리뷰어는 아무 정적 서버나 OK.)
+
+### 배포
+```bash
+# 1) index.html 헤더의 버전 문자열을 올린다 (약 689행: "🐾 나의 가계부 · vNNN")
+# 2) main에 커밋 + 푸시
+git add index.html && git commit -m "vNNN: ..." && git push origin main
+# 3) 1~5분 뒤 라이브 반영 확인 (GitHub Pages 빌드가 가끔 지연 → 빈 커밋으로 재트리거)
+curl -s "https://ohmsavaha.github.io/budget-app/index.html?cb=$RANDOM" | grep -o "가계부 · vNNN"
+```
+- **버전 문자열은 배포 확인 수단**이다. user-facing 변경마다 올린다.
+- Pages 빌드가 안 걸리면 `git commit --allow-empty` 로 재트리거.
+
+### 검증 (테스트 코드 없음)
+- 자동화된 테스트 스위트가 없다. 검증은 **프리뷰 브라우저 + 콘솔 에러 0건 + 실제 클릭**으로 한다.
+- 순수 로직(날짜/분류/파싱)은 함수 소스를 콘솔/eval에 복붙해 단언(assert)한다 — 모듈 스코프라 함수가 `window`에 없다.
+- 대규모 편집 후 **중복 함수 정의**를 grep으로 확인(단일 파일이라 쉽게 shadow됨).
+
+---
+
+## 3. 아키텍처
+
+### 3.1 렌더 헬퍼 `h()` (약 438행) — 이 앱의 심장
+```js
+function h(tag, props={}, ...kids){ ... }
+```
+- `props.style` = **객체**(`Object.assign`). `class` → className. `on*` → addEventListener. 나머지 → setAttribute.
+- children: 문자열/숫자 → 텍스트노드. `null`/`false` → 스킵 (그래서 `cond && h(...)` 관용구가 됨).
+- 모든 UI가 중첩된 `h(...)` 호출. **디자인툴에서 나온 React/HTML 스니펫은 이 형태로 다시 써야 함.**
+
+### 3.2 전역 상태 `S` (약 445행)
+가변 전역 객체 하나에 모든 런타임 상태:
+```js
+const S={session, tab:"home", curYm:"YYYY-MM", txns:[], prevTxns:[], sharedTxns:[],
+         accounts:[], savings:[], householdId, invRows:[], ... };
+```
+패턴: **`S`를 변경 → 재렌더**. 리액티브 바인딩 없음.
+
+### 3.3 렌더 흐름
+```
+sb.auth.getSession() → render()
+  ├─ 세션 없음 → renderAuth()  (로그인/가입)
+  └─ 세션 있음 → renderDash()
+        ├─ 헤더(월 네비게이터, 검색🔍, 가져오기📥, 알림🔔, 설정⚙️)
+        ├─ 탭 바 (TAB_DEFS)
+        └─ S.tab 으로 분기 → build<Tab>() 이 #ct(콘텐츠 컨테이너) 채움
+```
+- 탭 정의(`TAB_DEFS`, 약 672행): `home / spend / shared / assets / calendar / fixed / invest / yearly / db` (9개).
+- 각 탭 = `buildHome() / buildSpend() / buildShared() / buildAssets() / buildCalendarView() / buildFixed() / buildInvest() / buildYearly() / buildDbTab()`.
+
+### 3.4 데이터 로더 (per-scope, 비동기)
+`S`를 채우고 재렌더하는 async 함수들:
+- `loadMonth()` — 현재월/전월 거래 (`S.txns`, `S.prevTxns`)
+- `loadShared()` — 공용 거래 + 공용 고정비 + householdId
+- `loadYear()` / `loadInvest()` / `loadFixed()` / `loadCalMonth()` / `loadAssets()` / `loadSharedView(ymk)` / `loadDbProducts()`
+- **"수정 후 갱신" 관용구**: `await loadX(); const ct=document.getElementById("ct"); if(ct){ct.innerHTML="";buildX().forEach(n=>ct.append(n));}`
+
+### 3.5 모달/시트
+`show*` 함수들이 `position:fixed` 오버레이를 `document.body`에 append. (예: `showAdd`, `showEditTxn`, `showImport`, `showDupCleaner`, `showCardStatement` …)
+
+### 3.6 카드 재배치·이동 시스템 (약 4819~5151행)
+탭 안 카드들을 드래그로 순서변경·리사이즈(span)·다른 탭으로 이동·숨김 가능. localStorage(`cardorder:`, `cardstate:`, `cardmoved:`, `taborder`)에 저장. `reorderCards()` / `attachDrag()` / `flipMove()` (FLIP 애니메이션) 등.
+
+---
+
+## 4. 파일 구조
+
+```
+index.html          # 앱 전체 (~7,965줄, 단일 <script type=module>)
+sw.js               # 서비스워커 (오프라인 캐시 network-first + 푸시 핸들러)
+manifest.webmanifest# PWA 매니페스트
+icon-*.png / apple-touch-icon.png / icon-maskable*.png  # 앱 아이콘
+assets/             # 브랜드 스티커·대시보드·UI 이미지 (고양이 마스코트: 짜장🐈‍⬛ 후추🐈 마요🐈)
+stickers/           # 스티커 리소스
+shortcut/           # iOS 단축어 연동 (Edge Function + 설치 가이드) — §10.6
+CLAUDE.md           # AI(Claude Code)용 작업 가이드
+HANDOVER.md         # (이 문서)
+```
+
+---
+
+## 5. 데이터 모델
+
+### 5.1 Supabase 테이블 (총 15개)
+
+| 테이블 | 용도 | 핵심 컬럼 |
+|---|---|---|
+| **transactions** | 모든 거래 (핵심) | `user_id, household_id, date, account("개인"/"공용"), type, amount, category, merchant, payment_method, memo, installment_group_id, installment_no, installment_total, meta(jsonb)` |
+| **accounts** | 계좌·카드 | `name, kind("카드"/"통장"/…), balance, billing_day` |
+| **savings** | 저축·적금 | 현재액·목표·월납입·만기·금리 |
+| **loans** | 부채 | 원금·잔액·금리 등 |
+| **dutch_splits** | 더치페이/대신결제 정산 | `total, my_share, to_receive, is_shared, received, received_account_id, transaction_id, place, date` |
+| **fixed_costs** | 개인 고정비 | `name, amount, billing_day, account, payment_method, is_active, memo, meta(jsonb)` |
+| **shared_fixed_costs** | 공용 고정비 | 위와 유사 (household 공유) |
+| **household_members** | 가구 공유 매핑 | `household_id, user_id` (정근+다혜 2행) |
+| **monthly_budgets** | 월 예산 | 월별 예산액 |
+| **investment_snapshots** | 투자 현황 스냅샷 | 총평가액·손익·수익률·환율 (일자별) |
+| **investment_holdings** | 투자 종목 | 종목·수량·평가액·티커 |
+| **shopping_items** | 장바구니 | 품목·예상가·구매여부 |
+| **products** | 우리집 품목 사전(DB탭) | 품목 마스터 |
+| **price_records** | 품목 가격 기록 | product_id별 가격 이력 |
+| **push_subscriptions** | 웹푸시 구독 | endpoint·키 |
+
+### 5.2 거래 `type` 값 (`TYPES`, 약 67행) — **10종, 도메인 핵심**
+```
+소비(일시불), 소비(할부), 정산환급, 환불/취소, 수입,
+저축/적금, 투자, 카드대금, 공용입금, 이체
+```
+
+### 5.3 보안(RLS) — v128 감사 결과 ✅
+- transactions는 **user_id 기반 RLS**. 세션 사용자는 자기 것 + household를 통해 공유된 공용 거래만 읽음. (감사에서 "남의 거래" = 다혜의 공용 거래 1건만 = 설계대로. 임의 접근 차단 확인.)
+- **household 공유 메커니즘**: 공용 거래는 `account="공용"` + `household_id=<가구ID>`. 이 `household_id`가 있어야 파트너가 봄.
+  - ⚠️ **알려진 이슈**: 가져오기로 넣은 과거 공용 거래 일부가 `household_id`가 비어 파트너와 공유 안 됨 → v128에서 (a) 가져오기 저장 시 자동 채움 (b) 설정→데이터→"🔗 공용 공유 복구" 버튼(backfill)으로 해결. (§12 참고)
+
+### 5.4 localStorage (기기별 개인 설정, 동기화 안 됨)
+주요 키: `anthropic_key`(API키), `card_groups`(카드 묶기 규칙), `classify_rules`(자동분류 사용자규칙), `cat_budgets`(카테고리 예산), `shared_cfg`(공용 예산·부담비율), `shared_tab`(입금목표·정산체크), `spend_exclude`/`spend_fixed`(지출 제외/고정 키워드), `portfolio_holdings`·`invest_journal`(투자), `nw_history`(순자산 추이), `notif_prefs`·`push_on`·`notif_log`(알림), `cardorder:`/`cardstate:`/`cardmoved:`/`taborder`(카드 배치), `revolving:`(리볼빙 이월), `quick_favs`(빠른입력 즐겨찾기), `month_close`(월 마감) 등 ~36개.
+> ⚠️ localStorage는 **기기 로컬**이라 폰↔PC↔파트너 간 동기화 안 됨. 카드 묶기·분류규칙 등은 각 기기에서 설정 필요.
+
+---
+
+## 6. 💡 회계 도메인 규칙 (가장 중요 — 함부로 바꾸지 말 것)
+
+> 원저자(정근)가 확정한 규칙. 리뷰 시 "이상해 보여도" 대부분 의도된 것.
+
+### 6.1 유형 → 성격 매핑
+- `kindOf(type)` (약 411행): `소비(일시불)/소비(할부)` → **spend**, `정산환급/환불취소` → **reduce**, `수입` → **income**, `저축/적금·투자` → **save**, 나머지(`카드대금·공용입금·이체`) → **flow**.
+- `sharedKindOf(t)` (공용 탭 전용, 약 6369행): `공용입금`·**`수입`** → **deposit**(입금), `소비` → spend, `정산환급/환불취소` → reduce, `이체·카드대금·저축·투자` → **flow**. → **공용통장에 들어온 돈(수입 타입 포함)은 지출로 안 셈**(v125 버그수정).
+
+### 6.2 일시불 vs 할부
+- **일시불** = 구매일에 지출 처리.
+- **할부(개인)** = 각 회차를 그 달 지출로, 날짜는 **카드 결제일**에 맞춤. `estPurchaseDate(t)`가 `installment_no`로 원구매일 역산 → 메모에 `#원구매:YYYY-MM-DD` 태그. `autoSortInstallments()`/`showBillDateSort()`가 할부를 결제일로 이동.
+- **할부(공용)** = **v121 규칙**: 산 날짜에 **전액 1건**(소비 일시불, 메모에 `#할부통합`). 공용 장부는 산 달에 한 번만 인식(미래 날짜 안 생김). 대신 **카드 청구 예상 화면에서만** 메모의 "N개월 할부"를 파싱해 **가상 회차 분할**(원금/N을 해당 청구월들에 표시) — `buildNextMonthBill` 내부(약 2594행). 데이터는 1줄, 청구는 계산.
+
+### 6.3 카드대금 = 이체 취급
+- `카드대금`은 지출이 아니라 이체로 본다. 이미 기록된 소비를 갚는 것이라 **이중계상 방지**. 청구 확정 화면은 소비 행에서 예상만 뽑음.
+
+### 6.4 공용 50% (내 몫)
+- `accountShare(pm)` (약 5970행): 결제수단명에 "공용" 포함 시 0.5, 아니면 1. **카드 청구 예상**에서 공용 카드 지출을 내 몫(절반)으로 계산할 때 사용.
+- `calcStatsFor(txns)` (약 757행): 개인/공용 소비를 분리 집계(`pNet`, `cNet`). **실질 총지출 = pNet + cNet × 부담비율(기본 50%)**. 홈 결산(`buildMonthSettle`)과 지출 히어로(`buildSpendHero`)가 이 값을 씀. 공용통장 입금(수입)은 개인 income에서 제외(v125).
+
+### 6.5 더치페이 / 대신결제 정산 (`dutch_splits`)
+- **개인 더치페이(1/n)**: 내 카드로 선결제 → "받을 돈" 걸기 → 입금 매칭 시 `type`을 `정산환급`으로 전환(내 소비에서 차감).
+- **공용 대신결제(v122)**: 공용 물건을 내 개인 카드로 결제 → 거래 수정 시트의 "💸 내가 대신 냈어요 — 정산받기"에서 **[전액][절반][직접]** 중 선택해 받을 돈 등록. **받음 처리 시 `이체`로 기록**(내 계좌 잔액만 +, 공용 지출은 전액 유지 = 안 깎임). `showDutchReceive`에서 `d.is_shared`면 이체, 아니면 정산환급으로 분기.
+
+### 6.6 올해 분담 리포트 (v126, `buildYearSettleReport`)
+정근/여친 각자 **낸 돈**(공용통장 입금 + 개인 카드로 낸 공용 소비 − 정산 환급) vs **부담 몫**(공용지출×비율) 비교 → "누가 얼마 채우면 균형" 자동 계산.
+
+---
+
+## 7. 탭별 기능 (build 함수 매핑)
+
+| 탭 | build 함수 | 주요 내용 |
+|---|---|---|
+| 🏠 홈 | `buildHome` | 예산 현황·📊 월 결산(실질총지출/수입/순잉여·저축률·📤이미지·📝노션 공유)·다가오는 청구·월간 인사이트·카테고리별 소비 |
+| 💸 지출 | `buildSpend` | 🎯 지출 히어로(실질총지출·무지출·6개월 추이)·다음달 청구 예상·결제수단별 사용액(카드 묶기)·구독·카테고리 예산·식비 분석·카테고리 리포트·장바구니·제외 제안·최근 내역 |
+| 🤝 공용 | `buildShared` | 공유상태·공용 지출 히어로·공용 예산 게이지·달력/카테고리 도넛·공용 고정비·정산 도우미·분담 리포트·입금 전환 배너·생활비 입금·이번달 공용 내역 |
+| 💰 자산 | `buildAssets` | 계좌·저축·투자·부채·순자산·순자산 추이·자산 구성 도넛·FIRE 트래커 |
+| 📅 월간 | `buildCalendarView` | 월 달력(일별 지출·메모)·요일별·날짜 상세 |
+| 📌 고정비 | `buildFixed` | 고정비 목록(납부 체크·변동/구독/공용분담·주기)·반복결제 자동발견 |
+| 📈 투자 | `buildInvest` | 포트폴리오·종목별·섹터 도넛·수익률 캘린더·투자 일지·스크린샷 자동입력 |
+| 🗓️ 연간 | `buildYearly` | 월별 막대·연 집계 |
+| 🗃️ DB | `buildDbTab` | 우리집 품목 가격사전(products/price_records) |
+
+---
+
+## 8. 주요 기능 상세
+
+### 8.1 가져오기 (`showImport`, 약 6200행대) — 3가지 방법 + 대상 토글
+1. **📸 스크린샷 AI**: 카드앱 이용내역 캡처(여러 장) → `claudeVisionMulti` → 거래 배열 추출 → 자동분류 → 검토 테이블 → 일괄 저장.
+2. **📊 엑셀**: 뱅크샐러드/토스뱅크 등 `.xlsx` → SheetJS 지연로드(`loadExtScript`) → 헤더 자동인식 → `impNormDate`(점/한글/시리얼/YY 날짜) + `bsMapCategory`(뱅샐→우리 카테고리) → 은행 내역서식(출금/입금 분리컬럼·거래일시·부호금액)도 지원.
+3. **📄 JSON**: Claude 대화로 만든 JSON(구방식).
+- **개인/공용(모임통장) 토글**: 공용 선택 시 입금→`공용입금`, account="공용", `household_id` 자동 연결(v128).
+- **중복 스킵**: 저장 시 (날짜·금액·가맹점)으로 기존과 대조해 자동 제외.
+
+### 8.2 중복 정리 (`showDupCleaner`, v124) — §12의 뱅샐 중복 대응
+설정→데이터→🧹. 같은 (날짜+금액+가맹점+계정) 2건 이상 그룹을 큰 금액순 나열. "유지" 1건 자동선정(메모/실카드 우선), 나머지 개별/일괄 삭제. **자동삭제 안 함**(실제 반복구매 오삭제 방지). 계정(개인/공용)은 절대 안 섞음.
+
+### 8.3 카드 묶기 (`cardGroupOf` / `showCardGroupManager`, v120·v123)
+뱅샐이 쪼갠 세부카드(로카·하이패스·YOU Prime 등)를 카드사로 합침. `CARD_ISSUERS` 내장 규칙 + 사용자 오버라이드(localStorage `card_groups`). 자동 안 잡히는 단독카드(예: 한전KPS 복지카드)는 설정→데이터→🔧 카드 묶기에서 수동 지정.
+
+### 8.4 카드 청구 예상 (`buildNextMonthBill`, 약 2594행)
+전월 사용분 + 당월 할부분 + **공용 할부통합 가상회차**(§6.2) 합산. 카드사 단위 그룹(세부카드는 상세 탭). 실제 청구액 입력(`showBillConfirm`)·리볼빙 이월 처리.
+
+### 8.5 자동분류 (`autoClassify`, 약 131행)
+`BUILTIN_RULES`(가맹점→카테고리·계정 사전) + 사용자 규칙(`classify_rules`). 키워드 길이 긴 순으로 매칭(구체 규칙 우선).
+
+### 8.6 AI 비전 (`claudeVision`/`claudeVisionMulti`, 약 163·185행)
+Anthropic Messages API 직접 호출(`anthropic-dangerous-direct-browser-access`). 모델 `claude-sonnet-4-6`, max_tokens 4000. 응답에서 첫 `{`~마지막 `}` 슬라이스 후 JSON 파싱.
+
+---
+
+## 9. 외부 연동 (전부 클라이언트 직접, 서버 최소)
+
+| 연동 | 방식 | 위치 |
+|---|---|---|
+| Supabase (DB·Auth) | `@supabase/supabase-js@2` (esm.sh) | 전역 `sb` |
+| Claude Vision | Anthropic Messages API 직접 fetch | `claudeVision*` |
+| 웹 푸시 | VAPID + `push_subscriptions` + `sw.js` push 핸들러. 실제 발송은 Supabase Edge Function(별도) | §11, sw.js |
+| 주가 | Yahoo Finance chart API + Supabase `market-proxy` 함수 | `fetchQuotes`/`fetchPrice` |
+| 환율 | open.er-api.com (키 불필요, CORS 허용) | `fetchFxRate` |
+| 엑셀 파싱 | SheetJS(cdnjs) 지연로드 | `loadExtScript` |
+| 📅 캘린더 | 클라이언트에서 `.ics`(월 반복+알람) 생성 → 공유/다운로드. **구글·아이폰 둘 다 import 가능** | `downloadPaydayICS` (v127) |
+| 📤 결산 이미지 | Canvas로 리포트 PNG 렌더 → `navigator.share` | `shareMonthReport` (v127) |
+| 📝 노션 | 결산을 마크다운 표로 클립보드 복사 → 노션 붙여넣기 | `copyMonthReportMd` (v128) |
+| 📲 iOS 단축어 | Supabase Edge Function(`shortcut/quick-import-edge-function.ts`) — 스크린샷→AI→자동등록. 토큰 인증·중복 스킵. **사용자가 직접 배포**(가이드: `shortcut/README.md`) | shortcut/ |
+| 오프라인 | 서비스워커 network-first 캐시 | sw.js |
+
+> **불가능한 연동(정직)**: 마이데이터 자동 동기화(금융 라이선스 필요), 카카오 알림톡(사업자 전용), iOS 홈위젯(PWA 미지원), 문자 자동인식(iOS 차단). 뱅샐 엑셀/스크린샷/단축어가 현실적 대안.
+
+---
+
+## 10. 서비스워커 (`sw.js`)
+
+- **network-first + 오프라인 폴백**: 온라인이면 항상 최신(배포 즉시 반영), 오프라인이면 마지막 캐시로 앱이 열림.
+- **Supabase 데이터 API는 절대 캐시 안 함** — `CACHEABLE_ORIGINS`(자기 오리진 + esm.sh + cdnjs)만 캐시.
+- 푸시 수신·알림 클릭 핸들러 포함.
+- ⚠️ **알려진 tech debt**: `CACHE = "budget-v117"`이 v117 이후 안 올라감. network-first라 실사용 영향은 거의 없지만(오프라인 폴백 캐시일 뿐), 원칙상 버전과 맞추면 좋음.
+
+---
+
+## 11. 웹 푸시 알림 (11종)
+카드결제일·예산초과·미기록매일·구독·월말·고정비·주간요약·무지출·저축목표·장바구니·투자급등락. 다중선택·앱아이콘 뱃지·인앱 알림함(`notif_log`). 구독은 `push_subscriptions`. **서버 자동발송은 별도 Supabase Edge Function(Deno)** — 이 리포지토리 밖(원본 `send-push_edge_function.ts`).
+
+---
+
+## 12. ⚠️ 알려진 이슈 / 기술 부채 (리뷰어 필독)
+
+1. **뱅샐 import 중복 (~199건, ≈594만원 부풀림)**: 같은 결제가 카드 이름 2개로 들어옴(네이버페이 taptap↔삼성카드, LOCA↔롯데, 토스공용↔토스, 해외결제 알리). → `showDupCleaner`로 사용자가 검토 삭제. 근본해결은 뱅샐에서 간편결제 연동 정리 or 카드사 이용내역 직접 사용.
+2. **할부통합 vs taptap 이중**: v121 할부통합이 삼성 쪽만 합쳐서 트레이더스 등이 [삼성 통합 237,640]+[taptap 79,213×3]로 금액이 달라 `showDupCleaner`에 안 걸림. 별도 수동 정리 필요.
+3. **공용 거래 household_id 누락 110건**: 파트너와 공유 안 됨. v128에서 코드 수정+복구 버튼 제공. 사용자가 "🔗 공용 공유 복구" 1회 실행 필요.
+4. **1000행 쿼리 한계**: Supabase 기본 limit 1000. 전량 조회는 `.range()` 페이지네이션 필요(감사/중복정리는 처리함, 다른 곳은 현재월 위주라 OK).
+5. **sw.js CACHE 버전 미동기화** (§10).
+6. **단일 8000줄 파일**: 모듈 분리·번들러·타입 없음. 리뷰/유지보수 부담. 다만 "빌드 없이 파일 하나" 제약이 의도된 것이라 트레이드오프.
+7. **테스트 부재**: 자동화 테스트 없음. 회귀는 수동 확인.
+8. **localStorage 미동기화** (§5.4): 기기/사람 간 설정 안 맞음.
+
+---
+
+## 13. 개발 시 주의사항 (실제 사고 사례 기반)
+
+- **함수 통째 교체 시 브레이스 매칭** 주의 — 옆 함수까지 삭제된 적 있음. 고유 시그니처 줄에 targeted edit 권장.
+- **자기참조 크래시**: `const x = h("div", {}, x, ...)` 금지 (초기화 중 자기 참조).
+- **날짜는 반드시 `dstr(d)`** (로컬 YYYY-MM-DD). `toISOString().slice(0,10)`(UTC) 금지 — KST 새벽 시간대에 하루 어긋나는 버그가 있었고 리포지토리 전역에서 고침. `td()`=오늘, `ym()`, `yml()`, `shYm()`, `mRange()` 재사용.
+- **금액 표기 헬퍼 재사용**: `W(n)`="₩1,234", `wonKor(n)`="123만 4,567원", `shortNum(n)`="12만".
+- **회계 규칙(§6) 변경 금지** — 확정된 도메인 결정.
+- 큰 파일이라 심볼은 **Grep으로 위치부터** 찾고 좁은 범위만 읽기.
+
+---
+
+## 14. 버전 히스토리 (오늘 세션 v116 → v128)
+
+| 버전 | 내용 |
+|---|---|
+| v117 | 날짜 UTC 버그 수정, 오프라인 캐시(sw.js), 금액 한글 미리보기 |
+| v118~119 | 가져오기 3종(스샷AI·뱅샐/토스뱅크 엑셀·JSON), 공용 달력/카테고리 도넛 |
+| v120 | 카드사 그룹핑, 모임통장 가져오기, 공용 달력 색/클릭 상세 |
+| v121 | 공용 할부=산 날 전액 1건 규칙 + 기존 데이터 정리(마이그레이션) |
+| v122 | 공용 대신결제 정산(전액/절반/직접 → 이체 환급) |
+| v123 | 카드 수동 묶기 UI + 지출 내역 공용 배지 |
+| v124 | 중복 거래 정리 검토 화면 |
+| v125 | 공용 집계 버그 2건 수정 + 청구 할부분할 + 지출 히어로 |
+| v126 | 올해 분담 리포트 |
+| v127 | 외부 연동 3종(.ics 캘린더 + 결산 이미지 공유 + iOS 단축어 준비) |
+| v128 | 데이터 감사·공용 공유 복구 + 가져오기 household 연결 + 노션/캘린더 |
+
+---
+
+## 15. 코드 리뷰어를 위한 체크포인트
+
+리뷰 시 우선순위:
+
+1. **보안**: RLS가 모든 테이블에 걸려 있나? (transactions는 확인됨. accounts/savings/loans/dutch_splits/fixed_costs/investment_* 등도 user_id RLS 필요.) service_role은 Edge Function에만. → **RLS 정책을 Supabase 대시보드에서 테이블별로 확인 권장.**
+2. **회계 정합성**: §6 규칙이 `calcStatsFor`·`sharedKindOf`·`buildNextMonthBill`·`buildYearSettleReport`에서 일관되게 적용되나. 특히 **공용 50% / 할부통합 가상회차 / 대신결제 이체** 3곳이 서로 안 어긋나는지.
+3. **데이터 무결성**: §12의 중복·household 누락. 대규모 쓰기(마이그레이션·복구·삭제)는 **스냅샷 후** 실행하는 패턴 유지.
+4. **성능**: 1000행 한계, 탭 진입마다 재쿼리(캐시 없음), 대형 파일 파싱(초기 로드). 필요시 인덱스·페이지네이션·코드 스플릿.
+5. **개선 여지(선택)**: 모듈 분리/번들러 도입, TypeScript, 테스트, localStorage→서버 동기화, 뱅샐 import 중복 자동감지 강화, 청구 예상의 할부통합 회차수 메타컬럼화(현재 메모 파싱).
+
+---
+
+_문의: 원저자 정근. 이 문서는 v128 기준이며, 큰 변경 시 갱신 필요._
