@@ -30,6 +30,7 @@ Object.assign(globalThis, {
   localStorage,
   MutationObserver: window.MutationObserver,
   CustomEvent: window.CustomEvent,
+  Element: window.Element,
   HTMLElement: window.HTMLElement,
 });
 
@@ -50,6 +51,16 @@ window.dispatchEvent(new window.CustomEvent("budget-mascot", {
 if (!image.getAttribute("src")?.includes("huchu_card_payment")) throw new Error("카드 결제 반응 실패");
 if (stage.dataset.state !== "reacting") throw new Error("반응 상태 표시 실패");
 
+window.BudgetMascot.play({ action: "head_tilt", character: "mayo", duration: 10 });
+if (!image.getAttribute("src")?.includes("phase2f/webp/mayo_head_tilt_512")) {
+  throw new Error("Phase 2F 생활 동작 실패");
+}
+
+window.BudgetMascot.play({ action: "group_cuddle", character: "group", duration: 10 });
+if (!image.getAttribute("src")?.includes("phase2f/webp/group_group_cuddle_512")) {
+  throw new Error("Phase 2F 그룹 동작 실패");
+}
+
 const toggle = stage.querySelector(".budget-mascot-toggle");
 toggle.click();
 if (!stage.classList.contains("is-disabled")) throw new Error("숨기기 실패");
@@ -57,13 +68,20 @@ toggle.click();
 if (stage.classList.contains("is-disabled")) throw new Error("다시 보기 실패");
 
 media.matches = true;
+window.BudgetMascot.play({ action: "head_tilt", character: "jjajang", duration: 10 });
+if (!image.getAttribute("src")?.includes("phase2f/static/jjajang_head_tilt_frame_01")) {
+  throw new Error("Phase 2F 모션 감소 정적 대체 실패");
+}
 window.BudgetMascot.play({ action: "refund", character: "jjajang", duration: 10 });
 if (!image.getAttribute("src")?.endsWith(".png")) throw new Error("모션 감소 정적 대체 실패");
+
+window.BudgetMascot.setEnabled(false);
 
 console.log(JSON.stringify({
   status: "passed",
   idle: "mayo_breathe",
   reaction: "huchu_card_payment",
   reducedMotion: "jjajang_refund_frame_01",
+  phase2f: "head_tilt + group_cuddle",
   toggle: "passed",
 }));

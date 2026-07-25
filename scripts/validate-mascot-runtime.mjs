@@ -39,6 +39,29 @@ for (const phase of phases) {
   }
 }
 
+const phase2fManifestPath = join(repoRoot, "assets/mascot-v2/phase2f/manifest.json");
+if (!existsSync(phase2fManifestPath)) {
+  failures.push(`누락: ${phase2fManifestPath}`);
+} else {
+  const phase2f = JSON.parse(readFileSync(phase2fManifestPath, "utf8"));
+  for (const animation of phase2f.animations || []) {
+    const { actor, action } = animation;
+    const paths = [
+      join(repoRoot, `assets/mascot-v2/phase2f/webp/${actor}_${action}_512_v01.webp`),
+      join(repoRoot, `assets/mascot-v2/phase2f/static/${actor}_${action}_frame_01_v01.png`),
+    ];
+    for (const path of paths) {
+      checked += 1;
+      if (!existsSync(path)) failures.push(`누락: ${path}`);
+      else {
+        const size = statSync(path).size;
+        totalBytes += size;
+        if (size < 100) failures.push(`비정상적으로 작은 파일: ${path} (${size} bytes)`);
+      }
+    }
+  }
+}
+
 for (const character of characters) {
   const master = join(
     repoRoot,
@@ -57,7 +80,7 @@ if (failures.length) {
     status: "passed",
     checkedFiles: checked,
     totalBytes,
-    phases: phases.length,
+    phases: phases.length + 1,
     characters: characters.length,
   }));
 }

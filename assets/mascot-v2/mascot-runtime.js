@@ -1,9 +1,15 @@
 const ROOT = "./assets/mascot-v2";
-const CHARACTERS = new Set(["huchu", "mayo", "jjajang"]);
+const CHARACTERS = new Set(["huchu", "mayo", "jjajang", "group"]);
 const REDUCED_MOTION = window.matchMedia("(prefers-reduced-motion: reduce)");
 const ENABLED_KEY = "mascot_v2_enabled";
 
 const PHASE_ACTIONS = Object.freeze({
+  phase2f: new Set([
+    "wake_up", "stretch", "yawn", "face_groom", "body_groom",
+    "tail_chase", "yarn_play", "box_enter", "card_peek", "call_owner",
+    "head_tilt", "explore", "focus_record", "encourage",
+    "group_cuddle", "group_ball_play",
+  ]),
   phase2a: new Set(["blink", "breathe", "ear_twitch", "tail_sway"]),
   phase2b: new Set(["walk", "run", "jump_land"]),
   phase2c: new Set([
@@ -23,6 +29,46 @@ const PHASE_ACTIONS = Object.freeze({
   ]),
 });
 
+const AMBIENT_BY_TAB = Object.freeze({
+  home: [
+    { character: "mayo", action: "face_groom", message: "마요가 잠깐 세수를 하며 쉬고 있어요." },
+    { character: "huchu", action: "head_tilt", message: "후추가 이번 달 기록을 궁금하게 바라봐요." },
+    { character: "jjajang", action: "encourage", message: "짜장이 오늘 기록도 잘하고 있다고 응원해요." },
+  ],
+  spend: [
+    { character: "huchu", action: "focus_record", message: "후추가 새 지출을 빠짐없이 기록하고 있어요." },
+    { character: "mayo", action: "body_groom", message: "마요가 기록 사이에 잠깐 몸단장을 해요." },
+  ],
+  shared: [
+    { character: "group", action: "group_cuddle", message: "세 마리가 공용통장 기록을 함께 지키고 있어요." },
+    { character: "mayo", action: "card_peek", message: "마요가 공용 내역 카드 뒤에서 살펴봐요." },
+  ],
+  assets: [
+    { character: "huchu", action: "explore", message: "후추가 자산 변화를 차근차근 탐색해요." },
+    { character: "jjajang", action: "head_tilt", message: "짜장이 자산 흐름을 유심히 바라봐요." },
+  ],
+  calendar: [
+    { character: "mayo", action: "focus_record", message: "마요가 날짜별 기록을 하나씩 정리해요." },
+    { character: "huchu", action: "card_peek", message: "후추가 달력 카드 뒤에서 빼꼼 바라봐요." },
+  ],
+  fixed: [
+    { character: "mayo", action: "focus_record", message: "마요가 고정비 납부 기록을 확인해요." },
+    { character: "jjajang", action: "encourage", message: "짜장이 이번 달 고정비 관리도 응원해요." },
+  ],
+  invest: [
+    { character: "huchu", action: "explore", message: "후추가 투자 흐름을 성급하지 않게 살펴봐요." },
+    { character: "mayo", action: "head_tilt", message: "마요가 투자 변화를 차분히 바라봐요." },
+  ],
+  yearly: [
+    { character: "group", action: "group_cuddle", message: "세 마리가 올해 쌓아온 기록을 함께 보고 있어요." },
+    { character: "jjajang", action: "encourage", message: "짜장이 꾸준히 이어온 한 해를 응원해요." },
+  ],
+  db: [
+    { character: "huchu", action: "explore", message: "후추가 우리집 품목과 가격 기록을 찾아봐요." },
+    { character: "jjajang", action: "box_enter", message: "짜장이 보관 품목 상자 안을 살펴봐요." },
+  ],
+});
+
 const IDLE_BY_TAB = Object.freeze({
   home: { character: "mayo", action: "breathe", message: "마요가 이번 달 가계부를 차분히 살펴보고 있어요." },
   spend: { character: "huchu", action: "ear_twitch", message: "후추가 새 지출과 예산 변화를 놓치지 않고 있어요." },
@@ -36,6 +82,20 @@ const IDLE_BY_TAB = Object.freeze({
 });
 
 const PREFERRED_CHARACTER = Object.freeze({
+  wake_up: "mayo",
+  stretch: "huchu",
+  face_groom: "mayo",
+  body_groom: "mayo",
+  tail_chase: "jjajang",
+  yarn_play: "jjajang",
+  box_enter: "huchu",
+  card_peek: "huchu",
+  call_owner: "jjajang",
+  explore: "huchu",
+  focus_record: "mayo",
+  encourage: "jjajang",
+  group_cuddle: "group",
+  group_ball_play: "group",
   amount_entry: "huchu",
   card_payment: "huchu",
   cash_payment: "mayo",
@@ -77,6 +137,22 @@ const PREFERRED_CHARACTER = Object.freeze({
 });
 
 const ACTION_COPY = Object.freeze({
+  wake_up: ["오늘 기록 시작", "마요가 천천히 일어나 가계부를 함께 열었어요.", "neutral"],
+  stretch: ["잠깐 기지개", "오래 머물렀다면 어깨도 한 번 가볍게 펴주세요.", "neutral"],
+  yawn: ["늦은 시간이에요", "기록은 저장됐으니 무리하지 말고 쉬어가도 좋아요.", "neutral"],
+  face_groom: ["잠깐 쉬는 중", "마요가 세수를 하며 다음 기록을 기다려요.", "neutral"],
+  body_groom: ["차분한 정리", "기록 사이에 잠깐 몸단장을 하고 있어요.", "neutral"],
+  tail_chase: ["놀이 시간", "짜장이 자기 꼬리를 발견하고 신나게 놀아요.", "neutral"],
+  yarn_play: ["털실 놀이", "짜장이 털실을 굴리며 잠깐 쉬고 있어요.", "neutral"],
+  box_enter: ["상자 탐색", "후추가 보관할 품목이 있는지 상자를 살펴봐요.", "neutral"],
+  card_peek: ["기록 살펴보기", "카드 뒤에서 새 내역을 조심스럽게 확인해요.", "neutral"],
+  call_owner: ["집사 기다리는 중", "기록할 일이 생기면 언제든 다시 불러주세요.", "neutral"],
+  head_tilt: ["궁금한 기록", "후추가 숫자의 변화를 유심히 바라보고 있어요.", "neutral"],
+  explore: ["차근차근 탐색", "후추가 필요한 기록을 하나씩 찾아보고 있어요.", "neutral"],
+  focus_record: ["입력에 집중", "마요가 지금 입력하는 내용을 함께 기록하고 있어요.", "neutral"],
+  encourage: ["잘하고 있어요", "작은 기록도 이어지면 분명한 변화가 돼요.", "good"],
+  group_cuddle: ["함께 정리 완료", "세 마리가 함께 관리한 기록을 나란히 확인해요.", "good"],
+  group_ball_play: ["잠깐 놀이", "세 마리가 공을 굴리며 잠깐 쉬고 있어요.", "neutral"],
   amount_entry: ["금액 입력 완료", "후추가 입력한 금액을 확인했어요.", "good"],
   card_payment: ["카드 결제 기록 완료", "카드 결제 내역이 안전하게 저장됐어요.", "good"],
   cash_payment: ["현금 결제 기록 완료", "현금으로 쓴 금액까지 빠짐없이 기록했어요.", "good"],
@@ -122,8 +198,11 @@ const PRIORITY = Object.freeze({
 });
 
 let timer = 0;
+let ambientTimer = 0;
 let activePriority = -1;
 let lastStage = null;
+let lastAmbient = "";
+let lastInputFocusAt = 0;
 
 function isEnabled() {
   return localStorage.getItem(ENABLED_KEY) !== "0";
@@ -134,7 +213,7 @@ function phaseFor(action) {
 }
 
 function animatedName(phase, character, action) {
-  const suffix = ["phase2a", "phase2b", "phase2c"].includes(phase) ? "_512_v01.webp" : "_v01.webp";
+  const suffix = ["phase2a", "phase2b", "phase2c", "phase2f"].includes(phase) ? "_512_v01.webp" : "_v01.webp";
   return `${character}_${action}${suffix}`;
 }
 
@@ -149,7 +228,8 @@ function assetPath(phase, character, action, reduced = REDUCED_MOTION.matches) {
 }
 
 function masterPath(character) {
-  return `${ROOT}/phase2a/static/${character}_master_front_sit_v01.png`;
+  const fallback = character === "group" ? "mayo" : character;
+  return `${ROOT}/phase2a/static/${fallback}_master_front_sit_v01.png`;
 }
 
 function getStage() {
@@ -198,8 +278,9 @@ function renderIdle() {
     toggle.title = isEnabled() ? "마스코트 숨기기" : "마스코트 다시 보기";
     toggle.setAttribute("aria-label", toggle.title);
   }
-  if (!isEnabled()) return false;
   window.clearTimeout(timer);
+  window.clearTimeout(ambientTimer);
+  if (!isEnabled()) return false;
   activePriority = -1;
   const tab = document.body.dataset.budgetTab || "home";
   const idle = IDLE_BY_TAB[tab] || IDLE_BY_TAB.home;
@@ -208,7 +289,31 @@ function renderIdle() {
   stage.querySelector(".budget-mascot-eyebrow").textContent = "후추 · 마요 · 짜장";
   stage.querySelector(".budget-mascot-message").textContent = idle.message;
   setImage(stage, { phase: "phase2a", ...idle });
+  scheduleAmbient();
   return true;
+}
+
+function scheduleAmbient() {
+  window.clearTimeout(ambientTimer);
+  if (!isEnabled() || REDUCED_MOTION.matches || document.hidden) return;
+  const delay = 25000 + Math.floor(Math.random() * 20001);
+  ambientTimer = window.setTimeout(playAmbient, delay);
+}
+
+function playAmbient() {
+  if (!isEnabled() || REDUCED_MOTION.matches || document.hidden) return false;
+  const tab = document.body.dataset.budgetTab || "home";
+  const candidates = AMBIENT_BY_TAB[tab] || AMBIENT_BY_TAB.home;
+  const available = candidates.filter(({ action, character }) => `${character}:${action}` !== lastAmbient);
+  const pool = available.length ? available : candidates;
+  const chosen = pool[Math.floor(Math.random() * pool.length)];
+  lastAmbient = `${chosen.character}:${chosen.action}`;
+  return play({
+    ...chosen,
+    duration: 2600,
+    title: "세 마리의 일상",
+    tone: "neutral",
+  });
 }
 
 function play({ action, character, duration = 2600, message, title, tone } = {}) {
@@ -221,6 +326,7 @@ function play({ action, character, duration = 2600, message, title, tone } = {})
   if (activePriority > priority) return false;
   activePriority = priority;
   window.clearTimeout(timer);
+  window.clearTimeout(ambientTimer);
   const chosen = CHARACTERS.has(character) ? character : (PREFERRED_CHARACTER[action] || "huchu");
   const copy = ACTION_COPY[action] || [title || "가계부 기록 완료", message || "기록을 확인했어요.", tone || "good"];
   stage.hidden = false;
@@ -243,6 +349,18 @@ function setEnabled(enabled) {
 
 window.addEventListener("budget-mascot", (event) => play(event.detail || {}));
 REDUCED_MOTION.addEventListener?.("change", renderIdle);
+document.addEventListener("visibilitychange", () => {
+  if (document.hidden) window.clearTimeout(ambientTimer);
+  else renderIdle();
+});
+document.addEventListener("focusin", (event) => {
+  const target = event.target;
+  if (!(target instanceof Element) || !target.matches("input, textarea, select, [contenteditable='true']")) return;
+  const now = Date.now();
+  if (now - lastInputFocusAt < 20000) return;
+  lastInputFocusAt = now;
+  play({ action: "focus_record", character: "mayo", duration: 2200 });
+});
 
 const observer = new MutationObserver(() => {
   const stage = getStage();
@@ -257,6 +375,7 @@ observer.observe(document.documentElement, {
 
 window.BudgetMascot = Object.freeze({
   play,
+  playAmbient,
   renderIdle,
   setEnabled,
   isEnabled,
