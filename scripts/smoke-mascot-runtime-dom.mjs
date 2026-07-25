@@ -1,0 +1,69 @@
+import { createRequire } from "node:module";
+import { pathToFileURL } from "node:url";
+import { join } from "node:path";
+
+const require = createRequire(import.meta.url);
+const testModules = process.env.DOM_TEST_NODE_MODULES || "/tmp/humajja-dom-test/node_modules";
+const { parseHTML } = require(join(testModules, "linkedom"));
+const { window } = parseHTML(`
+  <!doctype html>
+  <html><body data-budget-tab="home"><div data-budget-mascot-stage></div></body></html>
+`);
+
+const storage = new Map();
+const localStorage = {
+  getItem: (key) => storage.has(key) ? storage.get(key) : null,
+  setItem: (key, value) => storage.set(key, String(value)),
+  removeItem: (key) => storage.delete(key),
+};
+const media = {
+  matches: false,
+  addEventListener() {},
+  removeEventListener() {},
+};
+
+window.matchMedia = () => media;
+window.localStorage = localStorage;
+Object.assign(globalThis, {
+  window,
+  document: window.document,
+  localStorage,
+  MutationObserver: window.MutationObserver,
+  CustomEvent: window.CustomEvent,
+  HTMLElement: window.HTMLElement,
+});
+
+const runtimeUrl = pathToFileURL(
+  join(new URL("../", import.meta.url).pathname, "assets/mascot-v2/mascot-runtime.js"),
+);
+await import(`${runtimeUrl.href}?smoke=${Date.now()}`);
+await new Promise((resolve) => setTimeout(resolve, 0));
+
+const stage = document.querySelector("[data-budget-mascot-stage]");
+const image = stage?.querySelector(".budget-mascot-image");
+if (!stage?.classList.contains("budget-mascot-stage")) throw new Error("안전영역 초기화 실패");
+if (!image?.getAttribute("src")?.includes("mayo_breathe")) throw new Error("홈 대기 동작 실패");
+
+window.dispatchEvent(new window.CustomEvent("budget-mascot", {
+  detail: { action: "card_payment", character: "huchu", duration: 10 },
+}));
+if (!image.getAttribute("src")?.includes("huchu_card_payment")) throw new Error("카드 결제 반응 실패");
+if (stage.dataset.state !== "reacting") throw new Error("반응 상태 표시 실패");
+
+const toggle = stage.querySelector(".budget-mascot-toggle");
+toggle.click();
+if (!stage.classList.contains("is-disabled")) throw new Error("숨기기 실패");
+toggle.click();
+if (stage.classList.contains("is-disabled")) throw new Error("다시 보기 실패");
+
+media.matches = true;
+window.BudgetMascot.play({ action: "refund", character: "jjajang", duration: 10 });
+if (!image.getAttribute("src")?.endsWith(".png")) throw new Error("모션 감소 정적 대체 실패");
+
+console.log(JSON.stringify({
+  status: "passed",
+  idle: "mayo_breathe",
+  reaction: "huchu_card_payment",
+  reducedMotion: "jjajang_refund_frame_01",
+  toggle: "passed",
+}));

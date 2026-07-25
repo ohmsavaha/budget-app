@@ -1,0 +1,28 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>후마짜 런타임 스모크 테스트</title>
+  <link rel="stylesheet" href="../assets/mascot-v2/mascot-runtime.css">
+  <style>
+    * { box-sizing: border-box; }
+    body { margin: 0; padding: 18px; background: #f6f4ef; color: #28251f; font-family: system-ui, sans-serif; }
+    main { width: min(760px, 100%); margin: 0 auto; }
+    .test-data { margin-top: 14px; padding: 18px; border: 1px solid #ece7dd; border-radius: 18px; background: #fff; }
+    .test-amount { margin-top: 8px; font-size: 30px; font-weight: 800; }
+    .test-button { margin-top: 12px; padding: 10px 14px; border: 0; border-radius: 10px; background: #1e6e52; color: #fff; }
+  </style>
+</head>
+<body data-budget-tab="home">
+  <main>
+    <div data-budget-mascot-stage></div>
+    <section class="test-data">
+      <div>이번 달 실질 총지출</div>
+      <div class="test-amount">₩1,234,500</div>
+      <button class="test-button" type="button">거래 입력</button>
+    </section>
+  </main>
+  <script type="module" src="../assets/mascot-v2/mascot-runtime.js"></script>
+</body>
+</html>
