@@ -4,6 +4,13 @@ const REDUCED_MOTION = window.matchMedia("(prefers-reduced-motion: reduce)");
 const ENABLED_KEY = "mascot_v2_enabled";
 
 const PHASE_ACTIONS = Object.freeze({
+  phase2g: new Set([
+    "fixed_due_check", "autopay_confirm", "monthly_fixed_complete",
+    "search_no_results", "history_empty", "calendar_empty",
+    "retry_calm", "sync_success", "income_received", "savings_progress",
+    "transfer_complete", "investment_review", "investment_diversify",
+    "market_shelter", "group_highfive", "group_rest",
+  ]),
   phase2f: new Set([
     "wake_up", "stretch", "yawn", "face_groom", "body_groom",
     "tail_chase", "yarn_play", "box_enter", "card_peek", "call_owner",
@@ -34,6 +41,7 @@ const AMBIENT_BY_TAB = Object.freeze({
     { character: "mayo", action: "face_groom", message: "마요가 잠깐 세수를 하며 쉬고 있어요." },
     { character: "huchu", action: "head_tilt", message: "후추가 이번 달 기록을 궁금하게 바라봐요." },
     { character: "jjajang", action: "encourage", message: "짜장이 오늘 기록도 잘하고 있다고 응원해요." },
+    { character: "group", action: "group_rest", message: "세 마리가 기록 곁에서 잠깐 함께 쉬고 있어요." },
   ],
   spend: [
     { character: "huchu", action: "focus_record", message: "후추가 새 지출을 빠짐없이 기록하고 있어요." },
@@ -54,10 +62,13 @@ const AMBIENT_BY_TAB = Object.freeze({
   fixed: [
     { character: "mayo", action: "focus_record", message: "마요가 고정비 납부 기록을 확인해요." },
     { character: "jjajang", action: "encourage", message: "짜장이 이번 달 고정비 관리도 응원해요." },
+    { character: "mayo", action: "fixed_due_check", message: "마요가 다가오는 고정비 예정일을 살펴봐요." },
   ],
   invest: [
     { character: "huchu", action: "explore", message: "후추가 투자 흐름을 성급하지 않게 살펴봐요." },
     { character: "mayo", action: "head_tilt", message: "마요가 투자 변화를 차분히 바라봐요." },
+    { character: "huchu", action: "investment_review", message: "후추가 투자 구성을 차분히 점검해요." },
+    { character: "mayo", action: "investment_diversify", message: "마요가 자산이 한곳에 몰리지 않았는지 살펴봐요." },
   ],
   yearly: [
     { character: "group", action: "group_cuddle", message: "세 마리가 올해 쌓아온 기록을 함께 보고 있어요." },
@@ -82,6 +93,22 @@ const IDLE_BY_TAB = Object.freeze({
 });
 
 const PREFERRED_CHARACTER = Object.freeze({
+  fixed_due_check: "mayo",
+  autopay_confirm: "huchu",
+  monthly_fixed_complete: "jjajang",
+  search_no_results: "huchu",
+  history_empty: "mayo",
+  calendar_empty: "mayo",
+  retry_calm: "mayo",
+  sync_success: "huchu",
+  income_received: "mayo",
+  savings_progress: "jjajang",
+  transfer_complete: "huchu",
+  investment_review: "huchu",
+  investment_diversify: "mayo",
+  market_shelter: "mayo",
+  group_highfive: "group",
+  group_rest: "group",
   wake_up: "mayo",
   stretch: "huchu",
   face_groom: "mayo",
@@ -137,6 +164,22 @@ const PREFERRED_CHARACTER = Object.freeze({
 });
 
 const ACTION_COPY = Object.freeze({
+  fixed_due_check: ["고정비 예정 확인", "다가오는 납부일과 금액을 미리 살펴봤어요.", "neutral"],
+  autopay_confirm: ["자동이체 확인", "자동이체로 납부된 고정비를 확인했어요.", "good"],
+  monthly_fixed_complete: ["이번 달 고정비 완료", "이번 달 고정비 납부를 모두 정리했어요.", "good"],
+  search_no_results: ["검색 결과 없음", "일치하는 기록이 없어요. 검색어나 필터를 바꿔볼까요?", "neutral"],
+  history_empty: ["아직 기록이 없어요", "첫 기록을 남기면 이곳에서 흐름을 함께 볼 수 있어요.", "neutral"],
+  calendar_empty: ["기록 없는 날짜", "이 날짜에는 기록이 없어요. 쉬어간 날이어도 괜찮아요.", "neutral"],
+  retry_calm: ["다시 시도해 주세요", "기록은 보존했어요. 연결을 확인하고 다시 시도해 주세요.", "warn"],
+  sync_success: ["기록 동기화 완료", "개인·공용 기록을 최신 상태로 맞췄어요.", "good"],
+  income_received: ["수입 기록 완료", "들어온 금액을 빠짐없이 기록했어요.", "good"],
+  savings_progress: ["저축 목표 한 걸음", "작은 금액도 목표를 향한 분명한 전진이에요.", "good"],
+  transfer_complete: ["계좌 이동 완료", "옮긴 금액을 두 계좌에 정확히 반영했어요.", "good"],
+  investment_review: ["투자 구성 점검", "등락보다 계획과 자산 비중을 먼저 살펴봐요.", "neutral"],
+  investment_diversify: ["자산 배분 확인", "한곳에 몰리지 않았는지 차분히 점검했어요.", "neutral"],
+  market_shelter: ["변동이 큰 날이에요", "급하게 판단하지 말고 계획과 비중부터 확인해요.", "warn"],
+  group_highfive: ["함께 목표 완료", "함께 관리한 기록을 세 마리가 축하해요.", "good"],
+  group_rest: ["잠깐 함께 쉬어요", "기록은 안전하게 남았으니 잠깐 쉬어가도 좋아요.", "neutral"],
   wake_up: ["오늘 기록 시작", "마요가 천천히 일어나 가계부를 함께 열었어요.", "neutral"],
   stretch: ["잠깐 기지개", "오래 머물렀다면 어깨도 한 번 가볍게 펴주세요.", "neutral"],
   yawn: ["늦은 시간이에요", "기록은 저장됐으니 무리하지 말고 쉬어가도 좋아요.", "neutral"],
@@ -185,6 +228,14 @@ const ACTION_COPY = Object.freeze({
 });
 
 const PRIORITY = Object.freeze({
+  retry_calm: 5,
+  market_shelter: 5,
+  sync_success: 4,
+  monthly_fixed_complete: 4,
+  group_highfive: 4,
+  income_received: 3,
+  transfer_complete: 3,
+  savings_progress: 3,
   paw_tap: 5,
   budget_exceeded: 5,
   budget_warning: 5,
@@ -213,7 +264,7 @@ function phaseFor(action) {
 }
 
 function animatedName(phase, character, action) {
-  const suffix = ["phase2a", "phase2b", "phase2c", "phase2f"].includes(phase) ? "_512_v01.webp" : "_v01.webp";
+  const suffix = ["phase2a", "phase2b", "phase2c", "phase2f", "phase2g"].includes(phase) ? "_512_v01.webp" : "_v01.webp";
   return `${character}_${action}${suffix}`;
 }
 

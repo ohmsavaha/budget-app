@@ -50,6 +50,19 @@ const SKEY="sb_publishable_GQhGSdWGOfGnvC643UEgjA_mneIg-uV";
 const sb=createClient(SURL,SKEY);
 const DEBUG=false;const dlog=(...a)=>{if(DEBUG)console.log(...a);};
 const mascotEvent=(action,detail={})=>{try{window.dispatchEvent(new CustomEvent("budget-mascot",{detail:{action,...detail}}));}catch{}};
+let mascotEmptyTimer=0,mascotEmptyAt=0,mascotEmptyKey="";
+const mascotEmptyState=(text)=>{
+  const copy=String(text||""),now=Date.now(),tab=document.body.dataset.budgetTab||"home";
+  const action=/검색 결과|해당 내역/.test(copy)?"search_no_results":
+    tab==="calendar"?"calendar_empty":"history_empty";
+  const key=`${tab}:${action}`;
+  if(key===mascotEmptyKey&&now-mascotEmptyAt<30000)return;
+  clearTimeout(mascotEmptyTimer);
+  mascotEmptyTimer=setTimeout(()=>{
+    mascotEmptyAt=Date.now();mascotEmptyKey=key;
+    mascotEvent(action,{character:action==="search_no_results"?"huchu":"mayo",duration:2600});
+  },180);
+};
 
 const C={brand:"#1E6E52",soft:"#E7F1EB",over:"#C2553D",warn:"#C98A2B",ink:"#28251F",sub:"#8C857A",faint:"#B7B0A4",line:"#ECE7DD",bg:"#F6F4EF",w:"#fff"};
 const CATS=[
@@ -697,7 +710,7 @@ function renderDash(){
     h("div",{style:{display:"flex",alignItems:"center",justifyContent:"space-between",marginBottom:"16px"}},
       h("div",{style:{display:"flex",alignItems:"center",gap:"9px"}},
         h("span",{style:{fontSize:"21px"}},SN[Number(S.curYm.split("-")[1])]||"📒"),
-        h("div",{},h("div",{style:{fontSize:"11.5px",color:C.sub}},"🐾 나의 가계부 · v130"),h("div",{style:{fontSize:"16.5px",fontWeight:"800",letterSpacing:"-.01em",cursor:"pointer",display:"flex",alignItems:"center",gap:"4px"},onclick:()=>showMonthPicker()},yml(S.curYm),h("span",{style:{fontSize:"10px",color:C.faint}},"▾")))
+        h("div",{},h("div",{style:{fontSize:"11.5px",color:C.sub}},"🐾 나의 가계부 · v131"),h("div",{style:{fontSize:"16.5px",fontWeight:"800",letterSpacing:"-.01em",cursor:"pointer",display:"flex",alignItems:"center",gap:"4px"},onclick:()=>showMonthPicker()},yml(S.curYm),h("span",{style:{fontSize:"10px",color:C.faint}},"▾")))
       ),
       h("div",{style:{display:"flex",alignItems:"center",gap:"4px",background:C.w,border:`1px solid ${C.line}`,borderRadius:"999px",padding:"3px 4px"}},prevBtn,todayBtn,nextBtn)
     ),
@@ -5611,9 +5624,10 @@ function showAdd(preset){
     const mascotAction=dutchOn&&n===1?"split_bill":
       ["환불/취소","정산환급"].includes(typ.value)?"refund":
       typ.value==="공용입금"?"shared_deposit":
-      typ.value==="수입"?"surplus":
-      typ.value==="저축/적금"?"savings_mode":
-      ["투자","이체"].includes(typ.value)?"amount_entry":
+      typ.value==="수입"?"income_received":
+      typ.value==="저축/적금"?"savings_progress":
+      typ.value==="이체"?"transfer_complete":
+      typ.value==="투자"?"amount_entry":
       typ.value==="카드대금"?"card_payment":
       selAcc==="공용"?"shared_withdrawal":
       selPay==="현금"?"cash_payment":"card_payment";
@@ -5975,7 +5989,7 @@ function sec(title,right){
   const rightEl=typeof right==="string"?h("span",{style:{fontSize:"11.5px",color:C.faint}},right):right;
   return h("div",{style:{background:C.w,border:`1px solid ${C.line}`,borderRadius:"16px",padding:"16px 18px",marginTop:"12px"}},h("div",{style:{display:"flex",justifyContent:"space-between",alignItems:"baseline",marginBottom:"13px"}},titleEl,rightEl));
 }
-function empty(t){return h("div",{style:{textAlign:"center",color:C.faint,fontSize:"13px",padding:"18px 0",lineHeight:"1.7"}},t);}
+function empty(t){mascotEmptyState(t);return h("div",{style:{textAlign:"center",color:C.faint,fontSize:"13px",padding:"18px 0",lineHeight:"1.7"}},t);}
 // ── 결제수단 분류: 신용카드 / 체크·현금 계좌 / 공용 분담률 ──
 const CREDIT_CARD_RE=/카드$|카드\s|삼성카드|현대카드|롯데카드|우리카드|국민카드|kb.*카드|신한카드|하나카드|비씨|bc카드|nh카드|씨티/i;
 const CASH_ACCT_RE=/통장|토스뱅크|카카오뱅크|케이뱅크|kbank|뱅크|입출금|체크카드|체크|현금|계좌|페이|간편결제/i;
@@ -7191,7 +7205,7 @@ function showSharedFcDetail(sfc){
   // 수동 납부 토글
   if(!autoPaid){
     sh.append(h("button",{style:{width:"100%",marginTop:"14px",fontSize:"13.5px",fontWeight:"700",padding:"12px",borderRadius:"12px",border:`1px solid ${manualPaid?C.over:C.brand}`,background:manualPaid?"#FEF2EE":C.soft,color:manualPaid?C.over:C.brand,cursor:"pointer"},
-      onclick:()=>{const s2=getSharedTab();if(manualPaid)delete s2.paidManual[sfc.id];else s2.paidManual[sfc.id]=true;saveSharedTab(s2);ov.remove();reloadShared();if(!manualPaid)mascotEvent("fixed_cost",{character:"mayo"});}},manualPaid?"✓ 납부 표시 해제":"✅ 납부했다고 직접 표시"));
+      onclick:()=>{const s2=getSharedTab();if(manualPaid)delete s2.paidManual[sfc.id];else s2.paidManual[sfc.id]=true;saveSharedTab(s2);ov.remove();reloadShared();if(!manualPaid)mascotEvent("autopay_confirm",{character:"huchu"});}},manualPaid?"✓ 납부 표시 해제":"✅ 납부했다고 직접 표시"));
   }
   // 수정/삭제
   sh.append(h("div",{style:{display:"flex",gap:"10px",marginTop:"12px"}},
@@ -7963,7 +7977,7 @@ function showDutchReceive(d){
         : {user_id:S.session.user.id,household_id:null,date:td(),account:"개인",type:"정산환급",amount:Number(d.to_receive),category:"정산환급",merchant:(d.place||"더치페이")+" 정산받음",memo:"더치페이 환급"}
     );
     if(e1||e2||e3){alert("처리 실패: "+((e1||e2||e3).message));sv.disabled=false;sv.textContent="받음 처리하기";return;}
-    ov.remove();reloadAssets();mascotEvent(d.is_shared?"group_cuddle":"joint_settlement",{character:d.is_shared?"group":"jjajang"});
+    ov.remove();reloadAssets();mascotEvent(d.is_shared?"group_highfive":"transfer_complete",{character:d.is_shared?"group":"huchu"});
   };
   sh.append(
     h("div",{style:{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:"6px"}},h("span",{style:{fontSize:"17px",fontWeight:"800"}},"📥 받음 처리"),h("button",{style:{fontSize:"20px",color:C.sub},onclick:()=>ov.remove()},"✕")),

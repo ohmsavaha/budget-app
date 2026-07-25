@@ -39,24 +39,27 @@ for (const phase of phases) {
   }
 }
 
-const phase2fManifestPath = join(repoRoot, "assets/mascot-v2/phase2f/manifest.json");
-if (!existsSync(phase2fManifestPath)) {
-  failures.push(`누락: ${phase2fManifestPath}`);
-} else {
-  const phase2f = JSON.parse(readFileSync(phase2fManifestPath, "utf8"));
-  for (const animation of phase2f.animations || []) {
-    const { actor, action } = animation;
-    const paths = [
-      join(repoRoot, `assets/mascot-v2/phase2f/webp/${actor}_${action}_512_v01.webp`),
-      join(repoRoot, `assets/mascot-v2/phase2f/static/${actor}_${action}_frame_01_v01.png`),
-    ];
-    for (const path of paths) {
-      checked += 1;
-      if (!existsSync(path)) failures.push(`누락: ${path}`);
-      else {
-        const size = statSync(path).size;
-        totalBytes += size;
-        if (size < 100) failures.push(`비정상적으로 작은 파일: ${path} (${size} bytes)`);
+const manifestPhases = ["phase2f", "phase2g"];
+for (const phase of manifestPhases) {
+  const manifestPath = join(repoRoot, `assets/mascot-v2/${phase}/manifest.json`);
+  if (!existsSync(manifestPath)) {
+    failures.push(`누락: ${manifestPath}`);
+  } else {
+    const manifest = JSON.parse(readFileSync(manifestPath, "utf8"));
+    for (const animation of manifest.animations || []) {
+      const { actor, action } = animation;
+      const paths = [
+        join(repoRoot, `assets/mascot-v2/${phase}/webp/${actor}_${action}_512_v01.webp`),
+        join(repoRoot, `assets/mascot-v2/${phase}/static/${actor}_${action}_frame_01_v01.png`),
+      ];
+      for (const path of paths) {
+        checked += 1;
+        if (!existsSync(path)) failures.push(`누락: ${path}`);
+        else {
+          const size = statSync(path).size;
+          totalBytes += size;
+          if (size < 100) failures.push(`비정상적으로 작은 파일: ${path} (${size} bytes)`);
+        }
       }
     }
   }
@@ -80,7 +83,7 @@ if (failures.length) {
     status: "passed",
     checkedFiles: checked,
     totalBytes,
-    phases: phases.length + 1,
+    phases: phases.length + manifestPhases.length,
     characters: characters.length,
   }));
 }
