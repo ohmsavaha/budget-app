@@ -50,6 +50,13 @@ const SKEY="sb_publishable_GQhGSdWGOfGnvC643UEgjA_mneIg-uV";
 const sb=createClient(SURL,SKEY);
 const DEBUG=false;const dlog=(...a)=>{if(DEBUG)console.log(...a);};
 const mascotEvent=(action,detail={})=>{try{window.dispatchEvent(new CustomEvent("budget-mascot",{detail:{action,...detail}}));}catch{}};
+const nativeAlert=window.alert.bind(window);
+const alert=(message)=>{
+  if(/^(저장|처리|동기화) 실패/.test(String(message||""))){
+    mascotEvent("retry_calm",{character:"mayo",duration:3600});
+  }
+  return nativeAlert(message);
+};
 let mascotEmptyTimer=0,mascotEmptyAt=0,mascotEmptyKey="";
 const mascotEmptyState=(text)=>{
   const copy=String(text||""),now=Date.now(),tab=document.body.dataset.budgetTab||"home";
@@ -6448,7 +6455,7 @@ function showImport(){
       if(dupSkipped>0)setTimeout(()=>toast(`♻️ 이미 있는 ${dupSkipped}건은 자동으로 건너뛰었어요`),800);
       const{error}=await sb.from("transactions").insert(rows);
     if(error){alert("저장 실패: "+error.message);saveBtn.disabled=false;saveBtn.textContent=`${importData.length}건 전체 저장하기`;return;}
-    ov.remove();S.tab="home";await loadMonth();renderDash();
+    ov.remove();S.tab="home";await loadMonth();renderDash();mascotEvent("sync_success",{character:"huchu"});
   };
   // ── 공통: 배치 내 중복 제거 후 테이블에 누적 (DB 중복은 저장 시 한 번 더 걸러짐) ──
   const rowKey=r=>`${r.date}|${Number(r.amount)}|${(r.merchant||"").trim()}`;
@@ -7205,7 +7212,15 @@ function showSharedFcDetail(sfc){
   // 수동 납부 토글
   if(!autoPaid){
     sh.append(h("button",{style:{width:"100%",marginTop:"14px",fontSize:"13.5px",fontWeight:"700",padding:"12px",borderRadius:"12px",border:`1px solid ${manualPaid?C.over:C.brand}`,background:manualPaid?"#FEF2EE":C.soft,color:manualPaid?C.over:C.brand,cursor:"pointer"},
-      onclick:()=>{const s2=getSharedTab();if(manualPaid)delete s2.paidManual[sfc.id];else s2.paidManual[sfc.id]=true;saveSharedTab(s2);ov.remove();reloadShared();if(!manualPaid)mascotEvent("autopay_confirm",{character:"huchu"});}},manualPaid?"✓ 납부 표시 해제":"✅ 납부했다고 직접 표시"));
+      onclick:async()=>{
+        const s2=getSharedTab();
+        if(manualPaid)delete s2.paidManual[sfc.id];else s2.paidManual[sfc.id]=true;
+        const allDone=!manualPaid&&SHARED_FC.length>0&&SHARED_FC.every(
+          fc=>fc.id===sfc.id||sfcPaidAuto(fc)||!!s2.paidManual[fc.id]
+        );
+        saveSharedTab(s2);ov.remove();await reloadShared();
+        if(!manualPaid)mascotEvent(allDone?"monthly_fixed_complete":"autopay_confirm",{character:allDone?"jjajang":"huchu"});
+      }},manualPaid?"✓ 납부 표시 해제":"✅ 납부했다고 직접 표시"));
   }
   // 수정/삭제
   sh.append(h("div",{style:{display:"flex",gap:"10px",marginTop:"12px"}},
