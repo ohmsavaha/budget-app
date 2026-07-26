@@ -8,6 +8,7 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
 <link rel="manifest" href="./manifest.webmanifest"/>
 <link rel="apple-touch-icon" href="./apple-touch-icon.png"/>
+<link rel="stylesheet" href="./assets/mascot-v2/mascot-runtime.css"/>
 <meta name="apple-mobile-web-app-capable" content="yes"/>
 <meta name="apple-mobile-web-app-title" content="가계부"/>
 <style>
@@ -48,6 +49,27 @@ const SURL="https://axlxdkybghxcltilsqgj.supabase.co";
 const SKEY="sb_publishable_GQhGSdWGOfGnvC643UEgjA_mneIg-uV";
 const sb=createClient(SURL,SKEY);
 const DEBUG=false;const dlog=(...a)=>{if(DEBUG)console.log(...a);};
+const mascotEvent=(action,detail={})=>{try{window.dispatchEvent(new CustomEvent("budget-mascot",{detail:{action,...detail}}));}catch{}};
+const nativeAlert=window.alert.bind(window);
+const alert=(message)=>{
+  if(/^(저장|처리|동기화) 실패/.test(String(message||""))){
+    mascotEvent("retry_calm",{character:"mayo",duration:3600});
+  }
+  return nativeAlert(message);
+};
+let mascotEmptyTimer=0,mascotEmptyAt=0,mascotEmptyKey="";
+const mascotEmptyState=(text)=>{
+  const copy=String(text||""),now=Date.now(),tab=document.body.dataset.budgetTab||"home";
+  const action=/검색 결과|해당 내역/.test(copy)?"search_no_results":
+    tab==="calendar"?"calendar_empty":"history_empty";
+  const key=`${tab}:${action}`;
+  if(key===mascotEmptyKey&&now-mascotEmptyAt<30000)return;
+  clearTimeout(mascotEmptyTimer);
+  mascotEmptyTimer=setTimeout(()=>{
+    mascotEmptyAt=Date.now();mascotEmptyKey=key;
+    mascotEvent(action,{character:action==="search_no_results"?"huchu":"mayo",duration:2600});
+  },180);
+};
 
 const C={brand:"#1E6E52",soft:"#E7F1EB",over:"#C2553D",warn:"#C98A2B",ink:"#28251F",sub:"#8C857A",faint:"#B7B0A4",line:"#ECE7DD",bg:"#F6F4EF",w:"#fff"};
 const CATS=[
@@ -672,6 +694,7 @@ function showMonthPicker(){
 }
 function renderDash(){
   exitReorder();
+  document.body.dataset.budgetTab=S.tab;
   const isCur=S.curYm===ym(td());
   const prevBtn=h("button",{style:{width:"30px",height:"30px",borderRadius:"999px",color:C.sub,fontSize:"18px"},onclick:()=>{S.curYm=shYm(S.curYm,-1);S.calYm=S.curYm;renderDash();}},"‹");
   const todayBtn=h("button",{style:{fontSize:"12px",fontWeight:"700",color:isCur?C.brand:C.sub,padding:"4px 8px"},onclick:()=>{S.curYm=ym(td());S.calYm=S.curYm;renderDash();}},isCur?"현재":"현재로");
@@ -688,12 +711,13 @@ function renderDash(){
   reorderTabs(tabbar,_tabBtns);
   const settingsBtn=h("button",{style:{fontSize:"12px",color:C.faint,padding:"8px 10px"},onclick:()=>showApiKeySetting()},"⚙️");
   const logoutBtn=h("button",{style:{fontSize:"12px",color:C.faint,marginLeft:"auto",padding:"8px 10px"},onclick:()=>sb.auth.signOut()},"로그아웃");
+  const mascotStage=h("div",{id:"budget-mascot-stage",class:"budget-mascot-stage","data-budget-mascot-stage":"","aria-label":"후추·마요·짜장 마스코트"});
   const ct=h("div",{id:"ct"});
   const wrap=h("div",{style:{maxWidth:"760px",margin:"0 auto",padding:"18px 16px 110px"}},
     h("div",{style:{display:"flex",alignItems:"center",justifyContent:"space-between",marginBottom:"16px"}},
       h("div",{style:{display:"flex",alignItems:"center",gap:"9px"}},
         h("span",{style:{fontSize:"21px"}},SN[Number(S.curYm.split("-")[1])]||"📒"),
-        h("div",{},h("div",{style:{fontSize:"11.5px",color:C.sub}},"🐾 나의 가계부 · v128"),h("div",{style:{fontSize:"16.5px",fontWeight:"800",letterSpacing:"-.01em",cursor:"pointer",display:"flex",alignItems:"center",gap:"4px"},onclick:()=>showMonthPicker()},yml(S.curYm),h("span",{style:{fontSize:"10px",color:C.faint}},"▾")))
+        h("div",{},h("div",{style:{fontSize:"11.5px",color:C.sub}},"🐾 나의 가계부 · v132"),h("div",{style:{fontSize:"16.5px",fontWeight:"800",letterSpacing:"-.01em",cursor:"pointer",display:"flex",alignItems:"center",gap:"4px"},onclick:()=>showMonthPicker()},yml(S.curYm),h("span",{style:{fontSize:"10px",color:C.faint}},"▾")))
       ),
       h("div",{style:{display:"flex",alignItems:"center",gap:"4px",background:C.w,border:`1px solid ${C.line}`,borderRadius:"999px",padding:"3px 4px"}},prevBtn,todayBtn,nextBtn)
     ),
@@ -708,6 +732,7 @@ function renderDash(){
         h("button",{title:"로그아웃",style:{fontSize:"11px",color:C.faint,padding:"0 6px",background:"none",border:"none",cursor:"pointer",flexShrink:"0"},onclick:()=>sb.auth.signOut()},"로그아웃")
       )
     ),
+    mascotStage,
     ct
   );
   setApp(wrap);
@@ -801,9 +826,9 @@ async function downloadPaydayICS(btn){
     const ics=["BEGIN:VCALENDAR","VERSION:2.0","PRODID:-//nagagyebu//paw//KR","CALSCALE:GREGORIAN","X-WR-CALNAME:🐾 가계부 결제일",...evs,"END:VCALENDAR"].join("\r\n");
     const blob=new Blob([ics],{type:"text/calendar;charset=utf-8"});
     const f=new File([blob],"가계부_결제일.ics",{type:"text/calendar"});
-    if(navigator.canShare&&navigator.canShare({files:[f]})){try{await navigator.share({files:[f],title:"가계부 결제일"});toast("📅 캘린더에 추가해주세요!");return;}catch(e){if(e.name==="AbortError")return;}}
+    if(navigator.canShare&&navigator.canShare({files:[f]})){try{await navigator.share({files:[f],title:"가계부 결제일"});toast("📅 캘린더에 추가해주세요!");mascotEvent("calendar_export",{character:"mayo"});return;}catch(e){if(e.name==="AbortError")return;}}
     const url=URL.createObjectURL(blob);const aEl=document.createElement("a");aEl.href=url;aEl.download="가계부_결제일.ics";aEl.click();URL.revokeObjectURL(url);
-    toast(`📅 ${evs.length}개 결제일 저장! 파일을 열면 캘린더에 추가돼요`);
+    toast(`📅 ${evs.length}개 결제일 저장! 파일을 열면 캘린더에 추가돼요`);mascotEvent("calendar_export",{character:"mayo"});
   }catch(e){toast("캘린더 파일 생성 실패: "+(e.message||e),false);}
   finally{if(btn){btn.disabled=false;btn.textContent="📅 결제일을 아이폰 캘린더로 (.ics)";}}
 }
@@ -818,6 +843,7 @@ async function repairSharedHousehold(btn){
     if(error){toast("복구 실패: "+error.message,false);return;}
     const n=(data||[]).length;
     toast(n?`🔗 공용 거래 ${n}건을 다혜님과 공유 연결했어요!`:"이미 다 공유돼 있어요 👍");
+    mascotEvent(n?"restore_complete":"sync_success",{character:n?"mayo":"huchu"});
   }catch(e){toast("복구 실패: "+(e.message||e),false);}
   finally{if(btn){btn.disabled=false;btn.textContent=orig;}}
 }
@@ -837,7 +863,7 @@ async function copyMonthReportMd(st,cfg){
     `| ${net>=0?"📈 순잉여":"📉 순적자"} | ${W(Math.abs(net))} |`,"",
     `## 카테고리 TOP`,...top.map(([n,v])=>`- ${(CM[n]||CM["기타"]).i} ${n}: ${W(v)}`),"",
     `_${td()} · 나의 가계부 앱_`].join("\n");
-  try{await navigator.clipboard.writeText(L);toast("📝 노션·메모에 붙여넣기 하세요! (복사 완료)");}
+  try{await navigator.clipboard.writeText(L);toast("📝 노션·메모에 붙여넣기 하세요! (복사 완료)");mascotEvent("report_share",{character:"mayo"});}
   catch(e){
     const ta=h("textarea",{style:{position:"fixed",inset:"0",width:"100%",height:"100%",zIndex:"99",fontSize:"12px",padding:"40px 16px"}});ta.value=L;
     const ov=h("div",{style:{position:"fixed",inset:"0",zIndex:"98",background:C.w}},h("button",{style:{position:"fixed",top:"8px",right:"12px",zIndex:"100",fontSize:"22px",cursor:"pointer",background:"transparent",border:"none"},onclick:()=>ov.remove()},"✕"),ta);
@@ -863,6 +889,7 @@ function showDupCleaner(){
     const g={};rows.forEach(t=>{const k=[t.date,t.amount,(t.merchant||"").trim(),t.account].join("|");(g[k]=g[k]||[]).push(t);});
     groups=Object.values(g).filter(rs=>rs.length>=2).sort((a,b)=>Number(b[0].amount)-Number(a[0].amount));
     groups.forEach(rs=>rs.sort((a,b)=>((b.memo?2:0)+(/taptap|LOCA|로카/i.test(b.payment_method||"")?0:1))-((a.memo?2:0)+(/taptap|LOCA|로카/i.test(a.payment_method||"")?0:1))));
+    if(groups.length)mascotEvent("duplicate_review",{character:"huchu"});
     draw();
   };
   const draw=()=>{
@@ -915,6 +942,7 @@ async function downloadFullBackup(setStatus){
   const blob=new Blob([JSON.stringify(out,null,2)],{type:"application/json"});
   const url=URL.createObjectURL(blob);const a=document.createElement("a");a.href=url;a.download=`가계부백업_${td()}.json`;a.click();URL.revokeObjectURL(url);
   setStatus&&setStatus(`✅ 거래 ${(out.transactions||[]).length}건 등 전체 백업 완료`);
+  mascotEvent("backup_complete",{character:"huchu"});
 }
 const getMonthClose=()=>{try{return JSON.parse(localStorage.getItem("month_close")||"{}");}catch{return{};}};
 const setMonthCloseAll=(o)=>{try{localStorage.setItem("month_close",JSON.stringify(o));}catch{}};
@@ -1279,6 +1307,8 @@ function showMonthClose(){
       setMonthCloseAll(mc);
       if(snapNW!=null){let nh={};try{nh=JSON.parse(localStorage.getItem("nw_history")||"{}");}catch{}nh[ymKey]=snapNW;try{localStorage.setItem("nw_history",JSON.stringify(nh));}catch{}}
       render();
+      mascotEvent("month_close",{character:"jjajang"});
+      setTimeout(()=>mascotEvent("group_plan_next",{character:"group"}),3200);
     }},closed?"🔄 마감 다시 확정 (갱신)":"✅ 이 달 마감 확정하기"));
     const closes=Object.entries(getMonthClose()).sort((a,b)=>b[0].localeCompare(a[0]));
     if(closes.length){
@@ -1295,6 +1325,7 @@ function showMonthClose(){
   };
   render();
   sh.append(body);ov.append(sh);document.body.append(ov);
+  mascotEvent("group_month_review",{character:"group"});
 }
 
 // ④ 이번 달 카드별 사용액
@@ -2573,6 +2604,7 @@ function showBillConfirm(pm,estAmt,bym,onDone){
     else setRevolving(pm,bym,null);
     ov.remove();await loadMonth();
     toast(carry>0?`✓ ${pm} 청구 ${W(a)} 확정 · 🔄이월 ${W(carry)}`:`✓ ${pm} ${yml(bym)} 청구 ${W(a)} 확정!`);
+    mascotEvent("card_bill_review",{character:"huchu"});
     if(onDone)onDone();
   };
   // 이 청구월에 지난달에서 넘어온 이월분 안내
@@ -4287,6 +4319,8 @@ function showAddFixed(preset,onDone){
     ov.remove();
     await Promise.all([loadFixed(),loadMonth()]);
     const ct=document.getElementById("ct");if(ct){ct.innerHTML="";buildFixed().forEach(n=>ct.append(n));}
+    if(p.memo==="반복 결제 자동 발견")mascotEvent("recurring_found",{character:"huchu"});
+    if(onDone)onDone();
   };
 
   sh.append(
@@ -5603,7 +5637,19 @@ function showAdd(preset){
       const{error}=await sb.from("transactions").insert(rows);
       if(error){alert("저장 실패: "+error.message);sv.disabled=false;sv.textContent="저장하기";return;}
     }
+    const mascotAction=dutchOn&&n===1?"split_bill":
+      ["환불/취소","정산환급"].includes(typ.value)?"refund":
+      typ.value==="소비(할부)"?"installment_plan":
+      typ.value==="공용입금"?"shared_deposit":
+      typ.value==="수입"?"income_received":
+      typ.value==="저축/적금"?"savings_progress":
+      typ.value==="이체"?"transfer_complete":
+      typ.value==="투자"?"amount_entry":
+      typ.value==="카드대금"?"card_payment":
+      selAcc==="공용"?"shared_withdrawal":
+      selPay==="현금"?"cash_payment":"card_payment";
     ov.remove();await loadMonth();const ct=document.getElementById("ct");if(ct){ct.innerHTML="";buildHome().forEach(n=>ct.append(n));}
+    mascotEvent(mascotAction);
   };
   // ⚡ 자주 쓰는 (최근 빈도) + 사용처 자동완성
   const _freq={};
@@ -5960,7 +6006,7 @@ function sec(title,right){
   const rightEl=typeof right==="string"?h("span",{style:{fontSize:"11.5px",color:C.faint}},right):right;
   return h("div",{style:{background:C.w,border:`1px solid ${C.line}`,borderRadius:"16px",padding:"16px 18px",marginTop:"12px"}},h("div",{style:{display:"flex",justifyContent:"space-between",alignItems:"baseline",marginBottom:"13px"}},titleEl,rightEl));
 }
-function empty(t){return h("div",{style:{textAlign:"center",color:C.faint,fontSize:"13px",padding:"18px 0",lineHeight:"1.7"}},t);}
+function empty(t){mascotEmptyState(t);return h("div",{style:{textAlign:"center",color:C.faint,fontSize:"13px",padding:"18px 0",lineHeight:"1.7"}},t);}
 // ── 결제수단 분류: 신용카드 / 체크·현금 계좌 / 공용 분담률 ──
 const CREDIT_CARD_RE=/카드$|카드\s|삼성카드|현대카드|롯데카드|우리카드|국민카드|kb.*카드|신한카드|하나카드|비씨|bc카드|nh카드|씨티/i;
 const CASH_ACCT_RE=/통장|토스뱅크|카카오뱅크|케이뱅크|kbank|뱅크|입출금|체크카드|체크|현금|계좌|페이|간편결제/i;
@@ -6066,6 +6112,7 @@ async function enablePush(){
     localStorage.setItem("push_on","1");
     await showLocalNotif("🔔 알림이 켜졌어요!","이제 결제일·예산 알림을 받을 수 있어요.");
     toast("🔔 알림을 켰어요!");
+    mascotEvent("notification_ready",{character:"mayo"});
     return true;
   }catch(e){dlog("[enablePush]",e);toast("알림 켜기 실패: "+(e.message||"오류"),false);return false;}
 }
@@ -6419,7 +6466,7 @@ function showImport(){
       if(dupSkipped>0)setTimeout(()=>toast(`♻️ 이미 있는 ${dupSkipped}건은 자동으로 건너뛰었어요`),800);
       const{error}=await sb.from("transactions").insert(rows);
     if(error){alert("저장 실패: "+error.message);saveBtn.disabled=false;saveBtn.textContent=`${importData.length}건 전체 저장하기`;return;}
-    ov.remove();S.tab="home";await loadMonth();renderDash();
+    ov.remove();S.tab="home";await loadMonth();renderDash();mascotEvent("import_review",{character:"mayo"});
   };
   // ── 공통: 배치 내 중복 제거 후 테이블에 누적 (DB 중복은 저장 시 한 번 더 걸러짐) ──
   const rowKey=r=>`${r.date}|${Number(r.amount)}|${(r.merchant||"").trim()}`;
@@ -7101,6 +7148,7 @@ function showAddDeposit(){
     const{error}=await sb.from("transactions").insert(row);
     if(error){alert("저장 실패: "+error.message);sv.disabled=false;sv.textContent="저장하기";return;}
     ov.remove();await loadShared();const ct=document.getElementById("ct");if(ct){ct.innerHTML="";buildShared().forEach(n=>ct.append(n));}
+    mascotEvent(mode==="입금"?"shared_deposit":"shared_withdrawal",{character:mode==="입금"?"mayo":"huchu"});
   };
   whoBlock.append(lbl("누가 입금?"),whoRow);
   catBlock.append(lbl("카테고리"),catWrap);
@@ -7175,7 +7223,15 @@ function showSharedFcDetail(sfc){
   // 수동 납부 토글
   if(!autoPaid){
     sh.append(h("button",{style:{width:"100%",marginTop:"14px",fontSize:"13.5px",fontWeight:"700",padding:"12px",borderRadius:"12px",border:`1px solid ${manualPaid?C.over:C.brand}`,background:manualPaid?"#FEF2EE":C.soft,color:manualPaid?C.over:C.brand,cursor:"pointer"},
-      onclick:()=>{const s2=getSharedTab();if(manualPaid)delete s2.paidManual[sfc.id];else s2.paidManual[sfc.id]=true;saveSharedTab(s2);ov.remove();reloadShared();}},manualPaid?"✓ 납부 표시 해제":"✅ 납부했다고 직접 표시"));
+      onclick:async()=>{
+        const s2=getSharedTab();
+        if(manualPaid)delete s2.paidManual[sfc.id];else s2.paidManual[sfc.id]=true;
+        const allDone=!manualPaid&&SHARED_FC.length>0&&SHARED_FC.every(
+          fc=>fc.id===sfc.id||sfcPaidAuto(fc)||!!s2.paidManual[fc.id]
+        );
+        saveSharedTab(s2);ov.remove();await reloadShared();
+        if(!manualPaid)mascotEvent(allDone?"monthly_fixed_complete":"autopay_confirm",{character:allDone?"jjajang":"huchu"});
+      }},manualPaid?"✓ 납부 표시 해제":"✅ 납부했다고 직접 표시"));
   }
   // 수정/삭제
   sh.append(h("div",{style:{display:"flex",gap:"10px",marginTop:"12px"}},
@@ -7731,7 +7787,7 @@ function showAccountEdit(acc){
     else{const{data:ins,error:e}=await sb.from("accounts").insert({...payload,is_active:true}).select("id").single();error=e;newId=ins?.id;}
     if(error){alert("저장 실패: "+error.message);sv.disabled=false;sv.textContent=isEdit?"수정 저장":"추가하기";return;}
     if(newId)setOD(newId,{on:odOn,limit:Number(odLimitEl.value)||0,rate:Number(odRateEl.value)||0,payday:Number(odDayEl.value)||null});
-    ov.remove();reloadAssets();
+    ov.remove();reloadAssets();mascotEvent("account_balance_check",{character:"huchu"});
   };
   sh.append(
     h("div",{style:{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:"16px"}},h("span",{style:{fontSize:"17px",fontWeight:"800"}},isEdit?"계좌 수정":"계좌 추가"),h("button",{style:{fontSize:"20px",color:C.sub},onclick:()=>ov.remove()},"✕")),
@@ -7798,7 +7854,8 @@ function showSavingEdit(sv0){
     else{const{data:ins,error:e}=await sb.from("savings").insert({...payload,is_active:true}).select("id").single();error=e;newId=ins?.id;}
     if(error){alert("저장 실패: "+error.message);sv.disabled=false;sv.textContent=isEdit?"수정 저장":"추가하기";return;}
     if(newId)setSavExt(newId,{maturity:matEl.value||null,rate:Number(srateEl.value)||0});
-    ov.remove();reloadAssets();
+    const reached=payload.target_amount>0&&payload.current_amount>=payload.target_amount&&(Number(sv0?.current_amount)||0)<payload.target_amount;
+    ov.remove();reloadAssets();mascotEvent(reached?"goal_achieved":"savings_progress",{character:reached?"jjajang":"mayo"});
   };
   sh.append(
     h("div",{style:{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:"16px"}},h("span",{style:{fontSize:"17px",fontWeight:"800"}},isEdit?"저축 수정":"저축 추가"),h("button",{style:{fontSize:"20px",color:C.sub},onclick:()=>ov.remove()},"✕")),
@@ -7947,7 +8004,7 @@ function showDutchReceive(d){
         : {user_id:S.session.user.id,household_id:null,date:td(),account:"개인",type:"정산환급",amount:Number(d.to_receive),category:"정산환급",merchant:(d.place||"더치페이")+" 정산받음",memo:"더치페이 환급"}
     );
     if(e1||e2||e3){alert("처리 실패: "+((e1||e2||e3).message));sv.disabled=false;sv.textContent="받음 처리하기";return;}
-    ov.remove();reloadAssets();
+    ov.remove();reloadAssets();mascotEvent(d.is_shared?"group_highfive":"transfer_complete",{character:d.is_shared?"group":"huchu"});
   };
   sh.append(
     h("div",{style:{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:"6px"}},h("span",{style:{fontSize:"17px",fontWeight:"800"}},"📥 받음 처리"),h("button",{style:{fontSize:"20px",color:C.sub},onclick:()=>ov.remove()},"✕")),
@@ -7961,5 +8018,6 @@ function showDutchReceive(d){
 
 if("serviceWorker" in navigator)window.addEventListener("load",()=>navigator.serviceWorker.register("./sw.js").catch(()=>{}));
 if("setAppBadge" in navigator)window.addEventListener("load",()=>{try{updateAppBadge();}catch{}});</script>
+<script type="module" src="./assets/mascot-v2/mascot-runtime.js"></script>
 </body>
 </html>

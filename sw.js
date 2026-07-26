@@ -1,6 +1,13 @@
 // 나의 가계부 서비스워커 — 오프라인 캐시 + 푸시 알림
-const CACHE = "budget-v117";
-const CORE = ["./", "./index.html", "./manifest.webmanifest", "./icon-192.png"];
+const CACHE = "budget-v132";
+const CORE = [
+  "./",
+  "./index.html",
+  "./manifest.webmanifest",
+  "./icon-192.png",
+  "./assets/mascot-v2/mascot-runtime.css",
+  "./assets/mascot-v2/mascot-runtime.js",
+];
 // 캐시 대상: 우리 파일 + 코드/차트 CDN. Supabase 데이터 API는 절대 캐시하지 않음 (가계부 데이터는 항상 최신이어야 함)
 const CACHEABLE_ORIGINS = [self.location.origin, "https://esm.sh", "https://cdnjs.cloudflare.com"];
 

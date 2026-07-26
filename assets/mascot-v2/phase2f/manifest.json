@@ -1,0 +1,2098 @@
+{
+  "pack": "humajja-mascot-v2-phase2f",
+  "version": "1.0.0",
+  "canvas": {
+    "master": [
+      1024,
+      1024
+    ],
+    "app": [
+      [
+        512,
+        512
+      ],
+      [
+        256,
+        256
+      ],
+      [
+        128,
+        128
+      ]
+    ]
+  },
+  "animation_count": 44,
+  "solo_action_count": 14,
+  "group_action_count": 2,
+  "key_pose_count": 176,
+  "animations": [
+    {
+      "id": "huchu_wake_up",
+      "actor": "huchu",
+      "display_name": "후추",
+      "action": "wake_up",
+      "action_label": "잠깨기",
+      "keyframes": [
+        "01_keyframes_master/huchu/wake_up/huchu_wake_up_key_01_v01.png",
+        "01_keyframes_master/huchu/wake_up/huchu_wake_up_key_02_v01.png",
+        "01_keyframes_master/huchu/wake_up/huchu_wake_up_key_03_v01.png",
+        "01_keyframes_master/huchu/wake_up/huchu_wake_up_key_04_v01.png"
+      ],
+      "playback_frames": [
+        "03_animation_frames/huchu/wake_up/huchu_wake_up_frame_01_v01.png",
+        "03_animation_frames/huchu/wake_up/huchu_wake_up_frame_02_v01.png",
+        "03_animation_frames/huchu/wake_up/huchu_wake_up_frame_03_v01.png",
+        "03_animation_frames/huchu/wake_up/huchu_wake_up_frame_04_v01.png",
+        "03_animation_frames/huchu/wake_up/huchu_wake_up_frame_05_v01.png",
+        "03_animation_frames/huchu/wake_up/huchu_wake_up_frame_06_v01.png"
+      ],
+      "frame_order": [
+        0,
+        1,
+        2,
+        3,
+        2,
+        1
+      ],
+      "durations_ms": [
+        150,
+        170,
+        210,
+        300,
+        210,
+        170
+      ],
+      "total_duration_ms": 1210,
+      "loop": true,
+      "anchor": {
+        "x": 0.5,
+        "y": 0.94
+      },
+      "webp_1024": "04_animated_webp/master/huchu_wake_up_1024_v01.webp",
+      "webp_512": "04_animated_webp/app_512/huchu_wake_up_512_v01.webp",
+      "apng_1024": "05_apng/master/huchu_wake_up_1024_v01.png",
+      "apng_512": "05_apng/app_512/huchu_wake_up_512_v01.png"
+    },
+    {
+      "id": "mayo_wake_up",
+      "actor": "mayo",
+      "display_name": "마요",
+      "action": "wake_up",
+      "action_label": "잠깨기",
+      "keyframes": [
+        "01_keyframes_master/mayo/wake_up/mayo_wake_up_key_01_v01.png",
+        "01_keyframes_master/mayo/wake_up/mayo_wake_up_key_02_v01.png",
+        "01_keyframes_master/mayo/wake_up/mayo_wake_up_key_03_v01.png",
+        "01_keyframes_master/mayo/wake_up/mayo_wake_up_key_04_v01.png"
+      ],
+      "playback_frames": [
+        "03_animation_frames/mayo/wake_up/mayo_wake_up_frame_01_v01.png",
+        "03_animation_frames/mayo/wake_up/mayo_wake_up_frame_02_v01.png",
+        "03_animation_frames/mayo/wake_up/mayo_wake_up_frame_03_v01.png",
+        "03_animation_frames/mayo/wake_up/mayo_wake_up_frame_04_v01.png",
+        "03_animation_frames/mayo/wake_up/mayo_wake_up_frame_05_v01.png",
+        "03_animation_frames/mayo/wake_up/mayo_wake_up_frame_06_v01.png"
+      ],
+      "frame_order": [
+        0,
+        1,
+        2,
+        3,
+        2,
+        1
+      ],
+      "durations_ms": [
+        150,
+        170,
+        210,
+        300,
+        210,
+        170
+      ],
+      "total_duration_ms": 1210,
+      "loop": true,
+      "anchor": {
+        "x": 0.5,
+        "y": 0.94
+      },
+      "webp_1024": "04_animated_webp/master/mayo_wake_up_1024_v01.webp",
+      "webp_512": "04_animated_webp/app_512/mayo_wake_up_512_v01.webp",
+      "apng_1024": "05_apng/master/mayo_wake_up_1024_v01.png",
+      "apng_512": "05_apng/app_512/mayo_wake_up_512_v01.png"
+    },
+    {
+      "id": "jjajang_wake_up",
+      "actor": "jjajang",
+      "display_name": "짜장",
+      "action": "wake_up",
+      "action_label": "잠깨기",
+      "keyframes": [
+        "01_keyframes_master/jjajang/wake_up/jjajang_wake_up_key_01_v01.png",
+        "01_keyframes_master/jjajang/wake_up/jjajang_wake_up_key_02_v01.png",
+        "01_keyframes_master/jjajang/wake_up/jjajang_wake_up_key_03_v01.png",
+        "01_keyframes_master/jjajang/wake_up/jjajang_wake_up_key_04_v01.png"
+      ],
+      "playback_frames": [
+        "03_animation_frames/jjajang/wake_up/jjajang_wake_up_frame_01_v01.png",
+        "03_animation_frames/jjajang/wake_up/jjajang_wake_up_frame_02_v01.png",
+        "03_animation_frames/jjajang/wake_up/jjajang_wake_up_frame_03_v01.png",
+        "03_animation_frames/jjajang/wake_up/jjajang_wake_up_frame_04_v01.png",
+        "03_animation_frames/jjajang/wake_up/jjajang_wake_up_frame_05_v01.png",
+        "03_animation_frames/jjajang/wake_up/jjajang_wake_up_frame_06_v01.png"
+      ],
+      "frame_order": [
+        0,
+        1,
+        2,
+        3,
+        2,
+        1
+      ],
+      "durations_ms": [
+        150,
+        170,
+        210,
+        300,
+        210,
+        170
+      ],
+      "total_duration_ms": 1210,
+      "loop": true,
+      "anchor": {
+        "x": 0.5,
+        "y": 0.94
+      },
+      "webp_1024": "04_animated_webp/master/jjajang_wake_up_1024_v01.webp",
+      "webp_512": "04_animated_webp/app_512/jjajang_wake_up_512_v01.webp",
+      "apng_1024": "05_apng/master/jjajang_wake_up_1024_v01.png",
+      "apng_512": "05_apng/app_512/jjajang_wake_up_512_v01.png"
+    },
+    {
+      "id": "huchu_stretch",
+      "actor": "huchu",
+      "display_name": "후추",
+      "action": "stretch",
+      "action_label": "큰 기지개",
+      "keyframes": [
+        "01_keyframes_master/huchu/stretch/huchu_stretch_key_01_v01.png",
+        "01_keyframes_master/huchu/stretch/huchu_stretch_key_02_v01.png",
+        "01_keyframes_master/huchu/stretch/huchu_stretch_key_03_v01.png",
+        "01_keyframes_master/huchu/stretch/huchu_stretch_key_04_v01.png"
+      ],
+      "playback_frames": [
+        "03_animation_frames/huchu/stretch/huchu_stretch_frame_01_v01.png",
+        "03_animation_frames/huchu/stretch/huchu_stretch_frame_02_v01.png",
+        "03_animation_frames/huchu/stretch/huchu_stretch_frame_03_v01.png",
+        "03_animation_frames/huchu/stretch/huchu_stretch_frame_04_v01.png",
+        "03_animation_frames/huchu/stretch/huchu_stretch_frame_05_v01.png",
+        "03_animation_frames/huchu/stretch/huchu_stretch_frame_06_v01.png"
+      ],
+      "frame_order": [
+        0,
+        1,
+        2,
+        3,
+        2,
+        1
+      ],
+      "durations_ms": [
+        150,
+        170,
+        210,
+        300,
+        210,
+        170
+      ],
+      "total_duration_ms": 1210,
+      "loop": true,
+      "anchor": {
+        "x": 0.5,
+        "y": 0.94
+      },
+      "webp_1024": "04_animated_webp/master/huchu_stretch_1024_v01.webp",
+      "webp_512": "04_animated_webp/app_512/huchu_stretch_512_v01.webp",
+      "apng_1024": "05_apng/master/huchu_stretch_1024_v01.png",
+      "apng_512": "05_apng/app_512/huchu_stretch_512_v01.png"
+    },
+    {
+      "id": "mayo_stretch",
+      "actor": "mayo",
+      "display_name": "마요",
+      "action": "stretch",
+      "action_label": "큰 기지개",
+      "keyframes": [
+        "01_keyframes_master/mayo/stretch/mayo_stretch_key_01_v01.png",
+        "01_keyframes_master/mayo/stretch/mayo_stretch_key_02_v01.png",
+        "01_keyframes_master/mayo/stretch/mayo_stretch_key_03_v01.png",
+        "01_keyframes_master/mayo/stretch/mayo_stretch_key_04_v01.png"
+      ],
+      "playback_frames": [
+        "03_animation_frames/mayo/stretch/mayo_stretch_frame_01_v01.png",
+        "03_animation_frames/mayo/stretch/mayo_stretch_frame_02_v01.png",
+        "03_animation_frames/mayo/stretch/mayo_stretch_frame_03_v01.png",
+        "03_animation_frames/mayo/stretch/mayo_stretch_frame_04_v01.png",
+        "03_animation_frames/mayo/stretch/mayo_stretch_frame_05_v01.png",
+        "03_animation_frames/mayo/stretch/mayo_stretch_frame_06_v01.png"
+      ],
+      "frame_order": [
+        0,
+        1,
+        2,
+        3,
+        2,
+        1
+      ],
+      "durations_ms": [
+        150,
+        170,
+        210,
+        300,
+        210,
+        170
+      ],
+      "total_duration_ms": 1210,
+      "loop": true,
+      "anchor": {
+        "x": 0.5,
+        "y": 0.94
+      },
+      "webp_1024": "04_animated_webp/master/mayo_stretch_1024_v01.webp",
+      "webp_512": "04_animated_webp/app_512/mayo_stretch_512_v01.webp",
+      "apng_1024": "05_apng/master/mayo_stretch_1024_v01.png",
+      "apng_512": "05_apng/app_512/mayo_stretch_512_v01.png"
+    },
+    {
+      "id": "jjajang_stretch",
+      "actor": "jjajang",
+      "display_name": "짜장",
+      "action": "stretch",
+      "action_label": "큰 기지개",
+      "keyframes": [
+        "01_keyframes_master/jjajang/stretch/jjajang_stretch_key_01_v01.png",
+        "01_keyframes_master/jjajang/stretch/jjajang_stretch_key_02_v01.png",
+        "01_keyframes_master/jjajang/stretch/jjajang_stretch_key_03_v01.png",
+        "01_keyframes_master/jjajang/stretch/jjajang_stretch_key_04_v01.png"
+      ],
+      "playback_frames": [
+        "03_animation_frames/jjajang/stretch/jjajang_stretch_frame_01_v01.png",
+        "03_animation_frames/jjajang/stretch/jjajang_stretch_frame_02_v01.png",
+        "03_animation_frames/jjajang/stretch/jjajang_stretch_frame_03_v01.png",
+        "03_animation_frames/jjajang/stretch/jjajang_stretch_frame_04_v01.png",
+        "03_animation_frames/jjajang/stretch/jjajang_stretch_frame_05_v01.png",
+        "03_animation_frames/jjajang/stretch/jjajang_stretch_frame_06_v01.png"
+      ],
+      "frame_order": [
+        0,
+        1,
+        2,
+        3,
+        2,
+        1
+      ],
+      "durations_ms": [
+        150,
+        170,
+        210,
+        300,
+        210,
+        170
+      ],
+      "total_duration_ms": 1210,
+      "loop": true,
+      "anchor": {
+        "x": 0.5,
+        "y": 0.94
+      },
+      "webp_1024": "04_animated_webp/master/jjajang_stretch_1024_v01.webp",
+      "webp_512": "04_animated_webp/app_512/jjajang_stretch_512_v01.webp",
+      "apng_1024": "05_apng/master/jjajang_stretch_1024_v01.png",
+      "apng_512": "05_apng/app_512/jjajang_stretch_512_v01.png"
+    },
+    {
+      "id": "huchu_yawn",
+      "actor": "huchu",
+      "display_name": "후추",
+      "action": "yawn",
+      "action_label": "하품",
+      "keyframes": [
+        "01_keyframes_master/huchu/yawn/huchu_yawn_key_01_v01.png",
+        "01_keyframes_master/huchu/yawn/huchu_yawn_key_02_v01.png",
+        "01_keyframes_master/huchu/yawn/huchu_yawn_key_03_v01.png",
+        "01_keyframes_master/huchu/yawn/huchu_yawn_key_04_v01.png"
+      ],
+      "playback_frames": [
+        "03_animation_frames/huchu/yawn/huchu_yawn_frame_01_v01.png",
+        "03_animation_frames/huchu/yawn/huchu_yawn_frame_02_v01.png",
+        "03_animation_frames/huchu/yawn/huchu_yawn_frame_03_v01.png",
+        "03_animation_frames/huchu/yawn/huchu_yawn_frame_04_v01.png",
+        "03_animation_frames/huchu/yawn/huchu_yawn_frame_05_v01.png",
+        "03_animation_frames/huchu/yawn/huchu_yawn_frame_06_v01.png"
+      ],
+      "frame_order": [
+        0,
+        1,
+        2,
+        3,
+        2,
+        1
+      ],
+      "durations_ms": [
+        150,
+        170,
+        210,
+        300,
+        210,
+        170
+      ],
+      "total_duration_ms": 1210,
+      "loop": true,
+      "anchor": {
+        "x": 0.5,
+        "y": 0.94
+      },
+      "webp_1024": "04_animated_webp/master/huchu_yawn_1024_v01.webp",
+      "webp_512": "04_animated_webp/app_512/huchu_yawn_512_v01.webp",
+      "apng_1024": "05_apng/master/huchu_yawn_1024_v01.png",
+      "apng_512": "05_apng/app_512/huchu_yawn_512_v01.png"
+    },
+    {
+      "id": "mayo_yawn",
+      "actor": "mayo",
+      "display_name": "마요",
+      "action": "yawn",
+      "action_label": "하품",
+      "keyframes": [
+        "01_keyframes_master/mayo/yawn/mayo_yawn_key_01_v01.png",
+        "01_keyframes_master/mayo/yawn/mayo_yawn_key_02_v01.png",
+        "01_keyframes_master/mayo/yawn/mayo_yawn_key_03_v01.png",
+        "01_keyframes_master/mayo/yawn/mayo_yawn_key_04_v01.png"
+      ],
+      "playback_frames": [
+        "03_animation_frames/mayo/yawn/mayo_yawn_frame_01_v01.png",
+        "03_animation_frames/mayo/yawn/mayo_yawn_frame_02_v01.png",
+        "03_animation_frames/mayo/yawn/mayo_yawn_frame_03_v01.png",
+        "03_animation_frames/mayo/yawn/mayo_yawn_frame_04_v01.png",
+        "03_animation_frames/mayo/yawn/mayo_yawn_frame_05_v01.png",
+        "03_animation_frames/mayo/yawn/mayo_yawn_frame_06_v01.png"
+      ],
+      "frame_order": [
+        0,
+        1,
+        2,
+        3,
+        2,
+        1
+      ],
+      "durations_ms": [
+        150,
+        170,
+        210,
+        300,
+        210,
+        170
+      ],
+      "total_duration_ms": 1210,
+      "loop": true,
+      "anchor": {
+        "x": 0.5,
+        "y": 0.94
+      },
+      "webp_1024": "04_animated_webp/master/mayo_yawn_1024_v01.webp",
+      "webp_512": "04_animated_webp/app_512/mayo_yawn_512_v01.webp",
+      "apng_1024": "05_apng/master/mayo_yawn_1024_v01.png",
+      "apng_512": "05_apng/app_512/mayo_yawn_512_v01.png"
+    },
+    {
+      "id": "jjajang_yawn",
+      "actor": "jjajang",
+      "display_name": "짜장",
+      "action": "yawn",
+      "action_label": "하품",
+      "keyframes": [
+        "01_keyframes_master/jjajang/yawn/jjajang_yawn_key_01_v01.png",
+        "01_keyframes_master/jjajang/yawn/jjajang_yawn_key_02_v01.png",
+        "01_keyframes_master/jjajang/yawn/jjajang_yawn_key_03_v01.png",
+        "01_keyframes_master/jjajang/yawn/jjajang_yawn_key_04_v01.png"
+      ],
+      "playback_frames": [
+        "03_animation_frames/jjajang/yawn/jjajang_yawn_frame_01_v01.png",
+        "03_animation_frames/jjajang/yawn/jjajang_yawn_frame_02_v01.png",
+        "03_animation_frames/jjajang/yawn/jjajang_yawn_frame_03_v01.png",
+        "03_animation_frames/jjajang/yawn/jjajang_yawn_frame_04_v01.png",
+        "03_animation_frames/jjajang/yawn/jjajang_yawn_frame_05_v01.png",
+        "03_animation_frames/jjajang/yawn/jjajang_yawn_frame_06_v01.png"
+      ],
+      "frame_order": [
+        0,
+        1,
+        2,
+        3,
+        2,
+        1
+      ],
+      "durations_ms": [
+        150,
+        170,
+        210,
+        300,
+        210,
+        170
+      ],
+      "total_duration_ms": 1210,
+      "loop": true,
+      "anchor": {
+        "x": 0.5,
+        "y": 0.94
+      },
+      "webp_1024": "04_animated_webp/master/jjajang_yawn_1024_v01.webp",
+      "webp_512": "04_animated_webp/app_512/jjajang_yawn_512_v01.webp",
+      "apng_1024": "05_apng/master/jjajang_yawn_1024_v01.png",
+      "apng_512": "05_apng/app_512/jjajang_yawn_512_v01.png"
+    },
+    {
+      "id": "huchu_face_groom",
+      "actor": "huchu",
+      "display_name": "후추",
+      "action": "face_groom",
+      "action_label": "세수 그루밍",
+      "keyframes": [
+        "01_keyframes_master/huchu/face_groom/huchu_face_groom_key_01_v01.png",
+        "01_keyframes_master/huchu/face_groom/huchu_face_groom_key_02_v01.png",
+        "01_keyframes_master/huchu/face_groom/huchu_face_groom_key_03_v01.png",
+        "01_keyframes_master/huchu/face_groom/huchu_face_groom_key_04_v01.png"
+      ],
+      "playback_frames": [
+        "03_animation_frames/huchu/face_groom/huchu_face_groom_frame_01_v01.png",
+        "03_animation_frames/huchu/face_groom/huchu_face_groom_frame_02_v01.png",
+        "03_animation_frames/huchu/face_groom/huchu_face_groom_frame_03_v01.png",
+        "03_animation_frames/huchu/face_groom/huchu_face_groom_frame_04_v01.png",
+        "03_animation_frames/huchu/face_groom/huchu_face_groom_frame_05_v01.png",
+        "03_animation_frames/huchu/face_groom/huchu_face_groom_frame_06_v01.png"
+      ],
+      "frame_order": [
+        0,
+        1,
+        2,
+        3,
+        2,
+        1
+      ],
+      "durations_ms": [
+        150,
+        170,
+        210,
+        300,
+        210,
+        170
+      ],
+      "total_duration_ms": 1210,
+      "loop": true,
+      "anchor": {
+        "x": 0.5,
+        "y": 0.94
+      },
+      "webp_1024": "04_animated_webp/master/huchu_face_groom_1024_v01.webp",
+      "webp_512": "04_animated_webp/app_512/huchu_face_groom_512_v01.webp",
+      "apng_1024": "05_apng/master/huchu_face_groom_1024_v01.png",
+      "apng_512": "05_apng/app_512/huchu_face_groom_512_v01.png"
+    },
+    {
+      "id": "mayo_face_groom",
+      "actor": "mayo",
+      "display_name": "마요",
+      "action": "face_groom",
+      "action_label": "세수 그루밍",
+      "keyframes": [
+        "01_keyframes_master/mayo/face_groom/mayo_face_groom_key_01_v01.png",
+        "01_keyframes_master/mayo/face_groom/mayo_face_groom_key_02_v01.png",
+        "01_keyframes_master/mayo/face_groom/mayo_face_groom_key_03_v01.png",
+        "01_keyframes_master/mayo/face_groom/mayo_face_groom_key_04_v01.png"
+      ],
+      "playback_frames": [
+        "03_animation_frames/mayo/face_groom/mayo_face_groom_frame_01_v01.png",
+        "03_animation_frames/mayo/face_groom/mayo_face_groom_frame_02_v01.png",
+        "03_animation_frames/mayo/face_groom/mayo_face_groom_frame_03_v01.png",
+        "03_animation_frames/mayo/face_groom/mayo_face_groom_frame_04_v01.png",
+        "03_animation_frames/mayo/face_groom/mayo_face_groom_frame_05_v01.png",
+        "03_animation_frames/mayo/face_groom/mayo_face_groom_frame_06_v01.png"
+      ],
+      "frame_order": [
+        0,
+        1,
+        2,
+        3,
+        2,
+        1
+      ],
+      "durations_ms": [
+        150,
+        170,
+        210,
+        300,
+        210,
+        170
+      ],
+      "total_duration_ms": 1210,
+      "loop": true,
+      "anchor": {
+        "x": 0.5,
+        "y": 0.94
+      },
+      "webp_1024": "04_animated_webp/master/mayo_face_groom_1024_v01.webp",
+      "webp_512": "04_animated_webp/app_512/mayo_face_groom_512_v01.webp",
+      "apng_1024": "05_apng/master/mayo_face_groom_1024_v01.png",
+      "apng_512": "05_apng/app_512/mayo_face_groom_512_v01.png"
+    },
+    {
+      "id": "jjajang_face_groom",
+      "actor": "jjajang",
+      "display_name": "짜장",
+      "action": "face_groom",
+      "action_label": "세수 그루밍",
+      "keyframes": [
+        "01_keyframes_master/jjajang/face_groom/jjajang_face_groom_key_01_v01.png",
+        "01_keyframes_master/jjajang/face_groom/jjajang_face_groom_key_02_v01.png",
+        "01_keyframes_master/jjajang/face_groom/jjajang_face_groom_key_03_v01.png",
+        "01_keyframes_master/jjajang/face_groom/jjajang_face_groom_key_04_v01.png"
+      ],
+      "playback_frames": [
+        "03_animation_frames/jjajang/face_groom/jjajang_face_groom_frame_01_v01.png",
+        "03_animation_frames/jjajang/face_groom/jjajang_face_groom_frame_02_v01.png",
+        "03_animation_frames/jjajang/face_groom/jjajang_face_groom_frame_03_v01.png",
+        "03_animation_frames/jjajang/face_groom/jjajang_face_groom_frame_04_v01.png",
+        "03_animation_frames/jjajang/face_groom/jjajang_face_groom_frame_05_v01.png",
+        "03_animation_frames/jjajang/face_groom/jjajang_face_groom_frame_06_v01.png"
+      ],
+      "frame_order": [
+        0,
+        1,
+        2,
+        3,
+        2,
+        1
+      ],
+      "durations_ms": [
+        150,
+        170,
+        210,
+        300,
+        210,
+        170
+      ],
+      "total_duration_ms": 1210,
+      "loop": true,
+      "anchor": {
+        "x": 0.5,
+        "y": 0.94
+      },
+      "webp_1024": "04_animated_webp/master/jjajang_face_groom_1024_v01.webp",
+      "webp_512": "04_animated_webp/app_512/jjajang_face_groom_512_v01.webp",
+      "apng_1024": "05_apng/master/jjajang_face_groom_1024_v01.png",
+      "apng_512": "05_apng/app_512/jjajang_face_groom_512_v01.png"
+    },
+    {
+      "id": "huchu_body_groom",
+      "actor": "huchu",
+      "display_name": "후추",
+      "action": "body_groom",
+      "action_label": "몸통 그루밍",
+      "keyframes": [
+        "01_keyframes_master/huchu/body_groom/huchu_body_groom_key_01_v01.png",
+        "01_keyframes_master/huchu/body_groom/huchu_body_groom_key_02_v01.png",
+        "01_keyframes_master/huchu/body_groom/huchu_body_groom_key_03_v01.png",
+        "01_keyframes_master/huchu/body_groom/huchu_body_groom_key_04_v01.png"
+      ],
+      "playback_frames": [
+        "03_animation_frames/huchu/body_groom/huchu_body_groom_frame_01_v01.png",
+        "03_animation_frames/huchu/body_groom/huchu_body_groom_frame_02_v01.png",
+        "03_animation_frames/huchu/body_groom/huchu_body_groom_frame_03_v01.png",
+        "03_animation_frames/huchu/body_groom/huchu_body_groom_frame_04_v01.png",
+        "03_animation_frames/huchu/body_groom/huchu_body_groom_frame_05_v01.png",
+        "03_animation_frames/huchu/body_groom/huchu_body_groom_frame_06_v01.png"
+      ],
+      "frame_order": [
+        0,
+        1,
+        2,
+        3,
+        2,
+        1
+      ],
+      "durations_ms": [
+        150,
+        170,
+        210,
+        300,
+        210,
+        170
+      ],
+      "total_duration_ms": 1210,
+      "loop": true,
+      "anchor": {
+        "x": 0.5,
+        "y": 0.94
+      },
+      "webp_1024": "04_animated_webp/master/huchu_body_groom_1024_v01.webp",
+      "webp_512": "04_animated_webp/app_512/huchu_body_groom_512_v01.webp",
+      "apng_1024": "05_apng/master/huchu_body_groom_1024_v01.png",
+      "apng_512": "05_apng/app_512/huchu_body_groom_512_v01.png"
+    },
+    {
+      "id": "mayo_body_groom",
+      "actor": "mayo",
+      "display_name": "마요",
+      "action": "body_groom",
+      "action_label": "몸통 그루밍",
+      "keyframes": [
+        "01_keyframes_master/mayo/body_groom/mayo_body_groom_key_01_v01.png",
+        "01_keyframes_master/mayo/body_groom/mayo_body_groom_key_02_v01.png",
+        "01_keyframes_master/mayo/body_groom/mayo_body_groom_key_03_v01.png",
+        "01_keyframes_master/mayo/body_groom/mayo_body_groom_key_04_v01.png"
+      ],
+      "playback_frames": [
+        "03_animation_frames/mayo/body_groom/mayo_body_groom_frame_01_v01.png",
+        "03_animation_frames/mayo/body_groom/mayo_body_groom_frame_02_v01.png",
+        "03_animation_frames/mayo/body_groom/mayo_body_groom_frame_03_v01.png",
+        "03_animation_frames/mayo/body_groom/mayo_body_groom_frame_04_v01.png",
+        "03_animation_frames/mayo/body_groom/mayo_body_groom_frame_05_v01.png",
+        "03_animation_frames/mayo/body_groom/mayo_body_groom_frame_06_v01.png"
+      ],
+      "frame_order": [
+        0,
+        1,
+        2,
+        3,
+        2,
+        1
+      ],
+      "durations_ms": [
+        150,
+        170,
+        210,
+        300,
+        210,
+        170
+      ],
+      "total_duration_ms": 1210,
+      "loop": true,
+      "anchor": {
+        "x": 0.5,
+        "y": 0.94
+      },
+      "webp_1024": "04_animated_webp/master/mayo_body_groom_1024_v01.webp",
+      "webp_512": "04_animated_webp/app_512/mayo_body_groom_512_v01.webp",
+      "apng_1024": "05_apng/master/mayo_body_groom_1024_v01.png",
+      "apng_512": "05_apng/app_512/mayo_body_groom_512_v01.png"
+    },
+    {
+      "id": "jjajang_body_groom",
+      "actor": "jjajang",
+      "display_name": "짜장",
+      "action": "body_groom",
+      "action_label": "몸통 그루밍",
+      "keyframes": [
+        "01_keyframes_master/jjajang/body_groom/jjajang_body_groom_key_01_v01.png",
+        "01_keyframes_master/jjajang/body_groom/jjajang_body_groom_key_02_v01.png",
+        "01_keyframes_master/jjajang/body_groom/jjajang_body_groom_key_03_v01.png",
+        "01_keyframes_master/jjajang/body_groom/jjajang_body_groom_key_04_v01.png"
+      ],
+      "playback_frames": [
+        "03_animation_frames/jjajang/body_groom/jjajang_body_groom_frame_01_v01.png",
+        "03_animation_frames/jjajang/body_groom/jjajang_body_groom_frame_02_v01.png",
+        "03_animation_frames/jjajang/body_groom/jjajang_body_groom_frame_03_v01.png",
+        "03_animation_frames/jjajang/body_groom/jjajang_body_groom_frame_04_v01.png",
+        "03_animation_frames/jjajang/body_groom/jjajang_body_groom_frame_05_v01.png",
+        "03_animation_frames/jjajang/body_groom/jjajang_body_groom_frame_06_v01.png"
+      ],
+      "frame_order": [
+        0,
+        1,
+        2,
+        3,
+        2,
+        1
+      ],
+      "durations_ms": [
+        150,
+        170,
+        210,
+        300,
+        210,
+        170
+      ],
+      "total_duration_ms": 1210,
+      "loop": true,
+      "anchor": {
+        "x": 0.5,
+        "y": 0.94
+      },
+      "webp_1024": "04_animated_webp/master/jjajang_body_groom_1024_v01.webp",
+      "webp_512": "04_animated_webp/app_512/jjajang_body_groom_512_v01.webp",
+      "apng_1024": "05_apng/master/jjajang_body_groom_1024_v01.png",
+      "apng_512": "05_apng/app_512/jjajang_body_groom_512_v01.png"
+    },
+    {
+      "id": "huchu_tail_chase",
+      "actor": "huchu",
+      "display_name": "후추",
+      "action": "tail_chase",
+      "action_label": "꼬리 쫓기",
+      "keyframes": [
+        "01_keyframes_master/huchu/tail_chase/huchu_tail_chase_key_01_v01.png",
+        "01_keyframes_master/huchu/tail_chase/huchu_tail_chase_key_02_v01.png",
+        "01_keyframes_master/huchu/tail_chase/huchu_tail_chase_key_03_v01.png",
+        "01_keyframes_master/huchu/tail_chase/huchu_tail_chase_key_04_v01.png"
+      ],
+      "playback_frames": [
+        "03_animation_frames/huchu/tail_chase/huchu_tail_chase_frame_01_v01.png",
+        "03_animation_frames/huchu/tail_chase/huchu_tail_chase_frame_02_v01.png",
+        "03_animation_frames/huchu/tail_chase/huchu_tail_chase_frame_03_v01.png",
+        "03_animation_frames/huchu/tail_chase/huchu_tail_chase_frame_04_v01.png",
+        "03_animation_frames/huchu/tail_chase/huchu_tail_chase_frame_05_v01.png",
+        "03_animation_frames/huchu/tail_chase/huchu_tail_chase_frame_06_v01.png"
+      ],
+      "frame_order": [
+        0,
+        1,
+        2,
+        3,
+        2,
+        1
+      ],
+      "durations_ms": [
+        150,
+        170,
+        210,
+        300,
+        210,
+        170
+      ],
+      "total_duration_ms": 1210,
+      "loop": true,
+      "anchor": {
+        "x": 0.5,
+        "y": 0.94
+      },
+      "webp_1024": "04_animated_webp/master/huchu_tail_chase_1024_v01.webp",
+      "webp_512": "04_animated_webp/app_512/huchu_tail_chase_512_v01.webp",
+      "apng_1024": "05_apng/master/huchu_tail_chase_1024_v01.png",
+      "apng_512": "05_apng/app_512/huchu_tail_chase_512_v01.png"
+    },
+    {
+      "id": "mayo_tail_chase",
+      "actor": "mayo",
+      "display_name": "마요",
+      "action": "tail_chase",
+      "action_label": "꼬리 쫓기",
+      "keyframes": [
+        "01_keyframes_master/mayo/tail_chase/mayo_tail_chase_key_01_v01.png",
+        "01_keyframes_master/mayo/tail_chase/mayo_tail_chase_key_02_v01.png",
+        "01_keyframes_master/mayo/tail_chase/mayo_tail_chase_key_03_v01.png",
+        "01_keyframes_master/mayo/tail_chase/mayo_tail_chase_key_04_v01.png"
+      ],
+      "playback_frames": [
+        "03_animation_frames/mayo/tail_chase/mayo_tail_chase_frame_01_v01.png",
+        "03_animation_frames/mayo/tail_chase/mayo_tail_chase_frame_02_v01.png",
+        "03_animation_frames/mayo/tail_chase/mayo_tail_chase_frame_03_v01.png",
+        "03_animation_frames/mayo/tail_chase/mayo_tail_chase_frame_04_v01.png",
+        "03_animation_frames/mayo/tail_chase/mayo_tail_chase_frame_05_v01.png",
+        "03_animation_frames/mayo/tail_chase/mayo_tail_chase_frame_06_v01.png"
+      ],
+      "frame_order": [
+        0,
+        1,
+        2,
+        3,
+        2,
+        1
+      ],
+      "durations_ms": [
+        150,
+        170,
+        210,
+        300,
+        210,
+        170
+      ],
+      "total_duration_ms": 1210,
+      "loop": true,
+      "anchor": {
+        "x": 0.5,
+        "y": 0.94
+      },
+      "webp_1024": "04_animated_webp/master/mayo_tail_chase_1024_v01.webp",
+      "webp_512": "04_animated_webp/app_512/mayo_tail_chase_512_v01.webp",
+      "apng_1024": "05_apng/master/mayo_tail_chase_1024_v01.png",
+      "apng_512": "05_apng/app_512/mayo_tail_chase_512_v01.png"
+    },
+    {
+      "id": "jjajang_tail_chase",
+      "actor": "jjajang",
+      "display_name": "짜장",
+      "action": "tail_chase",
+      "action_label": "꼬리 쫓기",
+      "keyframes": [
+        "01_keyframes_master/jjajang/tail_chase/jjajang_tail_chase_key_01_v01.png",
+        "01_keyframes_master/jjajang/tail_chase/jjajang_tail_chase_key_02_v01.png",
+        "01_keyframes_master/jjajang/tail_chase/jjajang_tail_chase_key_03_v01.png",
+        "01_keyframes_master/jjajang/tail_chase/jjajang_tail_chase_key_04_v01.png"
+      ],
+      "playback_frames": [
+        "03_animation_frames/jjajang/tail_chase/jjajang_tail_chase_frame_01_v01.png",
+        "03_animation_frames/jjajang/tail_chase/jjajang_tail_chase_frame_02_v01.png",
+        "03_animation_frames/jjajang/tail_chase/jjajang_tail_chase_frame_03_v01.png",
+        "03_animation_frames/jjajang/tail_chase/jjajang_tail_chase_frame_04_v01.png",
+        "03_animation_frames/jjajang/tail_chase/jjajang_tail_chase_frame_05_v01.png",
+        "03_animation_frames/jjajang/tail_chase/jjajang_tail_chase_frame_06_v01.png"
+      ],
+      "frame_order": [
+        0,
+        1,
+        2,
+        3,
+        2,
+        1
+      ],
+      "durations_ms": [
+        150,
+        170,
+        210,
+        300,
+        210,
+        170
+      ],
+      "total_duration_ms": 1210,
+      "loop": true,
+      "anchor": {
+        "x": 0.5,
+        "y": 0.94
+      },
+      "webp_1024": "04_animated_webp/master/jjajang_tail_chase_1024_v01.webp",
+      "webp_512": "04_animated_webp/app_512/jjajang_tail_chase_512_v01.webp",
+      "apng_1024": "05_apng/master/jjajang_tail_chase_1024_v01.png",
+      "apng_512": "05_apng/app_512/jjajang_tail_chase_512_v01.png"
+    },
+    {
+      "id": "huchu_yarn_play",
+      "actor": "huchu",
+      "display_name": "후추",
+      "action": "yarn_play",
+      "action_label": "털실 놀이",
+      "keyframes": [
+        "01_keyframes_master/huchu/yarn_play/huchu_yarn_play_key_01_v01.png",
+        "01_keyframes_master/huchu/yarn_play/huchu_yarn_play_key_02_v01.png",
+        "01_keyframes_master/huchu/yarn_play/huchu_yarn_play_key_03_v01.png",
+        "01_keyframes_master/huchu/yarn_play/huchu_yarn_play_key_04_v01.png"
+      ],
+      "playback_frames": [
+        "03_animation_frames/huchu/yarn_play/huchu_yarn_play_frame_01_v01.png",
+        "03_animation_frames/huchu/yarn_play/huchu_yarn_play_frame_02_v01.png",
+        "03_animation_frames/huchu/yarn_play/huchu_yarn_play_frame_03_v01.png",
+        "03_animation_frames/huchu/yarn_play/huchu_yarn_play_frame_04_v01.png",
+        "03_animation_frames/huchu/yarn_play/huchu_yarn_play_frame_05_v01.png",
+        "03_animation_frames/huchu/yarn_play/huchu_yarn_play_frame_06_v01.png"
+      ],
+      "frame_order": [
+        0,
+        1,
+        2,
+        3,
+        2,
+        1
+      ],
+      "durations_ms": [
+        150,
+        170,
+        210,
+        300,
+        210,
+        170
+      ],
+      "total_duration_ms": 1210,
+      "loop": true,
+      "anchor": {
+        "x": 0.5,
+        "y": 0.94
+      },
+      "webp_1024": "04_animated_webp/master/huchu_yarn_play_1024_v01.webp",
+      "webp_512": "04_animated_webp/app_512/huchu_yarn_play_512_v01.webp",
+      "apng_1024": "05_apng/master/huchu_yarn_play_1024_v01.png",
+      "apng_512": "05_apng/app_512/huchu_yarn_play_512_v01.png"
+    },
+    {
+      "id": "mayo_yarn_play",
+      "actor": "mayo",
+      "display_name": "마요",
+      "action": "yarn_play",
+      "action_label": "털실 놀이",
+      "keyframes": [
+        "01_keyframes_master/mayo/yarn_play/mayo_yarn_play_key_01_v01.png",
+        "01_keyframes_master/mayo/yarn_play/mayo_yarn_play_key_02_v01.png",
+        "01_keyframes_master/mayo/yarn_play/mayo_yarn_play_key_03_v01.png",
+        "01_keyframes_master/mayo/yarn_play/mayo_yarn_play_key_04_v01.png"
+      ],
+      "playback_frames": [
+        "03_animation_frames/mayo/yarn_play/mayo_yarn_play_frame_01_v01.png",
+        "03_animation_frames/mayo/yarn_play/mayo_yarn_play_frame_02_v01.png",
+        "03_animation_frames/mayo/yarn_play/mayo_yarn_play_frame_03_v01.png",
+        "03_animation_frames/mayo/yarn_play/mayo_yarn_play_frame_04_v01.png",
+        "03_animation_frames/mayo/yarn_play/mayo_yarn_play_frame_05_v01.png",
+        "03_animation_frames/mayo/yarn_play/mayo_yarn_play_frame_06_v01.png"
+      ],
+      "frame_order": [
+        0,
+        1,
+        2,
+        3,
+        2,
+        1
+      ],
+      "durations_ms": [
+        150,
+        170,
+        210,
+        300,
+        210,
+        170
+      ],
+      "total_duration_ms": 1210,
+      "loop": true,
+      "anchor": {
+        "x": 0.5,
+        "y": 0.94
+      },
+      "webp_1024": "04_animated_webp/master/mayo_yarn_play_1024_v01.webp",
+      "webp_512": "04_animated_webp/app_512/mayo_yarn_play_512_v01.webp",
+      "apng_1024": "05_apng/master/mayo_yarn_play_1024_v01.png",
+      "apng_512": "05_apng/app_512/mayo_yarn_play_512_v01.png"
+    },
+    {
+      "id": "jjajang_yarn_play",
+      "actor": "jjajang",
+      "display_name": "짜장",
+      "action": "yarn_play",
+      "action_label": "털실 놀이",
+      "keyframes": [
+        "01_keyframes_master/jjajang/yarn_play/jjajang_yarn_play_key_01_v01.png",
+        "01_keyframes_master/jjajang/yarn_play/jjajang_yarn_play_key_02_v01.png",
+        "01_keyframes_master/jjajang/yarn_play/jjajang_yarn_play_key_03_v01.png",
+        "01_keyframes_master/jjajang/yarn_play/jjajang_yarn_play_key_04_v01.png"
+      ],
+      "playback_frames": [
+        "03_animation_frames/jjajang/yarn_play/jjajang_yarn_play_frame_01_v01.png",
+        "03_animation_frames/jjajang/yarn_play/jjajang_yarn_play_frame_02_v01.png",
+        "03_animation_frames/jjajang/yarn_play/jjajang_yarn_play_frame_03_v01.png",
+        "03_animation_frames/jjajang/yarn_play/jjajang_yarn_play_frame_04_v01.png",
+        "03_animation_frames/jjajang/yarn_play/jjajang_yarn_play_frame_05_v01.png",
+        "03_animation_frames/jjajang/yarn_play/jjajang_yarn_play_frame_06_v01.png"
+      ],
+      "frame_order": [
+        0,
+        1,
+        2,
+        3,
+        2,
+        1
+      ],
+      "durations_ms": [
+        150,
+        170,
+        210,
+        300,
+        210,
+        170
+      ],
+      "total_duration_ms": 1210,
+      "loop": true,
+      "anchor": {
+        "x": 0.5,
+        "y": 0.94
+      },
+      "webp_1024": "04_animated_webp/master/jjajang_yarn_play_1024_v01.webp",
+      "webp_512": "04_animated_webp/app_512/jjajang_yarn_play_512_v01.webp",
+      "apng_1024": "05_apng/master/jjajang_yarn_play_1024_v01.png",
+      "apng_512": "05_apng/app_512/jjajang_yarn_play_512_v01.png"
+    },
+    {
+      "id": "huchu_box_enter",
+      "actor": "huchu",
+      "display_name": "후추",
+      "action": "box_enter",
+      "action_label": "상자 들어가기",
+      "keyframes": [
+        "01_keyframes_master/huchu/box_enter/huchu_box_enter_key_01_v01.png",
+        "01_keyframes_master/huchu/box_enter/huchu_box_enter_key_02_v01.png",
+        "01_keyframes_master/huchu/box_enter/huchu_box_enter_key_03_v01.png",
+        "01_keyframes_master/huchu/box_enter/huchu_box_enter_key_04_v01.png"
+      ],
+      "playback_frames": [
+        "03_animation_frames/huchu/box_enter/huchu_box_enter_frame_01_v01.png",
+        "03_animation_frames/huchu/box_enter/huchu_box_enter_frame_02_v01.png",
+        "03_animation_frames/huchu/box_enter/huchu_box_enter_frame_03_v01.png",
+        "03_animation_frames/huchu/box_enter/huchu_box_enter_frame_04_v01.png",
+        "03_animation_frames/huchu/box_enter/huchu_box_enter_frame_05_v01.png",
+        "03_animation_frames/huchu/box_enter/huchu_box_enter_frame_06_v01.png"
+      ],
+      "frame_order": [
+        0,
+        1,
+        2,
+        3,
+        2,
+        1
+      ],
+      "durations_ms": [
+        150,
+        170,
+        210,
+        300,
+        210,
+        170
+      ],
+      "total_duration_ms": 1210,
+      "loop": true,
+      "anchor": {
+        "x": 0.5,
+        "y": 0.94
+      },
+      "webp_1024": "04_animated_webp/master/huchu_box_enter_1024_v01.webp",
+      "webp_512": "04_animated_webp/app_512/huchu_box_enter_512_v01.webp",
+      "apng_1024": "05_apng/master/huchu_box_enter_1024_v01.png",
+      "apng_512": "05_apng/app_512/huchu_box_enter_512_v01.png"
+    },
+    {
+      "id": "mayo_box_enter",
+      "actor": "mayo",
+      "display_name": "마요",
+      "action": "box_enter",
+      "action_label": "상자 들어가기",
+      "keyframes": [
+        "01_keyframes_master/mayo/box_enter/mayo_box_enter_key_01_v01.png",
+        "01_keyframes_master/mayo/box_enter/mayo_box_enter_key_02_v01.png",
+        "01_keyframes_master/mayo/box_enter/mayo_box_enter_key_03_v01.png",
+        "01_keyframes_master/mayo/box_enter/mayo_box_enter_key_04_v01.png"
+      ],
+      "playback_frames": [
+        "03_animation_frames/mayo/box_enter/mayo_box_enter_frame_01_v01.png",
+        "03_animation_frames/mayo/box_enter/mayo_box_enter_frame_02_v01.png",
+        "03_animation_frames/mayo/box_enter/mayo_box_enter_frame_03_v01.png",
+        "03_animation_frames/mayo/box_enter/mayo_box_enter_frame_04_v01.png",
+        "03_animation_frames/mayo/box_enter/mayo_box_enter_frame_05_v01.png",
+        "03_animation_frames/mayo/box_enter/mayo_box_enter_frame_06_v01.png"
+      ],
+      "frame_order": [
+        0,
+        1,
+        2,
+        3,
+        2,
+        1
+      ],
+      "durations_ms": [
+        150,
+        170,
+        210,
+        300,
+        210,
+        170
+      ],
+      "total_duration_ms": 1210,
+      "loop": true,
+      "anchor": {
+        "x": 0.5,
+        "y": 0.94
+      },
+      "webp_1024": "04_animated_webp/master/mayo_box_enter_1024_v01.webp",
+      "webp_512": "04_animated_webp/app_512/mayo_box_enter_512_v01.webp",
+      "apng_1024": "05_apng/master/mayo_box_enter_1024_v01.png",
+      "apng_512": "05_apng/app_512/mayo_box_enter_512_v01.png"
+    },
+    {
+      "id": "jjajang_box_enter",
+      "actor": "jjajang",
+      "display_name": "짜장",
+      "action": "box_enter",
+      "action_label": "상자 들어가기",
+      "keyframes": [
+        "01_keyframes_master/jjajang/box_enter/jjajang_box_enter_key_01_v01.png",
+        "01_keyframes_master/jjajang/box_enter/jjajang_box_enter_key_02_v01.png",
+        "01_keyframes_master/jjajang/box_enter/jjajang_box_enter_key_03_v01.png",
+        "01_keyframes_master/jjajang/box_enter/jjajang_box_enter_key_04_v01.png"
+      ],
+      "playback_frames": [
+        "03_animation_frames/jjajang/box_enter/jjajang_box_enter_frame_01_v01.png",
+        "03_animation_frames/jjajang/box_enter/jjajang_box_enter_frame_02_v01.png",
+        "03_animation_frames/jjajang/box_enter/jjajang_box_enter_frame_03_v01.png",
+        "03_animation_frames/jjajang/box_enter/jjajang_box_enter_frame_04_v01.png",
+        "03_animation_frames/jjajang/box_enter/jjajang_box_enter_frame_05_v01.png",
+        "03_animation_frames/jjajang/box_enter/jjajang_box_enter_frame_06_v01.png"
+      ],
+      "frame_order": [
+        0,
+        1,
+        2,
+        3,
+        2,
+        1
+      ],
+      "durations_ms": [
+        150,
+        170,
+        210,
+        300,
+        210,
+        170
+      ],
+      "total_duration_ms": 1210,
+      "loop": true,
+      "anchor": {
+        "x": 0.5,
+        "y": 0.94
+      },
+      "webp_1024": "04_animated_webp/master/jjajang_box_enter_1024_v01.webp",
+      "webp_512": "04_animated_webp/app_512/jjajang_box_enter_512_v01.webp",
+      "apng_1024": "05_apng/master/jjajang_box_enter_1024_v01.png",
+      "apng_512": "05_apng/app_512/jjajang_box_enter_512_v01.png"
+    },
+    {
+      "id": "huchu_card_peek",
+      "actor": "huchu",
+      "display_name": "후추",
+      "action": "card_peek",
+      "action_label": "카드 빼꼼",
+      "keyframes": [
+        "01_keyframes_master/huchu/card_peek/huchu_card_peek_key_01_v01.png",
+        "01_keyframes_master/huchu/card_peek/huchu_card_peek_key_02_v01.png",
+        "01_keyframes_master/huchu/card_peek/huchu_card_peek_key_03_v01.png",
+        "01_keyframes_master/huchu/card_peek/huchu_card_peek_key_04_v01.png"
+      ],
+      "playback_frames": [
+        "03_animation_frames/huchu/card_peek/huchu_card_peek_frame_01_v01.png",
+        "03_animation_frames/huchu/card_peek/huchu_card_peek_frame_02_v01.png",
+        "03_animation_frames/huchu/card_peek/huchu_card_peek_frame_03_v01.png",
+        "03_animation_frames/huchu/card_peek/huchu_card_peek_frame_04_v01.png",
+        "03_animation_frames/huchu/card_peek/huchu_card_peek_frame_05_v01.png",
+        "03_animation_frames/huchu/card_peek/huchu_card_peek_frame_06_v01.png"
+      ],
+      "frame_order": [
+        0,
+        1,
+        2,
+        3,
+        2,
+        1
+      ],
+      "durations_ms": [
+        150,
+        170,
+        210,
+        300,
+        210,
+        170
+      ],
+      "total_duration_ms": 1210,
+      "loop": true,
+      "anchor": {
+        "x": 0.5,
+        "y": 0.94
+      },
+      "webp_1024": "04_animated_webp/master/huchu_card_peek_1024_v01.webp",
+      "webp_512": "04_animated_webp/app_512/huchu_card_peek_512_v01.webp",
+      "apng_1024": "05_apng/master/huchu_card_peek_1024_v01.png",
+      "apng_512": "05_apng/app_512/huchu_card_peek_512_v01.png"
+    },
+    {
+      "id": "mayo_card_peek",
+      "actor": "mayo",
+      "display_name": "마요",
+      "action": "card_peek",
+      "action_label": "카드 빼꼼",
+      "keyframes": [
+        "01_keyframes_master/mayo/card_peek/mayo_card_peek_key_01_v01.png",
+        "01_keyframes_master/mayo/card_peek/mayo_card_peek_key_02_v01.png",
+        "01_keyframes_master/mayo/card_peek/mayo_card_peek_key_03_v01.png",
+        "01_keyframes_master/mayo/card_peek/mayo_card_peek_key_04_v01.png"
+      ],
+      "playback_frames": [
+        "03_animation_frames/mayo/card_peek/mayo_card_peek_frame_01_v01.png",
+        "03_animation_frames/mayo/card_peek/mayo_card_peek_frame_02_v01.png",
+        "03_animation_frames/mayo/card_peek/mayo_card_peek_frame_03_v01.png",
+        "03_animation_frames/mayo/card_peek/mayo_card_peek_frame_04_v01.png",
+        "03_animation_frames/mayo/card_peek/mayo_card_peek_frame_05_v01.png",
+        "03_animation_frames/mayo/card_peek/mayo_card_peek_frame_06_v01.png"
+      ],
+      "frame_order": [
+        0,
+        1,
+        2,
+        3,
+        2,
+        1
+      ],
+      "durations_ms": [
+        150,
+        170,
+        210,
+        300,
+        210,
+        170
+      ],
+      "total_duration_ms": 1210,
+      "loop": true,
+      "anchor": {
+        "x": 0.5,
+        "y": 0.94
+      },
+      "webp_1024": "04_animated_webp/master/mayo_card_peek_1024_v01.webp",
+      "webp_512": "04_animated_webp/app_512/mayo_card_peek_512_v01.webp",
+      "apng_1024": "05_apng/master/mayo_card_peek_1024_v01.png",
+      "apng_512": "05_apng/app_512/mayo_card_peek_512_v01.png"
+    },
+    {
+      "id": "jjajang_card_peek",
+      "actor": "jjajang",
+      "display_name": "짜장",
+      "action": "card_peek",
+      "action_label": "카드 빼꼼",
+      "keyframes": [
+        "01_keyframes_master/jjajang/card_peek/jjajang_card_peek_key_01_v01.png",
+        "01_keyframes_master/jjajang/card_peek/jjajang_card_peek_key_02_v01.png",
+        "01_keyframes_master/jjajang/card_peek/jjajang_card_peek_key_03_v01.png",
+        "01_keyframes_master/jjajang/card_peek/jjajang_card_peek_key_04_v01.png"
+      ],
+      "playback_frames": [
+        "03_animation_frames/jjajang/card_peek/jjajang_card_peek_frame_01_v01.png",
+        "03_animation_frames/jjajang/card_peek/jjajang_card_peek_frame_02_v01.png",
+        "03_animation_frames/jjajang/card_peek/jjajang_card_peek_frame_03_v01.png",
+        "03_animation_frames/jjajang/card_peek/jjajang_card_peek_frame_04_v01.png",
+        "03_animation_frames/jjajang/card_peek/jjajang_card_peek_frame_05_v01.png",
+        "03_animation_frames/jjajang/card_peek/jjajang_card_peek_frame_06_v01.png"
+      ],
+      "frame_order": [
+        0,
+        1,
+        2,
+        3,
+        2,
+        1
+      ],
+      "durations_ms": [
+        150,
+        170,
+        210,
+        300,
+        210,
+        170
+      ],
+      "total_duration_ms": 1210,
+      "loop": true,
+      "anchor": {
+        "x": 0.5,
+        "y": 0.94
+      },
+      "webp_1024": "04_animated_webp/master/jjajang_card_peek_1024_v01.webp",
+      "webp_512": "04_animated_webp/app_512/jjajang_card_peek_512_v01.webp",
+      "apng_1024": "05_apng/master/jjajang_card_peek_1024_v01.png",
+      "apng_512": "05_apng/app_512/jjajang_card_peek_512_v01.png"
+    },
+    {
+      "id": "huchu_call_owner",
+      "actor": "huchu",
+      "display_name": "후추",
+      "action": "call_owner",
+      "action_label": "집사 부르기",
+      "keyframes": [
+        "01_keyframes_master/huchu/call_owner/huchu_call_owner_key_01_v01.png",
+        "01_keyframes_master/huchu/call_owner/huchu_call_owner_key_02_v01.png",
+        "01_keyframes_master/huchu/call_owner/huchu_call_owner_key_03_v01.png",
+        "01_keyframes_master/huchu/call_owner/huchu_call_owner_key_04_v01.png"
+      ],
+      "playback_frames": [
+        "03_animation_frames/huchu/call_owner/huchu_call_owner_frame_01_v01.png",
+        "03_animation_frames/huchu/call_owner/huchu_call_owner_frame_02_v01.png",
+        "03_animation_frames/huchu/call_owner/huchu_call_owner_frame_03_v01.png",
+        "03_animation_frames/huchu/call_owner/huchu_call_owner_frame_04_v01.png",
+        "03_animation_frames/huchu/call_owner/huchu_call_owner_frame_05_v01.png",
+        "03_animation_frames/huchu/call_owner/huchu_call_owner_frame_06_v01.png"
+      ],
+      "frame_order": [
+        0,
+        1,
+        2,
+        3,
+        2,
+        1
+      ],
+      "durations_ms": [
+        150,
+        170,
+        210,
+        300,
+        210,
+        170
+      ],
+      "total_duration_ms": 1210,
+      "loop": true,
+      "anchor": {
+        "x": 0.5,
+        "y": 0.94
+      },
+      "webp_1024": "04_animated_webp/master/huchu_call_owner_1024_v01.webp",
+      "webp_512": "04_animated_webp/app_512/huchu_call_owner_512_v01.webp",
+      "apng_1024": "05_apng/master/huchu_call_owner_1024_v01.png",
+      "apng_512": "05_apng/app_512/huchu_call_owner_512_v01.png"
+    },
+    {
+      "id": "mayo_call_owner",
+      "actor": "mayo",
+      "display_name": "마요",
+      "action": "call_owner",
+      "action_label": "집사 부르기",
+      "keyframes": [
+        "01_keyframes_master/mayo/call_owner/mayo_call_owner_key_01_v01.png",
+        "01_keyframes_master/mayo/call_owner/mayo_call_owner_key_02_v01.png",
+        "01_keyframes_master/mayo/call_owner/mayo_call_owner_key_03_v01.png",
+        "01_keyframes_master/mayo/call_owner/mayo_call_owner_key_04_v01.png"
+      ],
+      "playback_frames": [
+        "03_animation_frames/mayo/call_owner/mayo_call_owner_frame_01_v01.png",
+        "03_animation_frames/mayo/call_owner/mayo_call_owner_frame_02_v01.png",
+        "03_animation_frames/mayo/call_owner/mayo_call_owner_frame_03_v01.png",
+        "03_animation_frames/mayo/call_owner/mayo_call_owner_frame_04_v01.png",
+        "03_animation_frames/mayo/call_owner/mayo_call_owner_frame_05_v01.png",
+        "03_animation_frames/mayo/call_owner/mayo_call_owner_frame_06_v01.png"
+      ],
+      "frame_order": [
+        0,
+        1,
+        2,
+        3,
+        2,
+        1
+      ],
+      "durations_ms": [
+        150,
+        170,
+        210,
+        300,
+        210,
+        170
+      ],
+      "total_duration_ms": 1210,
+      "loop": true,
+      "anchor": {
+        "x": 0.5,
+        "y": 0.94
+      },
+      "webp_1024": "04_animated_webp/master/mayo_call_owner_1024_v01.webp",
+      "webp_512": "04_animated_webp/app_512/mayo_call_owner_512_v01.webp",
+      "apng_1024": "05_apng/master/mayo_call_owner_1024_v01.png",
+      "apng_512": "05_apng/app_512/mayo_call_owner_512_v01.png"
+    },
+    {
+      "id": "jjajang_call_owner",
+      "actor": "jjajang",
+      "display_name": "짜장",
+      "action": "call_owner",
+      "action_label": "집사 부르기",
+      "keyframes": [
+        "01_keyframes_master/jjajang/call_owner/jjajang_call_owner_key_01_v01.png",
+        "01_keyframes_master/jjajang/call_owner/jjajang_call_owner_key_02_v01.png",
+        "01_keyframes_master/jjajang/call_owner/jjajang_call_owner_key_03_v01.png",
+        "01_keyframes_master/jjajang/call_owner/jjajang_call_owner_key_04_v01.png"
+      ],
+      "playback_frames": [
+        "03_animation_frames/jjajang/call_owner/jjajang_call_owner_frame_01_v01.png",
+        "03_animation_frames/jjajang/call_owner/jjajang_call_owner_frame_02_v01.png",
+        "03_animation_frames/jjajang/call_owner/jjajang_call_owner_frame_03_v01.png",
+        "03_animation_frames/jjajang/call_owner/jjajang_call_owner_frame_04_v01.png",
+        "03_animation_frames/jjajang/call_owner/jjajang_call_owner_frame_05_v01.png",
+        "03_animation_frames/jjajang/call_owner/jjajang_call_owner_frame_06_v01.png"
+      ],
+      "frame_order": [
+        0,
+        1,
+        2,
+        3,
+        2,
+        1
+      ],
+      "durations_ms": [
+        150,
+        170,
+        210,
+        300,
+        210,
+        170
+      ],
+      "total_duration_ms": 1210,
+      "loop": true,
+      "anchor": {
+        "x": 0.5,
+        "y": 0.94
+      },
+      "webp_1024": "04_animated_webp/master/jjajang_call_owner_1024_v01.webp",
+      "webp_512": "04_animated_webp/app_512/jjajang_call_owner_512_v01.webp",
+      "apng_1024": "05_apng/master/jjajang_call_owner_1024_v01.png",
+      "apng_512": "05_apng/app_512/jjajang_call_owner_512_v01.png"
+    },
+    {
+      "id": "huchu_head_tilt",
+      "actor": "huchu",
+      "display_name": "후추",
+      "action": "head_tilt",
+      "action_label": "고개 갸웃",
+      "keyframes": [
+        "01_keyframes_master/huchu/head_tilt/huchu_head_tilt_key_01_v01.png",
+        "01_keyframes_master/huchu/head_tilt/huchu_head_tilt_key_02_v01.png",
+        "01_keyframes_master/huchu/head_tilt/huchu_head_tilt_key_03_v01.png",
+        "01_keyframes_master/huchu/head_tilt/huchu_head_tilt_key_04_v01.png"
+      ],
+      "playback_frames": [
+        "03_animation_frames/huchu/head_tilt/huchu_head_tilt_frame_01_v01.png",
+        "03_animation_frames/huchu/head_tilt/huchu_head_tilt_frame_02_v01.png",
+        "03_animation_frames/huchu/head_tilt/huchu_head_tilt_frame_03_v01.png",
+        "03_animation_frames/huchu/head_tilt/huchu_head_tilt_frame_04_v01.png",
+        "03_animation_frames/huchu/head_tilt/huchu_head_tilt_frame_05_v01.png",
+        "03_animation_frames/huchu/head_tilt/huchu_head_tilt_frame_06_v01.png"
+      ],
+      "frame_order": [
+        0,
+        1,
+        2,
+        3,
+        2,
+        1
+      ],
+      "durations_ms": [
+        150,
+        170,
+        210,
+        300,
+        210,
+        170
+      ],
+      "total_duration_ms": 1210,
+      "loop": true,
+      "anchor": {
+        "x": 0.5,
+        "y": 0.94
+      },
+      "webp_1024": "04_animated_webp/master/huchu_head_tilt_1024_v01.webp",
+      "webp_512": "04_animated_webp/app_512/huchu_head_tilt_512_v01.webp",
+      "apng_1024": "05_apng/master/huchu_head_tilt_1024_v01.png",
+      "apng_512": "05_apng/app_512/huchu_head_tilt_512_v01.png"
+    },
+    {
+      "id": "mayo_head_tilt",
+      "actor": "mayo",
+      "display_name": "마요",
+      "action": "head_tilt",
+      "action_label": "고개 갸웃",
+      "keyframes": [
+        "01_keyframes_master/mayo/head_tilt/mayo_head_tilt_key_01_v01.png",
+        "01_keyframes_master/mayo/head_tilt/mayo_head_tilt_key_02_v01.png",
+        "01_keyframes_master/mayo/head_tilt/mayo_head_tilt_key_03_v01.png",
+        "01_keyframes_master/mayo/head_tilt/mayo_head_tilt_key_04_v01.png"
+      ],
+      "playback_frames": [
+        "03_animation_frames/mayo/head_tilt/mayo_head_tilt_frame_01_v01.png",
+        "03_animation_frames/mayo/head_tilt/mayo_head_tilt_frame_02_v01.png",
+        "03_animation_frames/mayo/head_tilt/mayo_head_tilt_frame_03_v01.png",
+        "03_animation_frames/mayo/head_tilt/mayo_head_tilt_frame_04_v01.png",
+        "03_animation_frames/mayo/head_tilt/mayo_head_tilt_frame_05_v01.png",
+        "03_animation_frames/mayo/head_tilt/mayo_head_tilt_frame_06_v01.png"
+      ],
+      "frame_order": [
+        0,
+        1,
+        2,
+        3,
+        2,
+        1
+      ],
+      "durations_ms": [
+        150,
+        170,
+        210,
+        300,
+        210,
+        170
+      ],
+      "total_duration_ms": 1210,
+      "loop": true,
+      "anchor": {
+        "x": 0.5,
+        "y": 0.94
+      },
+      "webp_1024": "04_animated_webp/master/mayo_head_tilt_1024_v01.webp",
+      "webp_512": "04_animated_webp/app_512/mayo_head_tilt_512_v01.webp",
+      "apng_1024": "05_apng/master/mayo_head_tilt_1024_v01.png",
+      "apng_512": "05_apng/app_512/mayo_head_tilt_512_v01.png"
+    },
+    {
+      "id": "jjajang_head_tilt",
+      "actor": "jjajang",
+      "display_name": "짜장",
+      "action": "head_tilt",
+      "action_label": "고개 갸웃",
+      "keyframes": [
+        "01_keyframes_master/jjajang/head_tilt/jjajang_head_tilt_key_01_v01.png",
+        "01_keyframes_master/jjajang/head_tilt/jjajang_head_tilt_key_02_v01.png",
+        "01_keyframes_master/jjajang/head_tilt/jjajang_head_tilt_key_03_v01.png",
+        "01_keyframes_master/jjajang/head_tilt/jjajang_head_tilt_key_04_v01.png"
+      ],
+      "playback_frames": [
+        "03_animation_frames/jjajang/head_tilt/jjajang_head_tilt_frame_01_v01.png",
+        "03_animation_frames/jjajang/head_tilt/jjajang_head_tilt_frame_02_v01.png",
+        "03_animation_frames/jjajang/head_tilt/jjajang_head_tilt_frame_03_v01.png",
+        "03_animation_frames/jjajang/head_tilt/jjajang_head_tilt_frame_04_v01.png",
+        "03_animation_frames/jjajang/head_tilt/jjajang_head_tilt_frame_05_v01.png",
+        "03_animation_frames/jjajang/head_tilt/jjajang_head_tilt_frame_06_v01.png"
+      ],
+      "frame_order": [
+        0,
+        1,
+        2,
+        3,
+        2,
+        1
+      ],
+      "durations_ms": [
+        150,
+        170,
+        210,
+        300,
+        210,
+        170
+      ],
+      "total_duration_ms": 1210,
+      "loop": true,
+      "anchor": {
+        "x": 0.5,
+        "y": 0.94
+      },
+      "webp_1024": "04_animated_webp/master/jjajang_head_tilt_1024_v01.webp",
+      "webp_512": "04_animated_webp/app_512/jjajang_head_tilt_512_v01.webp",
+      "apng_1024": "05_apng/master/jjajang_head_tilt_1024_v01.png",
+      "apng_512": "05_apng/app_512/jjajang_head_tilt_512_v01.png"
+    },
+    {
+      "id": "huchu_explore",
+      "actor": "huchu",
+      "display_name": "후추",
+      "action": "explore",
+      "action_label": "주변 탐색",
+      "keyframes": [
+        "01_keyframes_master/huchu/explore/huchu_explore_key_01_v01.png",
+        "01_keyframes_master/huchu/explore/huchu_explore_key_02_v01.png",
+        "01_keyframes_master/huchu/explore/huchu_explore_key_03_v01.png",
+        "01_keyframes_master/huchu/explore/huchu_explore_key_04_v01.png"
+      ],
+      "playback_frames": [
+        "03_animation_frames/huchu/explore/huchu_explore_frame_01_v01.png",
+        "03_animation_frames/huchu/explore/huchu_explore_frame_02_v01.png",
+        "03_animation_frames/huchu/explore/huchu_explore_frame_03_v01.png",
+        "03_animation_frames/huchu/explore/huchu_explore_frame_04_v01.png",
+        "03_animation_frames/huchu/explore/huchu_explore_frame_05_v01.png",
+        "03_animation_frames/huchu/explore/huchu_explore_frame_06_v01.png"
+      ],
+      "frame_order": [
+        0,
+        1,
+        2,
+        3,
+        2,
+        1
+      ],
+      "durations_ms": [
+        150,
+        170,
+        210,
+        300,
+        210,
+        170
+      ],
+      "total_duration_ms": 1210,
+      "loop": true,
+      "anchor": {
+        "x": 0.5,
+        "y": 0.94
+      },
+      "webp_1024": "04_animated_webp/master/huchu_explore_1024_v01.webp",
+      "webp_512": "04_animated_webp/app_512/huchu_explore_512_v01.webp",
+      "apng_1024": "05_apng/master/huchu_explore_1024_v01.png",
+      "apng_512": "05_apng/app_512/huchu_explore_512_v01.png"
+    },
+    {
+      "id": "mayo_explore",
+      "actor": "mayo",
+      "display_name": "마요",
+      "action": "explore",
+      "action_label": "주변 탐색",
+      "keyframes": [
+        "01_keyframes_master/mayo/explore/mayo_explore_key_01_v01.png",
+        "01_keyframes_master/mayo/explore/mayo_explore_key_02_v01.png",
+        "01_keyframes_master/mayo/explore/mayo_explore_key_03_v01.png",
+        "01_keyframes_master/mayo/explore/mayo_explore_key_04_v01.png"
+      ],
+      "playback_frames": [
+        "03_animation_frames/mayo/explore/mayo_explore_frame_01_v01.png",
+        "03_animation_frames/mayo/explore/mayo_explore_frame_02_v01.png",
+        "03_animation_frames/mayo/explore/mayo_explore_frame_03_v01.png",
+        "03_animation_frames/mayo/explore/mayo_explore_frame_04_v01.png",
+        "03_animation_frames/mayo/explore/mayo_explore_frame_05_v01.png",
+        "03_animation_frames/mayo/explore/mayo_explore_frame_06_v01.png"
+      ],
+      "frame_order": [
+        0,
+        1,
+        2,
+        3,
+        2,
+        1
+      ],
+      "durations_ms": [
+        150,
+        170,
+        210,
+        300,
+        210,
+        170
+      ],
+      "total_duration_ms": 1210,
+      "loop": true,
+      "anchor": {
+        "x": 0.5,
+        "y": 0.94
+      },
+      "webp_1024": "04_animated_webp/master/mayo_explore_1024_v01.webp",
+      "webp_512": "04_animated_webp/app_512/mayo_explore_512_v01.webp",
+      "apng_1024": "05_apng/master/mayo_explore_1024_v01.png",
+      "apng_512": "05_apng/app_512/mayo_explore_512_v01.png"
+    },
+    {
+      "id": "jjajang_explore",
+      "actor": "jjajang",
+      "display_name": "짜장",
+      "action": "explore",
+      "action_label": "주변 탐색",
+      "keyframes": [
+        "01_keyframes_master/jjajang/explore/jjajang_explore_key_01_v01.png",
+        "01_keyframes_master/jjajang/explore/jjajang_explore_key_02_v01.png",
+        "01_keyframes_master/jjajang/explore/jjajang_explore_key_03_v01.png",
+        "01_keyframes_master/jjajang/explore/jjajang_explore_key_04_v01.png"
+      ],
+      "playback_frames": [
+        "03_animation_frames/jjajang/explore/jjajang_explore_frame_01_v01.png",
+        "03_animation_frames/jjajang/explore/jjajang_explore_frame_02_v01.png",
+        "03_animation_frames/jjajang/explore/jjajang_explore_frame_03_v01.png",
+        "03_animation_frames/jjajang/explore/jjajang_explore_frame_04_v01.png",
+        "03_animation_frames/jjajang/explore/jjajang_explore_frame_05_v01.png",
+        "03_animation_frames/jjajang/explore/jjajang_explore_frame_06_v01.png"
+      ],
+      "frame_order": [
+        0,
+        1,
+        2,
+        3,
+        2,
+        1
+      ],
+      "durations_ms": [
+        150,
+        170,
+        210,
+        300,
+        210,
+        170
+      ],
+      "total_duration_ms": 1210,
+      "loop": true,
+      "anchor": {
+        "x": 0.5,
+        "y": 0.94
+      },
+      "webp_1024": "04_animated_webp/master/jjajang_explore_1024_v01.webp",
+      "webp_512": "04_animated_webp/app_512/jjajang_explore_512_v01.webp",
+      "apng_1024": "05_apng/master/jjajang_explore_1024_v01.png",
+      "apng_512": "05_apng/app_512/jjajang_explore_512_v01.png"
+    },
+    {
+      "id": "huchu_focus_record",
+      "actor": "huchu",
+      "display_name": "후추",
+      "action": "focus_record",
+      "action_label": "집중 기록",
+      "keyframes": [
+        "01_keyframes_master/huchu/focus_record/huchu_focus_record_key_01_v01.png",
+        "01_keyframes_master/huchu/focus_record/huchu_focus_record_key_02_v01.png",
+        "01_keyframes_master/huchu/focus_record/huchu_focus_record_key_03_v01.png",
+        "01_keyframes_master/huchu/focus_record/huchu_focus_record_key_04_v01.png"
+      ],
+      "playback_frames": [
+        "03_animation_frames/huchu/focus_record/huchu_focus_record_frame_01_v01.png",
+        "03_animation_frames/huchu/focus_record/huchu_focus_record_frame_02_v01.png",
+        "03_animation_frames/huchu/focus_record/huchu_focus_record_frame_03_v01.png",
+        "03_animation_frames/huchu/focus_record/huchu_focus_record_frame_04_v01.png",
+        "03_animation_frames/huchu/focus_record/huchu_focus_record_frame_05_v01.png",
+        "03_animation_frames/huchu/focus_record/huchu_focus_record_frame_06_v01.png"
+      ],
+      "frame_order": [
+        0,
+        1,
+        2,
+        3,
+        2,
+        1
+      ],
+      "durations_ms": [
+        150,
+        170,
+        210,
+        300,
+        210,
+        170
+      ],
+      "total_duration_ms": 1210,
+      "loop": true,
+      "anchor": {
+        "x": 0.5,
+        "y": 0.94
+      },
+      "webp_1024": "04_animated_webp/master/huchu_focus_record_1024_v01.webp",
+      "webp_512": "04_animated_webp/app_512/huchu_focus_record_512_v01.webp",
+      "apng_1024": "05_apng/master/huchu_focus_record_1024_v01.png",
+      "apng_512": "05_apng/app_512/huchu_focus_record_512_v01.png"
+    },
+    {
+      "id": "mayo_focus_record",
+      "actor": "mayo",
+      "display_name": "마요",
+      "action": "focus_record",
+      "action_label": "집중 기록",
+      "keyframes": [
+        "01_keyframes_master/mayo/focus_record/mayo_focus_record_key_01_v01.png",
+        "01_keyframes_master/mayo/focus_record/mayo_focus_record_key_02_v01.png",
+        "01_keyframes_master/mayo/focus_record/mayo_focus_record_key_03_v01.png",
+        "01_keyframes_master/mayo/focus_record/mayo_focus_record_key_04_v01.png"
+      ],
+      "playback_frames": [
+        "03_animation_frames/mayo/focus_record/mayo_focus_record_frame_01_v01.png",
+        "03_animation_frames/mayo/focus_record/mayo_focus_record_frame_02_v01.png",
+        "03_animation_frames/mayo/focus_record/mayo_focus_record_frame_03_v01.png",
+        "03_animation_frames/mayo/focus_record/mayo_focus_record_frame_04_v01.png",
+        "03_animation_frames/mayo/focus_record/mayo_focus_record_frame_05_v01.png",
+        "03_animation_frames/mayo/focus_record/mayo_focus_record_frame_06_v01.png"
+      ],
+      "frame_order": [
+        0,
+        1,
+        2,
+        3,
+        2,
+        1
+      ],
+      "durations_ms": [
+        150,
+        170,
+        210,
+        300,
+        210,
+        170
+      ],
+      "total_duration_ms": 1210,
+      "loop": true,
+      "anchor": {
+        "x": 0.5,
+        "y": 0.94
+      },
+      "webp_1024": "04_animated_webp/master/mayo_focus_record_1024_v01.webp",
+      "webp_512": "04_animated_webp/app_512/mayo_focus_record_512_v01.webp",
+      "apng_1024": "05_apng/master/mayo_focus_record_1024_v01.png",
+      "apng_512": "05_apng/app_512/mayo_focus_record_512_v01.png"
+    },
+    {
+      "id": "jjajang_focus_record",
+      "actor": "jjajang",
+      "display_name": "짜장",
+      "action": "focus_record",
+      "action_label": "집중 기록",
+      "keyframes": [
+        "01_keyframes_master/jjajang/focus_record/jjajang_focus_record_key_01_v01.png",
+        "01_keyframes_master/jjajang/focus_record/jjajang_focus_record_key_02_v01.png",
+        "01_keyframes_master/jjajang/focus_record/jjajang_focus_record_key_03_v01.png",
+        "01_keyframes_master/jjajang/focus_record/jjajang_focus_record_key_04_v01.png"
+      ],
+      "playback_frames": [
+        "03_animation_frames/jjajang/focus_record/jjajang_focus_record_frame_01_v01.png",
+        "03_animation_frames/jjajang/focus_record/jjajang_focus_record_frame_02_v01.png",
+        "03_animation_frames/jjajang/focus_record/jjajang_focus_record_frame_03_v01.png",
+        "03_animation_frames/jjajang/focus_record/jjajang_focus_record_frame_04_v01.png",
+        "03_animation_frames/jjajang/focus_record/jjajang_focus_record_frame_05_v01.png",
+        "03_animation_frames/jjajang/focus_record/jjajang_focus_record_frame_06_v01.png"
+      ],
+      "frame_order": [
+        0,
+        1,
+        2,
+        3,
+        2,
+        1
+      ],
+      "durations_ms": [
+        150,
+        170,
+        210,
+        300,
+        210,
+        170
+      ],
+      "total_duration_ms": 1210,
+      "loop": true,
+      "anchor": {
+        "x": 0.5,
+        "y": 0.94
+      },
+      "webp_1024": "04_animated_webp/master/jjajang_focus_record_1024_v01.webp",
+      "webp_512": "04_animated_webp/app_512/jjajang_focus_record_512_v01.webp",
+      "apng_1024": "05_apng/master/jjajang_focus_record_1024_v01.png",
+      "apng_512": "05_apng/app_512/jjajang_focus_record_512_v01.png"
+    },
+    {
+      "id": "huchu_encourage",
+      "actor": "huchu",
+      "display_name": "후추",
+      "action": "encourage",
+      "action_label": "조용한 응원",
+      "keyframes": [
+        "01_keyframes_master/huchu/encourage/huchu_encourage_key_01_v01.png",
+        "01_keyframes_master/huchu/encourage/huchu_encourage_key_02_v01.png",
+        "01_keyframes_master/huchu/encourage/huchu_encourage_key_03_v01.png",
+        "01_keyframes_master/huchu/encourage/huchu_encourage_key_04_v01.png"
+      ],
+      "playback_frames": [
+        "03_animation_frames/huchu/encourage/huchu_encourage_frame_01_v01.png",
+        "03_animation_frames/huchu/encourage/huchu_encourage_frame_02_v01.png",
+        "03_animation_frames/huchu/encourage/huchu_encourage_frame_03_v01.png",
+        "03_animation_frames/huchu/encourage/huchu_encourage_frame_04_v01.png",
+        "03_animation_frames/huchu/encourage/huchu_encourage_frame_05_v01.png",
+        "03_animation_frames/huchu/encourage/huchu_encourage_frame_06_v01.png"
+      ],
+      "frame_order": [
+        0,
+        1,
+        2,
+        3,
+        2,
+        1
+      ],
+      "durations_ms": [
+        150,
+        170,
+        210,
+        300,
+        210,
+        170
+      ],
+      "total_duration_ms": 1210,
+      "loop": true,
+      "anchor": {
+        "x": 0.5,
+        "y": 0.94
+      },
+      "webp_1024": "04_animated_webp/master/huchu_encourage_1024_v01.webp",
+      "webp_512": "04_animated_webp/app_512/huchu_encourage_512_v01.webp",
+      "apng_1024": "05_apng/master/huchu_encourage_1024_v01.png",
+      "apng_512": "05_apng/app_512/huchu_encourage_512_v01.png"
+    },
+    {
+      "id": "mayo_encourage",
+      "actor": "mayo",
+      "display_name": "마요",
+      "action": "encourage",
+      "action_label": "조용한 응원",
+      "keyframes": [
+        "01_keyframes_master/mayo/encourage/mayo_encourage_key_01_v01.png",
+        "01_keyframes_master/mayo/encourage/mayo_encourage_key_02_v01.png",
+        "01_keyframes_master/mayo/encourage/mayo_encourage_key_03_v01.png",
+        "01_keyframes_master/mayo/encourage/mayo_encourage_key_04_v01.png"
+      ],
+      "playback_frames": [
+        "03_animation_frames/mayo/encourage/mayo_encourage_frame_01_v01.png",
+        "03_animation_frames/mayo/encourage/mayo_encourage_frame_02_v01.png",
+        "03_animation_frames/mayo/encourage/mayo_encourage_frame_03_v01.png",
+        "03_animation_frames/mayo/encourage/mayo_encourage_frame_04_v01.png",
+        "03_animation_frames/mayo/encourage/mayo_encourage_frame_05_v01.png",
+        "03_animation_frames/mayo/encourage/mayo_encourage_frame_06_v01.png"
+      ],
+      "frame_order": [
+        0,
+        1,
+        2,
+        3,
+        2,
+        1
+      ],
+      "durations_ms": [
+        150,
+        170,
+        210,
+        300,
+        210,
+        170
+      ],
+      "total_duration_ms": 1210,
+      "loop": true,
+      "anchor": {
+        "x": 0.5,
+        "y": 0.94
+      },
+      "webp_1024": "04_animated_webp/master/mayo_encourage_1024_v01.webp",
+      "webp_512": "04_animated_webp/app_512/mayo_encourage_512_v01.webp",
+      "apng_1024": "05_apng/master/mayo_encourage_1024_v01.png",
+      "apng_512": "05_apng/app_512/mayo_encourage_512_v01.png"
+    },
+    {
+      "id": "jjajang_encourage",
+      "actor": "jjajang",
+      "display_name": "짜장",
+      "action": "encourage",
+      "action_label": "조용한 응원",
+      "keyframes": [
+        "01_keyframes_master/jjajang/encourage/jjajang_encourage_key_01_v01.png",
+        "01_keyframes_master/jjajang/encourage/jjajang_encourage_key_02_v01.png",
+        "01_keyframes_master/jjajang/encourage/jjajang_encourage_key_03_v01.png",
+        "01_keyframes_master/jjajang/encourage/jjajang_encourage_key_04_v01.png"
+      ],
+      "playback_frames": [
+        "03_animation_frames/jjajang/encourage/jjajang_encourage_frame_01_v01.png",
+        "03_animation_frames/jjajang/encourage/jjajang_encourage_frame_02_v01.png",
+        "03_animation_frames/jjajang/encourage/jjajang_encourage_frame_03_v01.png",
+        "03_animation_frames/jjajang/encourage/jjajang_encourage_frame_04_v01.png",
+        "03_animation_frames/jjajang/encourage/jjajang_encourage_frame_05_v01.png",
+        "03_animation_frames/jjajang/encourage/jjajang_encourage_frame_06_v01.png"
+      ],
+      "frame_order": [
+        0,
+        1,
+        2,
+        3,
+        2,
+        1
+      ],
+      "durations_ms": [
+        150,
+        170,
+        210,
+        300,
+        210,
+        170
+      ],
+      "total_duration_ms": 1210,
+      "loop": true,
+      "anchor": {
+        "x": 0.5,
+        "y": 0.94
+      },
+      "webp_1024": "04_animated_webp/master/jjajang_encourage_1024_v01.webp",
+      "webp_512": "04_animated_webp/app_512/jjajang_encourage_512_v01.webp",
+      "apng_1024": "05_apng/master/jjajang_encourage_1024_v01.png",
+      "apng_512": "05_apng/app_512/jjajang_encourage_512_v01.png"
+    },
+    {
+      "id": "group_group_cuddle",
+      "actor": "group",
+      "display_name": "세 마리",
+      "action": "group_cuddle",
+      "action_label": "셋이 기대기",
+      "keyframes": [
+        "01_keyframes_master/group/group_cuddle/group_group_cuddle_key_01_v01.png",
+        "01_keyframes_master/group/group_cuddle/group_group_cuddle_key_02_v01.png",
+        "01_keyframes_master/group/group_cuddle/group_group_cuddle_key_03_v01.png",
+        "01_keyframes_master/group/group_cuddle/group_group_cuddle_key_04_v01.png"
+      ],
+      "playback_frames": [
+        "03_animation_frames/group/group_cuddle/group_group_cuddle_frame_01_v01.png",
+        "03_animation_frames/group/group_cuddle/group_group_cuddle_frame_02_v01.png",
+        "03_animation_frames/group/group_cuddle/group_group_cuddle_frame_03_v01.png",
+        "03_animation_frames/group/group_cuddle/group_group_cuddle_frame_04_v01.png",
+        "03_animation_frames/group/group_cuddle/group_group_cuddle_frame_05_v01.png",
+        "03_animation_frames/group/group_cuddle/group_group_cuddle_frame_06_v01.png"
+      ],
+      "frame_order": [
+        0,
+        1,
+        2,
+        3,
+        2,
+        1
+      ],
+      "durations_ms": [
+        150,
+        170,
+        210,
+        300,
+        210,
+        170
+      ],
+      "total_duration_ms": 1210,
+      "loop": true,
+      "anchor": {
+        "x": 0.5,
+        "y": 0.94
+      },
+      "webp_1024": "04_animated_webp/master/group_group_cuddle_1024_v01.webp",
+      "webp_512": "04_animated_webp/app_512/group_group_cuddle_512_v01.webp",
+      "apng_1024": "05_apng/master/group_group_cuddle_1024_v01.png",
+      "apng_512": "05_apng/app_512/group_group_cuddle_512_v01.png"
+    },
+    {
+      "id": "group_group_ball_play",
+      "actor": "group",
+      "display_name": "세 마리",
+      "action": "group_ball_play",
+      "action_label": "셋이 공놀이",
+      "keyframes": [
+        "01_keyframes_master/group/group_ball_play/group_group_ball_play_key_01_v01.png",
+        "01_keyframes_master/group/group_ball_play/group_group_ball_play_key_02_v01.png",
+        "01_keyframes_master/group/group_ball_play/group_group_ball_play_key_03_v01.png",
+        "01_keyframes_master/group/group_ball_play/group_group_ball_play_key_04_v01.png"
+      ],
+      "playback_frames": [
+        "03_animation_frames/group/group_ball_play/group_group_ball_play_frame_01_v01.png",
+        "03_animation_frames/group/group_ball_play/group_group_ball_play_frame_02_v01.png",
+        "03_animation_frames/group/group_ball_play/group_group_ball_play_frame_03_v01.png",
+        "03_animation_frames/group/group_ball_play/group_group_ball_play_frame_04_v01.png",
+        "03_animation_frames/group/group_ball_play/group_group_ball_play_frame_05_v01.png",
+        "03_animation_frames/group/group_ball_play/group_group_ball_play_frame_06_v01.png"
+      ],
+      "frame_order": [
+        0,
+        1,
+        2,
+        3,
+        2,
+        1
+      ],
+      "durations_ms": [
+        150,
+        170,
+        210,
+        300,
+        210,
+        170
+      ],
+      "total_duration_ms": 1210,
+      "loop": true,
+      "anchor": {
+        "x": 0.5,
+        "y": 0.94
+      },
+      "webp_1024": "04_animated_webp/master/group_group_ball_play_1024_v01.webp",
+      "webp_512": "04_animated_webp/app_512/group_group_ball_play_512_v01.webp",
+      "apng_1024": "05_apng/master/group_group_ball_play_1024_v01.png",
+      "apng_512": "05_apng/app_512/group_group_ball_play_512_v01.png"
+    }
+  ]
+}
