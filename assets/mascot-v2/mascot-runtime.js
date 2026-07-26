@@ -4,6 +4,14 @@ const REDUCED_MOTION = window.matchMedia("(prefers-reduced-motion: reduce)");
 const ENABLED_KEY = "mascot_v2_enabled";
 
 const PHASE_ACTIONS = Object.freeze({
+  phase2h: new Set([
+    "month_close", "backup_complete", "restore_complete",
+    "notification_ready", "card_bill_review", "installment_plan",
+    "duplicate_review", "import_review", "goal_achieved",
+    "account_balance_check", "recurring_found", "annual_review",
+    "report_share", "calendar_export", "group_month_review",
+    "group_plan_next",
+  ]),
   phase2g: new Set([
     "fixed_due_check", "autopay_confirm", "monthly_fixed_complete",
     "search_no_results", "history_empty", "calendar_empty",
@@ -46,6 +54,7 @@ const AMBIENT_BY_TAB = Object.freeze({
   spend: [
     { character: "huchu", action: "focus_record", message: "후추가 새 지출을 빠짐없이 기록하고 있어요." },
     { character: "mayo", action: "body_groom", message: "마요가 기록 사이에 잠깐 몸단장을 해요." },
+    { character: "huchu", action: "card_bill_review", message: "후추가 카드 청구 내용을 차분히 살펴봐요." },
   ],
   shared: [
     { character: "group", action: "group_cuddle", message: "세 마리가 공용통장 기록을 함께 지키고 있어요." },
@@ -54,6 +63,7 @@ const AMBIENT_BY_TAB = Object.freeze({
   assets: [
     { character: "huchu", action: "explore", message: "후추가 자산 변화를 차근차근 탐색해요." },
     { character: "jjajang", action: "head_tilt", message: "짜장이 자산 흐름을 유심히 바라봐요." },
+    { character: "huchu", action: "account_balance_check", message: "후추가 계좌 잔액을 하나씩 대조해요." },
   ],
   calendar: [
     { character: "mayo", action: "focus_record", message: "마요가 날짜별 기록을 하나씩 정리해요." },
@@ -63,6 +73,7 @@ const AMBIENT_BY_TAB = Object.freeze({
     { character: "mayo", action: "focus_record", message: "마요가 고정비 납부 기록을 확인해요." },
     { character: "jjajang", action: "encourage", message: "짜장이 이번 달 고정비 관리도 응원해요." },
     { character: "mayo", action: "fixed_due_check", message: "마요가 다가오는 고정비 예정일을 살펴봐요." },
+    { character: "huchu", action: "recurring_found", message: "후추가 반복되는 결제 기록을 확인해요." },
   ],
   invest: [
     { character: "huchu", action: "explore", message: "후추가 투자 흐름을 성급하지 않게 살펴봐요." },
@@ -73,6 +84,7 @@ const AMBIENT_BY_TAB = Object.freeze({
   yearly: [
     { character: "group", action: "group_cuddle", message: "세 마리가 올해 쌓아온 기록을 함께 보고 있어요." },
     { character: "jjajang", action: "encourage", message: "짜장이 꾸준히 이어온 한 해를 응원해요." },
+    { character: "jjajang", action: "annual_review", message: "짜장이 열두 달 기록을 차분히 돌아봐요." },
   ],
   db: [
     { character: "huchu", action: "explore", message: "후추가 우리집 품목과 가격 기록을 찾아봐요." },
@@ -93,6 +105,22 @@ const IDLE_BY_TAB = Object.freeze({
 });
 
 const PREFERRED_CHARACTER = Object.freeze({
+  month_close: "jjajang",
+  backup_complete: "huchu",
+  restore_complete: "mayo",
+  notification_ready: "mayo",
+  card_bill_review: "huchu",
+  installment_plan: "mayo",
+  duplicate_review: "huchu",
+  import_review: "mayo",
+  goal_achieved: "jjajang",
+  account_balance_check: "huchu",
+  recurring_found: "huchu",
+  annual_review: "jjajang",
+  report_share: "mayo",
+  calendar_export: "mayo",
+  group_month_review: "group",
+  group_plan_next: "group",
   fixed_due_check: "mayo",
   autopay_confirm: "huchu",
   monthly_fixed_complete: "jjajang",
@@ -164,6 +192,22 @@ const PREFERRED_CHARACTER = Object.freeze({
 });
 
 const ACTION_COPY = Object.freeze({
+  month_close: ["이번 달 마감 완료", "이번 달 기록을 안전하게 결산으로 남겼어요.", "good"],
+  backup_complete: ["전체 백업 완료", "거래와 설정을 다시 꺼낼 수 있는 파일로 저장했어요.", "good"],
+  restore_complete: ["공유 기록 복구 완료", "빠져 있던 공용 기록 연결을 다시 맞췄어요.", "good"],
+  notification_ready: ["알림 준비 완료", "선택한 결제일과 예산 알림을 받을 준비가 됐어요.", "good"],
+  card_bill_review: ["카드 청구 확인", "명세서의 실제 청구액을 기록에 반영했어요.", "neutral"],
+  installment_plan: ["할부 계획 기록", "나눠 낼 금액과 기간을 차분히 기록했어요.", "neutral"],
+  duplicate_review: ["중복 기록 점검", "비슷한 거래를 비교해 필요한 항목만 남길 수 있어요.", "neutral"],
+  import_review: ["가져온 기록 확인", "중복을 걸러낸 거래를 검토하고 안전하게 저장했어요.", "good"],
+  goal_achieved: ["저축 목표 달성", "꾸준히 모은 금액이 드디어 목표에 닿았어요!", "good"],
+  account_balance_check: ["계좌 잔액 확인", "바뀐 계좌 잔액을 자산 기록에 반영했어요.", "neutral"],
+  recurring_found: ["반복 결제 발견", "매달 비슷하게 나가는 기록을 고정비로 정리했어요.", "neutral"],
+  annual_review: ["한 해 기록 점검", "열두 달의 흐름을 차분히 돌아보고 있어요.", "neutral"],
+  report_share: ["결산표 복사 완료", "월 결산을 메모나 문서에 옮길 준비가 됐어요.", "good"],
+  calendar_export: ["결제일 내보내기 완료", "결제일 일정을 캘린더에 추가할 수 있게 만들었어요.", "good"],
+  group_month_review: ["함께 월 결산", "세 마리가 이번 달 기록을 나란히 검토해요.", "neutral"],
+  group_plan_next: ["다음 달 준비", "이번 달을 닫고 다음 달 계획을 함께 시작해요.", "good"],
   fixed_due_check: ["고정비 예정 확인", "다가오는 납부일과 금액을 미리 살펴봤어요.", "neutral"],
   autopay_confirm: ["자동이체 확인", "자동이체로 납부된 고정비를 확인했어요.", "good"],
   monthly_fixed_complete: ["이번 달 고정비 완료", "이번 달 고정비 납부를 모두 정리했어요.", "good"],
@@ -228,6 +272,22 @@ const ACTION_COPY = Object.freeze({
 });
 
 const PRIORITY = Object.freeze({
+  backup_complete: 5,
+  restore_complete: 5,
+  notification_ready: 4,
+  month_close: 4,
+  goal_achieved: 4,
+  group_plan_next: 4,
+  import_review: 4,
+  calendar_export: 3,
+  report_share: 3,
+  card_bill_review: 3,
+  installment_plan: 3,
+  duplicate_review: 3,
+  account_balance_check: 3,
+  recurring_found: 3,
+  annual_review: 3,
+  group_month_review: 3,
   retry_calm: 5,
   market_shelter: 5,
   sync_success: 4,
@@ -264,7 +324,7 @@ function phaseFor(action) {
 }
 
 function animatedName(phase, character, action) {
-  const suffix = ["phase2a", "phase2b", "phase2c", "phase2f", "phase2g"].includes(phase) ? "_512_v01.webp" : "_v01.webp";
+  const suffix = ["phase2a", "phase2b", "phase2c", "phase2f", "phase2g", "phase2h"].includes(phase) ? "_512_v01.webp" : "_v01.webp";
   return `${character}_${action}${suffix}`;
 }
 

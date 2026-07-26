@@ -71,6 +71,17 @@ if (!image.getAttribute("src")?.includes("phase2g/webp/group_group_highfive_512"
   throw new Error("Phase 2G 그룹 동작 실패");
 }
 
+window.BudgetMascot.play({ action: "backup_complete", character: "huchu", duration: 10 });
+if (!image.getAttribute("src")?.includes("phase2h/webp/huchu_backup_complete_512")) {
+  throw new Error("Phase 2H 데이터 안전 동작 실패");
+}
+await new Promise((resolve) => setTimeout(resolve, 15));
+
+window.BudgetMascot.play({ action: "group_month_review", character: "group", duration: 10 });
+if (!image.getAttribute("src")?.includes("phase2h/webp/group_group_month_review_512")) {
+  throw new Error("Phase 2H 그룹 동작 실패");
+}
+
 const toggle = stage.querySelector(".budget-mascot-toggle");
 toggle.click();
 if (!stage.classList.contains("is-disabled")) throw new Error("숨기기 실패");
@@ -86,6 +97,11 @@ window.BudgetMascot.play({ action: "market_shelter", character: "mayo", duration
 if (!image.getAttribute("src")?.includes("phase2g/static/mayo_market_shelter_frame_01")) {
   throw new Error("Phase 2G 모션 감소 정적 대체 실패");
 }
+await new Promise((resolve) => setTimeout(resolve, 15));
+window.BudgetMascot.play({ action: "calendar_export", character: "mayo", duration: 10 });
+if (!image.getAttribute("src")?.includes("phase2h/static/mayo_calendar_export_frame_01")) {
+  throw new Error("Phase 2H 모션 감소 정적 대체 실패");
+}
 window.BudgetMascot.play({ action: "refund", character: "jjajang", duration: 10 });
 if (!image.getAttribute("src")?.endsWith(".png")) throw new Error("모션 감소 정적 대체 실패");
 
@@ -98,5 +114,6 @@ console.log(JSON.stringify({
   reducedMotion: "jjajang_refund_frame_01",
   phase2f: "head_tilt + group_cuddle",
   phase2g: "fixed_due_check + group_highfive + market_shelter",
+  phase2h: "backup_complete + group_month_review + calendar_export",
   toggle: "passed",
 }));

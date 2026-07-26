@@ -39,7 +39,7 @@ for (const phase of phases) {
   }
 }
 
-const manifestPhases = ["phase2f", "phase2g"];
+const manifestPhases = ["phase2f", "phase2g", "phase2h"];
 for (const phase of manifestPhases) {
   const manifestPath = join(repoRoot, `assets/mascot-v2/${phase}/manifest.json`);
   if (!existsSync(manifestPath)) {
