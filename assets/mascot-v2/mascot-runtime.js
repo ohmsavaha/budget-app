@@ -4,6 +4,13 @@ const REDUCED_MOTION = window.matchMedia("(prefers-reduced-motion: reduce)");
 const ENABLED_KEY = "mascot_v2_enabled";
 
 const PHASE_ACTIONS = Object.freeze({
+  phase2i: new Set([
+    "shopping_item_add", "purchase_complete", "repurchase_pick",
+    "product_register", "price_record", "price_compare",
+    "loan_plan", "loan_progress", "savings_maturity", "account_link",
+    "investment_snapshot", "holding_add", "shared_plan_saved",
+    "split_created", "group_shopping_plan", "group_household_inventory",
+  ]),
   phase2h: new Set([
     "month_close", "backup_complete", "restore_complete",
     "notification_ready", "card_bill_review", "installment_plan",
@@ -55,6 +62,7 @@ const AMBIENT_BY_TAB = Object.freeze({
     { character: "huchu", action: "focus_record", message: "후추가 새 지출을 빠짐없이 기록하고 있어요." },
     { character: "mayo", action: "body_groom", message: "마요가 기록 사이에 잠깐 몸단장을 해요." },
     { character: "huchu", action: "card_bill_review", message: "후추가 카드 청구 내용을 차분히 살펴봐요." },
+    { character: "group", action: "group_shopping_plan", message: "세 마리가 장바구니 계획을 함께 살펴봐요." },
   ],
   shared: [
     { character: "group", action: "group_cuddle", message: "세 마리가 공용통장 기록을 함께 지키고 있어요." },
@@ -89,6 +97,7 @@ const AMBIENT_BY_TAB = Object.freeze({
   db: [
     { character: "huchu", action: "explore", message: "후추가 우리집 품목과 가격 기록을 찾아봐요." },
     { character: "jjajang", action: "box_enter", message: "짜장이 보관 품목 상자 안을 살펴봐요." },
+    { character: "group", action: "group_household_inventory", message: "세 마리가 우리집 품목을 함께 정리해요." },
   ],
 });
 
@@ -105,6 +114,22 @@ const IDLE_BY_TAB = Object.freeze({
 });
 
 const PREFERRED_CHARACTER = Object.freeze({
+  shopping_item_add: "huchu",
+  purchase_complete: "jjajang",
+  repurchase_pick: "mayo",
+  product_register: "mayo",
+  price_record: "huchu",
+  price_compare: "jjajang",
+  loan_plan: "huchu",
+  loan_progress: "mayo",
+  savings_maturity: "jjajang",
+  account_link: "mayo",
+  investment_snapshot: "jjajang",
+  holding_add: "huchu",
+  shared_plan_saved: "mayo",
+  split_created: "jjajang",
+  group_shopping_plan: "group",
+  group_household_inventory: "group",
   month_close: "jjajang",
   backup_complete: "huchu",
   restore_complete: "mayo",
@@ -192,6 +217,22 @@ const PREFERRED_CHARACTER = Object.freeze({
 });
 
 const ACTION_COPY = Object.freeze({
+  shopping_item_add: ["장바구니에 담았어요", "살 품목과 예상 금액을 장보기 계획에 추가했어요.", "good"],
+  purchase_complete: ["구매 완료", "실제 구매 금액과 구입처를 장바구니 기록에 남겼어요.", "good"],
+  repurchase_pick: ["재구매 품목 저장", "다시 사고 싶은 품목을 가성비 픽으로 표시했어요.", "good"],
+  product_register: ["품목 등록 완료", "우리집 가격사전에 새 품목을 등록했어요.", "good"],
+  price_record: ["가격 기록 추가", "구입처와 가격을 다음 비교에 쓸 수 있게 남겼어요.", "good"],
+  price_compare: ["가격 비교 준비", "두 곳 이상의 가격을 모아 더 좋은 선택을 비교할 수 있어요.", "neutral"],
+  loan_plan: ["대출 계획 등록", "원금·금리·상환액을 한곳에서 볼 수 있게 정리했어요.", "neutral"],
+  loan_progress: ["대출 상환 진척", "줄어든 대출 잔액을 자산 기록에 반영했어요.", "good"],
+  savings_maturity: ["저축 만기 기록", "만기일과 예상 수령액을 확인할 수 있게 저장했어요.", "good"],
+  account_link: ["카드 계좌 연결", "카드 대금이 빠지는 계좌를 연결했어요.", "good"],
+  investment_snapshot: ["투자 현황 저장", "오늘의 평가액과 손익을 스냅샷으로 남겼어요.", "neutral"],
+  holding_add: ["보유 종목 추가", "새 종목과 수량을 투자 계산 목록에 넣었어요.", "good"],
+  shared_plan_saved: ["공용 계획 저장", "함께 쓸 예산과 부담 비율을 저장했어요.", "good"],
+  split_created: ["나눠내기 생성", "총 결제액과 내 몫, 받을 돈을 나눠 기록했어요.", "good"],
+  group_shopping_plan: ["함께 장보기 계획", "세 마리가 여러 품목의 장보기 계획을 함께 확인해요.", "neutral"],
+  group_household_inventory: ["함께 품목 정리", "세 마리가 우리집 품목과 가격 기록을 나란히 살펴봐요.", "neutral"],
   month_close: ["이번 달 마감 완료", "이번 달 기록을 안전하게 결산으로 남겼어요.", "good"],
   backup_complete: ["전체 백업 완료", "거래와 설정을 다시 꺼낼 수 있는 파일로 저장했어요.", "good"],
   restore_complete: ["공유 기록 복구 완료", "빠져 있던 공용 기록 연결을 다시 맞췄어요.", "good"],
@@ -272,6 +313,22 @@ const ACTION_COPY = Object.freeze({
 });
 
 const PRIORITY = Object.freeze({
+  purchase_complete: 4,
+  shared_plan_saved: 4,
+  split_created: 4,
+  loan_progress: 4,
+  savings_maturity: 4,
+  account_link: 3,
+  investment_snapshot: 3,
+  holding_add: 3,
+  shopping_item_add: 3,
+  repurchase_pick: 3,
+  product_register: 3,
+  price_record: 3,
+  price_compare: 3,
+  loan_plan: 3,
+  group_shopping_plan: 3,
+  group_household_inventory: 2,
   backup_complete: 5,
   restore_complete: 5,
   notification_ready: 4,
@@ -324,7 +381,7 @@ function phaseFor(action) {
 }
 
 function animatedName(phase, character, action) {
-  const suffix = ["phase2a", "phase2b", "phase2c", "phase2f", "phase2g", "phase2h"].includes(phase) ? "_512_v01.webp" : "_v01.webp";
+  const suffix = ["phase2a", "phase2b", "phase2c", "phase2f", "phase2g", "phase2h", "phase2i"].includes(phase) ? "_512_v01.webp" : "_v01.webp";
   return `${character}_${action}${suffix}`;
 }
 

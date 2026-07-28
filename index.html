@@ -368,7 +368,7 @@ function showApiKeySetting(){
   const budgetEl=h("input",{type:"number",value:cfg.sharedBudget||0,class:"num",style:inpSt});
   const ratioEl=h("input",{type:"number",value:cfg.ratio||50,min:"1",max:"100",class:"num",style:inpSt});
   const shSv=h("button",{style:{width:"100%",background:C.brand,color:"#fff",fontSize:"13.5px",fontWeight:"800",padding:"12px",borderRadius:"11px",border:"none",cursor:"pointer",marginTop:"2px"}},"👥 공용 설정 저장");
-  shSv.onclick=async()=>{saveSharedCfg({ratio:Number(ratioEl.value)||50,sharedBudget:Number(budgetEl.value)||0});toast("👥 공용 설정 저장 완료!");ov.remove();try{await loadMonth();if(typeof homeReload==="function")homeReload();}catch{}};
+  shSv.onclick=async()=>{saveSharedCfg({ratio:Number(ratioEl.value)||50,sharedBudget:Number(budgetEl.value)||0});toast("👥 공용 설정 저장 완료!");ov.remove();mascotEvent("shared_plan_saved",{character:"mayo"});try{await loadMonth();if(typeof homeReload==="function")homeReload();}catch{}};
 
   // ── 💾 데이터 ──
   const exportBtn=h("button",{style:{width:"100%",fontSize:"13.5px",fontWeight:"700",padding:"12px",borderRadius:"11px",border:`1px solid ${C.brand}`,color:C.brand,background:C.soft,cursor:"pointer"}},"⬇️ 전체 데이터 백업 (계좌·저축·대출 포함)");
@@ -717,7 +717,7 @@ function renderDash(){
     h("div",{style:{display:"flex",alignItems:"center",justifyContent:"space-between",marginBottom:"16px"}},
       h("div",{style:{display:"flex",alignItems:"center",gap:"9px"}},
         h("span",{style:{fontSize:"21px"}},SN[Number(S.curYm.split("-")[1])]||"📒"),
-        h("div",{},h("div",{style:{fontSize:"11.5px",color:C.sub}},"🐾 나의 가계부 · v132"),h("div",{style:{fontSize:"16.5px",fontWeight:"800",letterSpacing:"-.01em",cursor:"pointer",display:"flex",alignItems:"center",gap:"4px"},onclick:()=>showMonthPicker()},yml(S.curYm),h("span",{style:{fontSize:"10px",color:C.faint}},"▾")))
+        h("div",{},h("div",{style:{fontSize:"11.5px",color:C.sub}},"🐾 나의 가계부 · v133"),h("div",{style:{fontSize:"16.5px",fontWeight:"800",letterSpacing:"-.01em",cursor:"pointer",display:"flex",alignItems:"center",gap:"4px"},onclick:()=>showMonthPicker()},yml(S.curYm),h("span",{style:{fontSize:"10px",color:C.faint}},"▾")))
       ),
       h("div",{style:{display:"flex",alignItems:"center",gap:"4px",background:C.w,border:`1px solid ${C.line}`,borderRadius:"999px",padding:"3px 4px"}},prevBtn,todayBtn,nextBtn)
     ),
@@ -1632,7 +1632,7 @@ function showProductEdit(p,onDone){
     const row={user_id:S.session.user.id,name:nm,aliases:alEl.value.trim()||null,category:ctEl.value.trim()||null,note:ntEl.value.trim()||null};
     const{error}=p?await sb.from("products").update(row).eq("id",p.id):await sb.from("products").insert(row);
     if(error){toast("저장 실패: "+error.message,false);return;}
-    await loadDbProducts(true);ov.remove();toast(p?"✏️ 수정했어요":"🗃️ 품목 등록!");if(onDone)onDone();
+    await loadDbProducts(true);ov.remove();toast(p?"✏️ 수정했어요":"🗃️ 품목 등록!");if(!p)mascotEvent("product_register",{character:"mayo"});if(onDone)onDone();
   }},p?"수정 저장":"품목 등록");
   const del=p?h("button",{style:{width:"100%",marginTop:"7px",fontSize:"12px",color:C.over,background:"transparent",border:"none",cursor:"pointer",padding:"8px"},onclick:async()=>{
     if(!confirm(`'${p.name}' 품목과 가격 기록을 모두 삭제할까요?`))return;
@@ -1679,6 +1679,8 @@ function showProductDetail(pid){
       const{error}=await sb.from("price_records").insert({user_id:S.session.user.id,product_id:pid,source:srcEl.value.trim()||null,price:pr,url:urlEl.value.trim()||null,date:td()});
       if(error){toast("저장 실패: "+error.message,false);return;}
       await loadDbProducts(true);redraw();toast("💰 가격 기록 추가!");
+      const priceAction=dbPricesOf(pid).length>=2?"price_compare":"price_record";
+      mascotEvent(priceAction,{character:priceAction==="price_compare"?"jjajang":"huchu"});
     }},"추가");
     body.append(h("div",{style:{marginTop:"14px"}},
       h("div",{style:{fontSize:"12px",fontWeight:"800",color:C.sub,marginBottom:"7px"}},"➕ 가격 기록 추가"),
@@ -1965,7 +1967,10 @@ function buildShoppingList(){
       const{error:e2}=await sb.from("shopping_items").insert({user_id:S.session.user.id,name:nm,kind,est_price:Number(priceEl.value)||null});
       addBtn.disabled=false;
       if(e2){toast("추가 실패: "+(e2.message||""),false);return;}
-      toast(`🛒 '${nm}' 담았어요`);render();
+      toast(`🛒 '${nm}' 담았어요`);
+      const shoppingAction=todo.length?"group_shopping_plan":"shopping_item_add";
+      mascotEvent(shoppingAction,{character:shoppingAction==="group_shopping_plan"?"group":"huchu"});
+      render();
     }},"담기");
     const dbHint=h("div",{style:{display:"none",fontSize:"11.5px",fontWeight:"700",color:C.brand,background:"#EEF6F1",borderRadius:"9px",padding:"8px 11px",marginTop:"7px",cursor:"pointer",lineHeight:"1.55"}});
     let _dbHintPrice=null;
@@ -2004,11 +2009,11 @@ function buildShoppingList(){
       const det=h("div",{style:{display:"none"}});
       done.forEach(x=>{
         det.append(h("div",{style:{display:"flex",alignItems:"center",gap:"8px",padding:"7px 2px",borderBottom:`1px solid ${C.line}`}},
-          h("button",{style:{background:"transparent",border:"none",cursor:"pointer",fontSize:"15px",flexShrink:"0",padding:"0"},onclick:async()=>{await sb.from("shopping_items").update({repick:!x.repick}).eq("id",x.id);render();}},x.repick?"⭐":"☆"),
+          h("button",{style:{background:"transparent",border:"none",cursor:"pointer",fontSize:"15px",flexShrink:"0",padding:"0"},onclick:async()=>{const next=!x.repick;await sb.from("shopping_items").update({repick:next}).eq("id",x.id);if(next)mascotEvent("repurchase_pick",{character:"mayo"});render();}},x.repick?"⭐":"☆"),
           h("div",{style:{flex:"1",minWidth:"0"}},
             h("div",{style:{fontSize:"12.5px",fontWeight:"600",whiteSpace:"nowrap",overflow:"hidden",textOverflow:"ellipsis"}},x.name),
             h("div",{style:{fontSize:"10.5px",color:C.faint}},`${(x.bought_at||"").slice(5)}${x.store?" · "+x.store:""}${x.bought_price?" · "+W(x.bought_price):""}`)),
-          h("button",{style:{fontSize:"11px",fontWeight:"700",color:C.brand,background:"#EEF6F1",border:"none",borderRadius:"8px",padding:"5px 9px",cursor:"pointer",flexShrink:"0"},onclick:async()=>{await sb.from("shopping_items").insert({user_id:S.session.user.id,name:x.name,kind:x.kind||"필수",est_price:x.bought_price||x.est_price||null});toast(`🛒 '${x.name}' 다시 담았어요`);render();}},"다시 담기")));
+          h("button",{style:{fontSize:"11px",fontWeight:"700",color:C.brand,background:"#EEF6F1",border:"none",borderRadius:"8px",padding:"5px 9px",cursor:"pointer",flexShrink:"0"},onclick:async()=>{await sb.from("shopping_items").insert({user_id:S.session.user.id,name:x.name,kind:x.kind||"필수",est_price:x.bought_price||x.est_price||null});toast(`🛒 '${x.name}' 다시 담았어요`);mascotEvent("repurchase_pick",{character:"mayo"});render();}},"다시 담기")));
       });
       hd2.onclick=()=>{open=!open;det.style.display=open?"block":"none";};
       body.append(hd2,det);
@@ -2048,6 +2053,7 @@ function showShopBought(x,onDone){
     }
     ov.remove();
     toast(alsoTx?`✅ '${x.name}' 샀어요 + 지출 기록됨`:`✅ '${x.name}' 샀어요`);
+    mascotEvent("purchase_complete",{character:"jjajang"});
     if(onDone)onDone();
   };
   const btn=(t,bg,fg,fn)=>h("button",{style:{flex:"1",fontSize:"13.5px",fontWeight:"800",padding:"12px",borderRadius:"11px",border:bg===C.w?`1px solid ${C.line}`:"none",background:bg,color:fg,cursor:"pointer"},onclick:fn},t);
@@ -5769,7 +5775,7 @@ function showHoldingsCalc(onResult){
     const tk=tkEl.value.trim().toUpperCase(),qty=Number(qEl.value);
     if(!tk||!qty)return;
     holdings.push({ticker:tk,name:tk,qty,avgPrice:Number(avgEl.value)||0,curPrice:null,curKrw:null,fx:1});
-    saveHoldings(holdings);tkEl.value="";qEl.value="";avgEl.value="";drawList();
+    saveHoldings(holdings);tkEl.value="";qEl.value="";avgEl.value="";drawList();mascotEvent("holding_add",{character:"huchu"});
   };
 
   const fetchBtn=h("button",{style:{width:"100%",border:`1px solid ${C.brand}`,borderRadius:"11px",padding:"11px",fontSize:"14px",fontWeight:"700",color:C.brand,background:C.soft,cursor:"pointer",marginBottom:"10px"}},"📈 현재 주가 가져오기");
@@ -5943,7 +5949,7 @@ function showInvest(){
         }
       }
     }
-    ov.remove();await loadInvest();const ct=document.getElementById("ct");if(ct){ct.innerHTML="";buildInvest().forEach(n=>ct.append(n));}
+    ov.remove();await loadInvest();const ct=document.getElementById("ct");if(ct){ct.innerHTML="";buildInvest().forEach(n=>ct.append(n));}mascotEvent("investment_snapshot",{character:"jjajang"});
   };
   // 스크린샷 업로드
   const imgInp=h("input",{type:"file",accept:"image/*",multiple:"multiple",style:{display:"none"}});
@@ -7787,7 +7793,8 @@ function showAccountEdit(acc){
     else{const{data:ins,error:e}=await sb.from("accounts").insert({...payload,is_active:true}).select("id").single();error=e;newId=ins?.id;}
     if(error){alert("저장 실패: "+error.message);sv.disabled=false;sv.textContent=isEdit?"수정 저장":"추가하기";return;}
     if(newId)setOD(newId,{on:odOn,limit:Number(odLimitEl.value)||0,rate:Number(odRateEl.value)||0,payday:Number(odDayEl.value)||null});
-    ov.remove();reloadAssets();mascotEvent("account_balance_check",{character:"huchu"});
+    const linked=kind==="카드"&&!!linkSel.value;
+    ov.remove();reloadAssets();mascotEvent(linked?"account_link":"account_balance_check",{character:linked?"mayo":"huchu"});
   };
   sh.append(
     h("div",{style:{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:"16px"}},h("span",{style:{fontSize:"17px",fontWeight:"800"}},isEdit?"계좌 수정":"계좌 추가"),h("button",{style:{fontSize:"20px",color:C.sub},onclick:()=>ov.remove()},"✕")),
@@ -7855,7 +7862,8 @@ function showSavingEdit(sv0){
     if(error){alert("저장 실패: "+error.message);sv.disabled=false;sv.textContent=isEdit?"수정 저장":"추가하기";return;}
     if(newId)setSavExt(newId,{maturity:matEl.value||null,rate:Number(srateEl.value)||0});
     const reached=payload.target_amount>0&&payload.current_amount>=payload.target_amount&&(Number(sv0?.current_amount)||0)<payload.target_amount;
-    ov.remove();reloadAssets();mascotEvent(reached?"goal_achieved":"savings_progress",{character:reached?"jjajang":"mayo"});
+    const savingsAction=reached?"goal_achieved":matEl.value?"savings_maturity":"savings_progress";
+    ov.remove();reloadAssets();mascotEvent(savingsAction,{character:savingsAction==="goal_achieved"||savingsAction==="savings_maturity"?"jjajang":"mayo"});
   };
   sh.append(
     h("div",{style:{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:"16px"}},h("span",{style:{fontSize:"17px",fontWeight:"800"}},isEdit?"저축 수정":"저축 추가"),h("button",{style:{fontSize:"20px",color:C.sub},onclick:()=>ov.remove()},"✕")),
@@ -7898,7 +7906,10 @@ function showLoanEdit(l0){
     if(isEdit)({error}=await sb.from("loans").update(payload).eq("id",l0.id));
     else({error}=await sb.from("loans").insert({...payload,user_id:S.session.user.id}));
     if(error){alert("저장 실패: "+error.message);sv.disabled=false;sv.textContent=isEdit?"수정 저장":"추가하기";return;}
-    ov.remove();reloadAssets();
+    const previousBalance=isEdit?loanBal(l0):null;
+    const currentBalance=Number(balEl.value)||0;
+    const loanAction=!isEdit?"loan_plan":currentBalance<previousBalance?"loan_progress":null;
+    ov.remove();reloadAssets();if(loanAction)mascotEvent(loanAction,{character:loanAction==="loan_progress"?"mayo":"huchu"});
   };
   sh.append(
     h("div",{style:{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:"16px"}},h("span",{style:{fontSize:"17px",fontWeight:"800"}},isEdit?"대출 수정":"대출 추가"),h("button",{style:{fontSize:"20px",color:C.sub},onclick:()=>ov.remove()},"✕")),
@@ -7961,7 +7972,7 @@ function showDutchAdd(){
     // 2) 받을 돈 기록
     const{error:e2}=await sb.from("dutch_splits").insert({user_id:S.session.user.id,household_id:hid,date:dt.value,place:placeEl.value.trim()||"나눠내기",total:tot,my_share:my,to_receive:recv,is_shared:isShared,received:false});
     if(e1||e2){alert("저장 실패: "+((e1||e2).message));sv.disabled=false;sv.textContent="저장하기";return;}
-    ov.remove();reloadAssets();
+    ov.remove();reloadAssets();mascotEvent("split_created",{character:"jjajang"});
   };
   sh.append(
     h("div",{style:{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:"6px"}},h("span",{style:{fontSize:"17px",fontWeight:"800"}},"🧾 나눠내기"),h("button",{style:{fontSize:"20px",color:C.sub},onclick:()=>ov.remove()},"✕")),

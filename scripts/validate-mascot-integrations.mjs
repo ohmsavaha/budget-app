@@ -22,8 +22,27 @@ const requiredAppEvents = [
   "calendar_export",
   "group_month_review",
   "group_plan_next",
+  "shopping_item_add",
+  "purchase_complete",
+  "repurchase_pick",
+  "product_register",
+  "price_record",
+  "price_compare",
+  "loan_plan",
+  "loan_progress",
+  "savings_maturity",
+  "account_link",
+  "investment_snapshot",
+  "holding_add",
+  "shared_plan_saved",
+  "split_created",
+  "group_shopping_plan",
 ];
-const requiredRuntimeActions = [...requiredAppEvents, "annual_review"];
+const requiredRuntimeActions = [
+  ...requiredAppEvents,
+  "annual_review",
+  "group_household_inventory",
+];
 const failures = [];
 
 for (const action of requiredAppEvents) {
@@ -36,9 +55,10 @@ for (const action of requiredRuntimeActions) {
     failures.push(`런타임 동작 누락: ${action}`);
   }
 }
-if (!app.includes("나의 가계부 · v132")) failures.push("앱 버전 v132 표기 누락");
-if (!worker.includes('const CACHE = "budget-v132"')) failures.push("서비스 워커 v132 캐시 누락");
+if (!app.includes("나의 가계부 · v133")) failures.push("앱 버전 v133 표기 누락");
+if (!worker.includes('const CACHE = "budget-v133"')) failures.push("서비스 워커 v133 캐시 누락");
 if (!runtime.includes('"phase2h"')) failures.push("Phase 2H 애니메이션 파일명 규칙 누락");
+if (!runtime.includes('"phase2i"')) failures.push("Phase 2I 애니메이션 파일명 규칙 누락");
 
 if (failures.length) {
   console.error(failures.join("\n"));
@@ -48,6 +68,6 @@ if (failures.length) {
     status: "passed",
     appEvents: requiredAppEvents.length,
     runtimeActions: requiredRuntimeActions.length,
-    version: "v132",
+    version: "v133",
   }));
 }

@@ -81,6 +81,18 @@ window.BudgetMascot.play({ action: "group_month_review", character: "group", dur
 if (!image.getAttribute("src")?.includes("phase2h/webp/group_group_month_review_512")) {
   throw new Error("Phase 2H 그룹 동작 실패");
 }
+await new Promise((resolve) => setTimeout(resolve, 15));
+
+window.BudgetMascot.play({ action: "purchase_complete", character: "jjajang", duration: 10 });
+if (!image.getAttribute("src")?.includes("phase2i/webp/jjajang_purchase_complete_512")) {
+  throw new Error("Phase 2I 구매 완료 동작 실패");
+}
+await new Promise((resolve) => setTimeout(resolve, 15));
+
+window.BudgetMascot.play({ action: "group_shopping_plan", character: "group", duration: 10 });
+if (!image.getAttribute("src")?.includes("phase2i/webp/group_group_shopping_plan_512")) {
+  throw new Error("Phase 2I 그룹 장보기 동작 실패");
+}
 
 const toggle = stage.querySelector(".budget-mascot-toggle");
 toggle.click();
@@ -102,6 +114,11 @@ window.BudgetMascot.play({ action: "calendar_export", character: "mayo", duratio
 if (!image.getAttribute("src")?.includes("phase2h/static/mayo_calendar_export_frame_01")) {
   throw new Error("Phase 2H 모션 감소 정적 대체 실패");
 }
+await new Promise((resolve) => setTimeout(resolve, 15));
+window.BudgetMascot.play({ action: "account_link", character: "mayo", duration: 10 });
+if (!image.getAttribute("src")?.includes("phase2i/static/mayo_account_link_frame_01")) {
+  throw new Error("Phase 2I 모션 감소 정적 대체 실패");
+}
 window.BudgetMascot.play({ action: "refund", character: "jjajang", duration: 10 });
 if (!image.getAttribute("src")?.endsWith(".png")) throw new Error("모션 감소 정적 대체 실패");
 
@@ -115,5 +132,6 @@ console.log(JSON.stringify({
   phase2f: "head_tilt + group_cuddle",
   phase2g: "fixed_due_check + group_highfive + market_shelter",
   phase2h: "backup_complete + group_month_review + calendar_export",
+  phase2i: "purchase_complete + group_shopping_plan + account_link",
   toggle: "passed",
 }));

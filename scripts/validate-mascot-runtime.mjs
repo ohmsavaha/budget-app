@@ -10,6 +10,32 @@ const failures = [];
 let checked = 0;
 let totalBytes = 0;
 
+function inspectAnimatedWebP(path) {
+  const buffer = readFileSync(path);
+  if (buffer.subarray(0, 4).toString() !== "RIFF" || buffer.subarray(8, 12).toString() !== "WEBP") {
+    throw new Error("WebP RIFF 헤더가 아닙니다.");
+  }
+  const durations = [];
+  let width = 0;
+  let height = 0;
+  let hasAlpha = false;
+  for (let offset = 12; offset + 8 <= buffer.length;) {
+    const type = buffer.subarray(offset, offset + 4).toString();
+    const size = buffer.readUInt32LE(offset + 4);
+    const data = offset + 8;
+    if (data + size > buffer.length) throw new Error(`${type} 청크가 파일 경계를 벗어났습니다.`);
+    if (type === "VP8X") {
+      hasAlpha = Boolean(buffer[data] & 0x10);
+      width = 1 + buffer.readUIntLE(data + 4, 3);
+      height = 1 + buffer.readUIntLE(data + 7, 3);
+    } else if (type === "ANMF") {
+      durations.push(buffer.readUIntLE(data + 12, 3));
+    }
+    offset = data + size + (size & 1);
+  }
+  return { width, height, hasAlpha, durations };
+}
+
 for (const phase of phases) {
   const block = source.match(new RegExp(`${phase}: new Set\\(\\[([\\s\\S]*?)\\]\\)`));
   if (!block) {
@@ -39,7 +65,7 @@ for (const phase of phases) {
   }
 }
 
-const manifestPhases = ["phase2f", "phase2g", "phase2h"];
+const manifestPhases = ["phase2f", "phase2g", "phase2h", "phase2i"];
 for (const phase of manifestPhases) {
   const manifestPath = join(repoRoot, `assets/mascot-v2/${phase}/manifest.json`);
   if (!existsSync(manifestPath)) {
@@ -59,6 +85,21 @@ for (const phase of manifestPhases) {
           const size = statSync(path).size;
           totalBytes += size;
           if (size < 100) failures.push(`비정상적으로 작은 파일: ${path} (${size} bytes)`);
+          if (phase === "phase2i" && path.endsWith(".webp")) {
+            try {
+              const info = inspectAnimatedWebP(path);
+              const expectedDurations = [150, 170, 210, 300, 210, 170];
+              if (info.width !== 512 || info.height !== 512) {
+                failures.push(`Phase 2I WebP 캔버스 오류: ${path} (${info.width}x${info.height})`);
+              }
+              if (!info.hasAlpha) failures.push(`Phase 2I WebP 알파 플래그 누락: ${path}`);
+              if (JSON.stringify(info.durations) !== JSON.stringify(expectedDurations)) {
+                failures.push(`Phase 2I WebP 재생시간 오류: ${path} (${info.durations.join(",")})`);
+              }
+            } catch (error) {
+              failures.push(`Phase 2I WebP 판독 실패: ${path} (${error.message})`);
+            }
+          }
         }
       }
     }
