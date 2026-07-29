@@ -90,8 +90,8 @@ const sharedDepositCorrection = app.slice(app.indexOf("// ③-B"), app.indexOf("
 if (!sharedDepositCorrection.includes('mascotEvent("shared_deposit"')) failures.push("이체→공용입금 교정 성공 동작 누락");
 const directHoldingAdd = app.slice(app.indexOf("const addBtn=h(\"button\"", app.indexOf("function showHoldings")), app.indexOf("const fetchBtn=", app.indexOf("function showHoldings")));
 if (!directHoldingAdd.includes("saveHoldings(holdings)") || !directHoldingAdd.includes('mascotEvent("holding_add"')) failures.push("직접 투자 종목 추가 성공 동작 누락");
-if (!app.includes("나의 가계부 · v142")) failures.push("앱 버전 v142 표기 누락");
-if (!worker.includes('const CACHE = "budget-v142"')) failures.push("서비스 워커 v142 캐시 누락");
+if (!app.includes("나의 가계부 · v143")) failures.push("앱 버전 v143 표기 누락");
+if (!worker.includes('const CACHE = "budget-v143"')) failures.push("서비스 워커 v143 캐시 누락");
 if (!runtime.includes('"phase2h"')) failures.push("Phase 2H 애니메이션 파일명 규칙 누락");
 if (!runtime.includes('"phase2i"')) failures.push("Phase 2I 애니메이션 파일명 규칙 누락");
 if (!runtime.includes('"phase2k"')) failures.push("Phase 2K 애니메이션 파일명 규칙 누락");
@@ -104,6 +104,6 @@ if (failures.length) {
     status: "passed",
     appEvents: requiredAppEvents.length,
     runtimeActions: requiredRuntimeActions.length,
-    version: "v142",
+    version: "v143",
   }));
 }

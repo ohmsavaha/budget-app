@@ -1,5 +1,5 @@
 // 나의 가계부 서비스워커 — 오프라인 캐시 + 푸시 알림
-const CACHE = "budget-v142";
+const CACHE = "budget-v143";
 const CORE = [
   "./",
   "./index.html",
