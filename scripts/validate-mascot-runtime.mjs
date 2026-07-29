@@ -65,7 +65,7 @@ for (const phase of phases) {
   }
 }
 
-const manifestPhases = ["phase2f", "phase2g", "phase2h", "phase2i"];
+const manifestPhases = ["phase2f", "phase2g", "phase2h", "phase2i", "phase2k"];
 for (const phase of manifestPhases) {
   const manifestPath = join(repoRoot, `assets/mascot-v2/${phase}/manifest.json`);
   if (!existsSync(manifestPath)) {
@@ -85,19 +85,19 @@ for (const phase of manifestPhases) {
           const size = statSync(path).size;
           totalBytes += size;
           if (size < 100) failures.push(`비정상적으로 작은 파일: ${path} (${size} bytes)`);
-          if (phase === "phase2i" && path.endsWith(".webp")) {
+          if (["phase2i", "phase2k"].includes(phase) && path.endsWith(".webp")) {
             try {
               const info = inspectAnimatedWebP(path);
               const expectedDurations = [150, 170, 210, 300, 210, 170];
               if (info.width !== 512 || info.height !== 512) {
-                failures.push(`Phase 2I WebP 캔버스 오류: ${path} (${info.width}x${info.height})`);
+                failures.push(`${phase} WebP 캔버스 오류: ${path} (${info.width}x${info.height})`);
               }
-              if (!info.hasAlpha) failures.push(`Phase 2I WebP 알파 플래그 누락: ${path}`);
+              if (!info.hasAlpha) failures.push(`${phase} WebP 알파 플래그 누락: ${path}`);
               if (JSON.stringify(info.durations) !== JSON.stringify(expectedDurations)) {
-                failures.push(`Phase 2I WebP 재생시간 오류: ${path} (${info.durations.join(",")})`);
+                failures.push(`${phase} WebP 재생시간 오류: ${path} (${info.durations.join(",")})`);
               }
             } catch (error) {
-              failures.push(`Phase 2I WebP 판독 실패: ${path} (${error.message})`);
+              failures.push(`${phase} WebP 판독 실패: ${path} (${error.message})`);
             }
           }
         }

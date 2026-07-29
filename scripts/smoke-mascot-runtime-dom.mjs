@@ -93,6 +93,48 @@ window.BudgetMascot.play({ action: "group_shopping_plan", character: "group", du
 if (!image.getAttribute("src")?.includes("phase2i/webp/group_group_shopping_plan_512")) {
   throw new Error("Phase 2I 그룹 장보기 동작 실패");
 }
+await new Promise((resolve) => setTimeout(resolve, 15));
+
+window.BudgetMascot.play({ action: "fixed_plan_saved", character: "huchu", duration: 10 });
+if (!image.getAttribute("src")?.includes("phase2k/webp/huchu_fixed_plan_saved_512")) {
+  throw new Error("Phase 2K 고정비 계획 동작 실패");
+}
+await new Promise((resolve) => setTimeout(resolve, 15));
+
+window.BudgetMascot.play({ action: "group_goal_map", character: "group", duration: 10 });
+if (!image.getAttribute("src")?.includes("phase2k/webp/group_group_goal_map_512")) {
+  throw new Error("Phase 2K 그룹 목표 동작 실패");
+}
+await new Promise((resolve) => setTimeout(resolve, 15));
+
+window.BudgetMascot.play({ action: "lowest_price", character: "jjajang", duration: 10 });
+if (!image.getAttribute("src")?.includes("phase2e/webp/jjajang_lowest_price")) {
+  throw new Error("Phase 2J 기존 최저가 동작 재연결 실패");
+}
+await new Promise((resolve) => setTimeout(resolve, 15));
+
+window.BudgetMascot.play({ action: "joint_settlement", character: "mayo", duration: 10 });
+if (!image.getAttribute("src")?.includes("phase2d/webp/mayo_joint_settlement")) {
+  throw new Error("정산 도우미 완료 동작 실패");
+}
+await new Promise((resolve) => setTimeout(resolve, 15));
+
+window.BudgetMascot.play({ action: "budget_set", character: "huchu", duration: 10 });
+if (!image.getAttribute("src")?.includes("phase2e/webp/huchu_budget_set")) {
+  throw new Error("월 총예산 저장 동작 실패");
+}
+await new Promise((resolve) => setTimeout(resolve, 15));
+
+window.BudgetMascot.play({ action: "shared_deposit", character: "mayo", duration: 10 });
+if (!image.getAttribute("src")?.includes("phase2d/webp/mayo_shared_deposit")) {
+  throw new Error("공용입금 교정 동작 실패");
+}
+await new Promise((resolve) => setTimeout(resolve, 15));
+
+window.BudgetMascot.play({ action: "holding_add", character: "huchu", duration: 10 });
+if (!image.getAttribute("src")?.includes("phase2i/webp/huchu_holding_add_512")) {
+  throw new Error("직접 투자 종목 추가 동작 실패");
+}
 
 const toggle = stage.querySelector(".budget-mascot-toggle");
 toggle.click();
@@ -119,6 +161,11 @@ window.BudgetMascot.play({ action: "account_link", character: "mayo", duration: 
 if (!image.getAttribute("src")?.includes("phase2i/static/mayo_account_link_frame_01")) {
   throw new Error("Phase 2I 모션 감소 정적 대체 실패");
 }
+await new Promise((resolve) => setTimeout(resolve, 15));
+window.BudgetMascot.play({ action: "portfolio_repaired", character: "jjajang", duration: 10 });
+if (!image.getAttribute("src")?.includes("phase2k/static/jjajang_portfolio_repaired_frame_01")) {
+  throw new Error("Phase 2K 모션 감소 정적 대체 실패");
+}
 window.BudgetMascot.play({ action: "refund", character: "jjajang", duration: 10 });
 if (!image.getAttribute("src")?.endsWith(".png")) throw new Error("모션 감소 정적 대체 실패");
 
@@ -133,5 +180,7 @@ console.log(JSON.stringify({
   phase2g: "fixed_due_check + group_highfive + market_shelter",
   phase2h: "backup_complete + group_month_review + calendar_export",
   phase2i: "purchase_complete + group_shopping_plan + account_link",
+  phase2j: "budget_set + lowest_price + emergency_fund + debt_payoff + joint_settlement",
+  phase2k: "fixed_plan_saved + group_goal_map + portfolio_repaired",
   toggle: "passed",
 }));

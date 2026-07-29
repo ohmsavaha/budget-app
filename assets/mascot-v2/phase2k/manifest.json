@@ -1,0 +1,2098 @@
+{
+  "pack": "humajja-mascot-v2-phase2k",
+  "version": "1.0.0",
+  "canvas": {
+    "master": [
+      1024,
+      1024
+    ],
+    "app": [
+      [
+        512,
+        512
+      ],
+      [
+        256,
+        256
+      ],
+      [
+        128,
+        128
+      ]
+    ]
+  },
+  "animation_count": 44,
+  "solo_action_count": 14,
+  "group_action_count": 2,
+  "key_pose_count": 176,
+  "animations": [
+    {
+      "id": "huchu_fixed_plan_saved",
+      "actor": "huchu",
+      "display_name": "후추",
+      "action": "fixed_plan_saved",
+      "action_label": "고정비 계획 저장",
+      "keyframes": [
+        "01_keyframes_master/huchu/fixed_plan_saved/huchu_fixed_plan_saved_key_01_v01.png",
+        "01_keyframes_master/huchu/fixed_plan_saved/huchu_fixed_plan_saved_key_02_v01.png",
+        "01_keyframes_master/huchu/fixed_plan_saved/huchu_fixed_plan_saved_key_03_v01.png",
+        "01_keyframes_master/huchu/fixed_plan_saved/huchu_fixed_plan_saved_key_04_v01.png"
+      ],
+      "playback_frames": [
+        "03_animation_frames/huchu/fixed_plan_saved/huchu_fixed_plan_saved_frame_01_v01.png",
+        "03_animation_frames/huchu/fixed_plan_saved/huchu_fixed_plan_saved_frame_02_v01.png",
+        "03_animation_frames/huchu/fixed_plan_saved/huchu_fixed_plan_saved_frame_03_v01.png",
+        "03_animation_frames/huchu/fixed_plan_saved/huchu_fixed_plan_saved_frame_04_v01.png",
+        "03_animation_frames/huchu/fixed_plan_saved/huchu_fixed_plan_saved_frame_05_v01.png",
+        "03_animation_frames/huchu/fixed_plan_saved/huchu_fixed_plan_saved_frame_06_v01.png"
+      ],
+      "frame_order": [
+        0,
+        1,
+        2,
+        3,
+        2,
+        1
+      ],
+      "durations_ms": [
+        150,
+        170,
+        210,
+        300,
+        210,
+        170
+      ],
+      "total_duration_ms": 1210,
+      "loop": true,
+      "anchor": {
+        "x": 0.5,
+        "y": 0.94
+      },
+      "webp_1024": "04_animated_webp/master/huchu_fixed_plan_saved_1024_v01.webp",
+      "webp_512": "04_animated_webp/app_512/huchu_fixed_plan_saved_512_v01.webp",
+      "apng_1024": "05_apng/master/huchu_fixed_plan_saved_1024_v01.png",
+      "apng_512": "05_apng/app_512/huchu_fixed_plan_saved_512_v01.png"
+    },
+    {
+      "id": "mayo_fixed_plan_saved",
+      "actor": "mayo",
+      "display_name": "마요",
+      "action": "fixed_plan_saved",
+      "action_label": "고정비 계획 저장",
+      "keyframes": [
+        "01_keyframes_master/mayo/fixed_plan_saved/mayo_fixed_plan_saved_key_01_v01.png",
+        "01_keyframes_master/mayo/fixed_plan_saved/mayo_fixed_plan_saved_key_02_v01.png",
+        "01_keyframes_master/mayo/fixed_plan_saved/mayo_fixed_plan_saved_key_03_v01.png",
+        "01_keyframes_master/mayo/fixed_plan_saved/mayo_fixed_plan_saved_key_04_v01.png"
+      ],
+      "playback_frames": [
+        "03_animation_frames/mayo/fixed_plan_saved/mayo_fixed_plan_saved_frame_01_v01.png",
+        "03_animation_frames/mayo/fixed_plan_saved/mayo_fixed_plan_saved_frame_02_v01.png",
+        "03_animation_frames/mayo/fixed_plan_saved/mayo_fixed_plan_saved_frame_03_v01.png",
+        "03_animation_frames/mayo/fixed_plan_saved/mayo_fixed_plan_saved_frame_04_v01.png",
+        "03_animation_frames/mayo/fixed_plan_saved/mayo_fixed_plan_saved_frame_05_v01.png",
+        "03_animation_frames/mayo/fixed_plan_saved/mayo_fixed_plan_saved_frame_06_v01.png"
+      ],
+      "frame_order": [
+        0,
+        1,
+        2,
+        3,
+        2,
+        1
+      ],
+      "durations_ms": [
+        150,
+        170,
+        210,
+        300,
+        210,
+        170
+      ],
+      "total_duration_ms": 1210,
+      "loop": true,
+      "anchor": {
+        "x": 0.5,
+        "y": 0.94
+      },
+      "webp_1024": "04_animated_webp/master/mayo_fixed_plan_saved_1024_v01.webp",
+      "webp_512": "04_animated_webp/app_512/mayo_fixed_plan_saved_512_v01.webp",
+      "apng_1024": "05_apng/master/mayo_fixed_plan_saved_1024_v01.png",
+      "apng_512": "05_apng/app_512/mayo_fixed_plan_saved_512_v01.png"
+    },
+    {
+      "id": "jjajang_fixed_plan_saved",
+      "actor": "jjajang",
+      "display_name": "짜장",
+      "action": "fixed_plan_saved",
+      "action_label": "고정비 계획 저장",
+      "keyframes": [
+        "01_keyframes_master/jjajang/fixed_plan_saved/jjajang_fixed_plan_saved_key_01_v01.png",
+        "01_keyframes_master/jjajang/fixed_plan_saved/jjajang_fixed_plan_saved_key_02_v01.png",
+        "01_keyframes_master/jjajang/fixed_plan_saved/jjajang_fixed_plan_saved_key_03_v01.png",
+        "01_keyframes_master/jjajang/fixed_plan_saved/jjajang_fixed_plan_saved_key_04_v01.png"
+      ],
+      "playback_frames": [
+        "03_animation_frames/jjajang/fixed_plan_saved/jjajang_fixed_plan_saved_frame_01_v01.png",
+        "03_animation_frames/jjajang/fixed_plan_saved/jjajang_fixed_plan_saved_frame_02_v01.png",
+        "03_animation_frames/jjajang/fixed_plan_saved/jjajang_fixed_plan_saved_frame_03_v01.png",
+        "03_animation_frames/jjajang/fixed_plan_saved/jjajang_fixed_plan_saved_frame_04_v01.png",
+        "03_animation_frames/jjajang/fixed_plan_saved/jjajang_fixed_plan_saved_frame_05_v01.png",
+        "03_animation_frames/jjajang/fixed_plan_saved/jjajang_fixed_plan_saved_frame_06_v01.png"
+      ],
+      "frame_order": [
+        0,
+        1,
+        2,
+        3,
+        2,
+        1
+      ],
+      "durations_ms": [
+        150,
+        170,
+        210,
+        300,
+        210,
+        170
+      ],
+      "total_duration_ms": 1210,
+      "loop": true,
+      "anchor": {
+        "x": 0.5,
+        "y": 0.94
+      },
+      "webp_1024": "04_animated_webp/master/jjajang_fixed_plan_saved_1024_v01.webp",
+      "webp_512": "04_animated_webp/app_512/jjajang_fixed_plan_saved_512_v01.webp",
+      "apng_1024": "05_apng/master/jjajang_fixed_plan_saved_1024_v01.png",
+      "apng_512": "05_apng/app_512/jjajang_fixed_plan_saved_512_v01.png"
+    },
+    {
+      "id": "huchu_fixed_plan_updated",
+      "actor": "huchu",
+      "display_name": "후추",
+      "action": "fixed_plan_updated",
+      "action_label": "고정비 계획 수정",
+      "keyframes": [
+        "01_keyframes_master/huchu/fixed_plan_updated/huchu_fixed_plan_updated_key_01_v01.png",
+        "01_keyframes_master/huchu/fixed_plan_updated/huchu_fixed_plan_updated_key_02_v01.png",
+        "01_keyframes_master/huchu/fixed_plan_updated/huchu_fixed_plan_updated_key_03_v01.png",
+        "01_keyframes_master/huchu/fixed_plan_updated/huchu_fixed_plan_updated_key_04_v01.png"
+      ],
+      "playback_frames": [
+        "03_animation_frames/huchu/fixed_plan_updated/huchu_fixed_plan_updated_frame_01_v01.png",
+        "03_animation_frames/huchu/fixed_plan_updated/huchu_fixed_plan_updated_frame_02_v01.png",
+        "03_animation_frames/huchu/fixed_plan_updated/huchu_fixed_plan_updated_frame_03_v01.png",
+        "03_animation_frames/huchu/fixed_plan_updated/huchu_fixed_plan_updated_frame_04_v01.png",
+        "03_animation_frames/huchu/fixed_plan_updated/huchu_fixed_plan_updated_frame_05_v01.png",
+        "03_animation_frames/huchu/fixed_plan_updated/huchu_fixed_plan_updated_frame_06_v01.png"
+      ],
+      "frame_order": [
+        0,
+        1,
+        2,
+        3,
+        2,
+        1
+      ],
+      "durations_ms": [
+        150,
+        170,
+        210,
+        300,
+        210,
+        170
+      ],
+      "total_duration_ms": 1210,
+      "loop": true,
+      "anchor": {
+        "x": 0.5,
+        "y": 0.94
+      },
+      "webp_1024": "04_animated_webp/master/huchu_fixed_plan_updated_1024_v01.webp",
+      "webp_512": "04_animated_webp/app_512/huchu_fixed_plan_updated_512_v01.webp",
+      "apng_1024": "05_apng/master/huchu_fixed_plan_updated_1024_v01.png",
+      "apng_512": "05_apng/app_512/huchu_fixed_plan_updated_512_v01.png"
+    },
+    {
+      "id": "mayo_fixed_plan_updated",
+      "actor": "mayo",
+      "display_name": "마요",
+      "action": "fixed_plan_updated",
+      "action_label": "고정비 계획 수정",
+      "keyframes": [
+        "01_keyframes_master/mayo/fixed_plan_updated/mayo_fixed_plan_updated_key_01_v01.png",
+        "01_keyframes_master/mayo/fixed_plan_updated/mayo_fixed_plan_updated_key_02_v01.png",
+        "01_keyframes_master/mayo/fixed_plan_updated/mayo_fixed_plan_updated_key_03_v01.png",
+        "01_keyframes_master/mayo/fixed_plan_updated/mayo_fixed_plan_updated_key_04_v01.png"
+      ],
+      "playback_frames": [
+        "03_animation_frames/mayo/fixed_plan_updated/mayo_fixed_plan_updated_frame_01_v01.png",
+        "03_animation_frames/mayo/fixed_plan_updated/mayo_fixed_plan_updated_frame_02_v01.png",
+        "03_animation_frames/mayo/fixed_plan_updated/mayo_fixed_plan_updated_frame_03_v01.png",
+        "03_animation_frames/mayo/fixed_plan_updated/mayo_fixed_plan_updated_frame_04_v01.png",
+        "03_animation_frames/mayo/fixed_plan_updated/mayo_fixed_plan_updated_frame_05_v01.png",
+        "03_animation_frames/mayo/fixed_plan_updated/mayo_fixed_plan_updated_frame_06_v01.png"
+      ],
+      "frame_order": [
+        0,
+        1,
+        2,
+        3,
+        2,
+        1
+      ],
+      "durations_ms": [
+        150,
+        170,
+        210,
+        300,
+        210,
+        170
+      ],
+      "total_duration_ms": 1210,
+      "loop": true,
+      "anchor": {
+        "x": 0.5,
+        "y": 0.94
+      },
+      "webp_1024": "04_animated_webp/master/mayo_fixed_plan_updated_1024_v01.webp",
+      "webp_512": "04_animated_webp/app_512/mayo_fixed_plan_updated_512_v01.webp",
+      "apng_1024": "05_apng/master/mayo_fixed_plan_updated_1024_v01.png",
+      "apng_512": "05_apng/app_512/mayo_fixed_plan_updated_512_v01.png"
+    },
+    {
+      "id": "jjajang_fixed_plan_updated",
+      "actor": "jjajang",
+      "display_name": "짜장",
+      "action": "fixed_plan_updated",
+      "action_label": "고정비 계획 수정",
+      "keyframes": [
+        "01_keyframes_master/jjajang/fixed_plan_updated/jjajang_fixed_plan_updated_key_01_v01.png",
+        "01_keyframes_master/jjajang/fixed_plan_updated/jjajang_fixed_plan_updated_key_02_v01.png",
+        "01_keyframes_master/jjajang/fixed_plan_updated/jjajang_fixed_plan_updated_key_03_v01.png",
+        "01_keyframes_master/jjajang/fixed_plan_updated/jjajang_fixed_plan_updated_key_04_v01.png"
+      ],
+      "playback_frames": [
+        "03_animation_frames/jjajang/fixed_plan_updated/jjajang_fixed_plan_updated_frame_01_v01.png",
+        "03_animation_frames/jjajang/fixed_plan_updated/jjajang_fixed_plan_updated_frame_02_v01.png",
+        "03_animation_frames/jjajang/fixed_plan_updated/jjajang_fixed_plan_updated_frame_03_v01.png",
+        "03_animation_frames/jjajang/fixed_plan_updated/jjajang_fixed_plan_updated_frame_04_v01.png",
+        "03_animation_frames/jjajang/fixed_plan_updated/jjajang_fixed_plan_updated_frame_05_v01.png",
+        "03_animation_frames/jjajang/fixed_plan_updated/jjajang_fixed_plan_updated_frame_06_v01.png"
+      ],
+      "frame_order": [
+        0,
+        1,
+        2,
+        3,
+        2,
+        1
+      ],
+      "durations_ms": [
+        150,
+        170,
+        210,
+        300,
+        210,
+        170
+      ],
+      "total_duration_ms": 1210,
+      "loop": true,
+      "anchor": {
+        "x": 0.5,
+        "y": 0.94
+      },
+      "webp_1024": "04_animated_webp/master/jjajang_fixed_plan_updated_1024_v01.webp",
+      "webp_512": "04_animated_webp/app_512/jjajang_fixed_plan_updated_512_v01.webp",
+      "apng_1024": "05_apng/master/jjajang_fixed_plan_updated_1024_v01.png",
+      "apng_512": "05_apng/app_512/jjajang_fixed_plan_updated_512_v01.png"
+    },
+    {
+      "id": "huchu_fixed_archived",
+      "actor": "huchu",
+      "display_name": "후추",
+      "action": "fixed_archived",
+      "action_label": "고정비 보관",
+      "keyframes": [
+        "01_keyframes_master/huchu/fixed_archived/huchu_fixed_archived_key_01_v01.png",
+        "01_keyframes_master/huchu/fixed_archived/huchu_fixed_archived_key_02_v01.png",
+        "01_keyframes_master/huchu/fixed_archived/huchu_fixed_archived_key_03_v01.png",
+        "01_keyframes_master/huchu/fixed_archived/huchu_fixed_archived_key_04_v01.png"
+      ],
+      "playback_frames": [
+        "03_animation_frames/huchu/fixed_archived/huchu_fixed_archived_frame_01_v01.png",
+        "03_animation_frames/huchu/fixed_archived/huchu_fixed_archived_frame_02_v01.png",
+        "03_animation_frames/huchu/fixed_archived/huchu_fixed_archived_frame_03_v01.png",
+        "03_animation_frames/huchu/fixed_archived/huchu_fixed_archived_frame_04_v01.png",
+        "03_animation_frames/huchu/fixed_archived/huchu_fixed_archived_frame_05_v01.png",
+        "03_animation_frames/huchu/fixed_archived/huchu_fixed_archived_frame_06_v01.png"
+      ],
+      "frame_order": [
+        0,
+        1,
+        2,
+        3,
+        2,
+        1
+      ],
+      "durations_ms": [
+        150,
+        170,
+        210,
+        300,
+        210,
+        170
+      ],
+      "total_duration_ms": 1210,
+      "loop": true,
+      "anchor": {
+        "x": 0.5,
+        "y": 0.94
+      },
+      "webp_1024": "04_animated_webp/master/huchu_fixed_archived_1024_v01.webp",
+      "webp_512": "04_animated_webp/app_512/huchu_fixed_archived_512_v01.webp",
+      "apng_1024": "05_apng/master/huchu_fixed_archived_1024_v01.png",
+      "apng_512": "05_apng/app_512/huchu_fixed_archived_512_v01.png"
+    },
+    {
+      "id": "mayo_fixed_archived",
+      "actor": "mayo",
+      "display_name": "마요",
+      "action": "fixed_archived",
+      "action_label": "고정비 보관",
+      "keyframes": [
+        "01_keyframes_master/mayo/fixed_archived/mayo_fixed_archived_key_01_v01.png",
+        "01_keyframes_master/mayo/fixed_archived/mayo_fixed_archived_key_02_v01.png",
+        "01_keyframes_master/mayo/fixed_archived/mayo_fixed_archived_key_03_v01.png",
+        "01_keyframes_master/mayo/fixed_archived/mayo_fixed_archived_key_04_v01.png"
+      ],
+      "playback_frames": [
+        "03_animation_frames/mayo/fixed_archived/mayo_fixed_archived_frame_01_v01.png",
+        "03_animation_frames/mayo/fixed_archived/mayo_fixed_archived_frame_02_v01.png",
+        "03_animation_frames/mayo/fixed_archived/mayo_fixed_archived_frame_03_v01.png",
+        "03_animation_frames/mayo/fixed_archived/mayo_fixed_archived_frame_04_v01.png",
+        "03_animation_frames/mayo/fixed_archived/mayo_fixed_archived_frame_05_v01.png",
+        "03_animation_frames/mayo/fixed_archived/mayo_fixed_archived_frame_06_v01.png"
+      ],
+      "frame_order": [
+        0,
+        1,
+        2,
+        3,
+        2,
+        1
+      ],
+      "durations_ms": [
+        150,
+        170,
+        210,
+        300,
+        210,
+        170
+      ],
+      "total_duration_ms": 1210,
+      "loop": true,
+      "anchor": {
+        "x": 0.5,
+        "y": 0.94
+      },
+      "webp_1024": "04_animated_webp/master/mayo_fixed_archived_1024_v01.webp",
+      "webp_512": "04_animated_webp/app_512/mayo_fixed_archived_512_v01.webp",
+      "apng_1024": "05_apng/master/mayo_fixed_archived_1024_v01.png",
+      "apng_512": "05_apng/app_512/mayo_fixed_archived_512_v01.png"
+    },
+    {
+      "id": "jjajang_fixed_archived",
+      "actor": "jjajang",
+      "display_name": "짜장",
+      "action": "fixed_archived",
+      "action_label": "고정비 보관",
+      "keyframes": [
+        "01_keyframes_master/jjajang/fixed_archived/jjajang_fixed_archived_key_01_v01.png",
+        "01_keyframes_master/jjajang/fixed_archived/jjajang_fixed_archived_key_02_v01.png",
+        "01_keyframes_master/jjajang/fixed_archived/jjajang_fixed_archived_key_03_v01.png",
+        "01_keyframes_master/jjajang/fixed_archived/jjajang_fixed_archived_key_04_v01.png"
+      ],
+      "playback_frames": [
+        "03_animation_frames/jjajang/fixed_archived/jjajang_fixed_archived_frame_01_v01.png",
+        "03_animation_frames/jjajang/fixed_archived/jjajang_fixed_archived_frame_02_v01.png",
+        "03_animation_frames/jjajang/fixed_archived/jjajang_fixed_archived_frame_03_v01.png",
+        "03_animation_frames/jjajang/fixed_archived/jjajang_fixed_archived_frame_04_v01.png",
+        "03_animation_frames/jjajang/fixed_archived/jjajang_fixed_archived_frame_05_v01.png",
+        "03_animation_frames/jjajang/fixed_archived/jjajang_fixed_archived_frame_06_v01.png"
+      ],
+      "frame_order": [
+        0,
+        1,
+        2,
+        3,
+        2,
+        1
+      ],
+      "durations_ms": [
+        150,
+        170,
+        210,
+        300,
+        210,
+        170
+      ],
+      "total_duration_ms": 1210,
+      "loop": true,
+      "anchor": {
+        "x": 0.5,
+        "y": 0.94
+      },
+      "webp_1024": "04_animated_webp/master/jjajang_fixed_archived_1024_v01.webp",
+      "webp_512": "04_animated_webp/app_512/jjajang_fixed_archived_512_v01.webp",
+      "apng_1024": "05_apng/master/jjajang_fixed_archived_1024_v01.png",
+      "apng_512": "05_apng/app_512/jjajang_fixed_archived_512_v01.png"
+    },
+    {
+      "id": "huchu_fixed_reactivated",
+      "actor": "huchu",
+      "display_name": "후추",
+      "action": "fixed_reactivated",
+      "action_label": "고정비 재활성화",
+      "keyframes": [
+        "01_keyframes_master/huchu/fixed_reactivated/huchu_fixed_reactivated_key_01_v01.png",
+        "01_keyframes_master/huchu/fixed_reactivated/huchu_fixed_reactivated_key_02_v01.png",
+        "01_keyframes_master/huchu/fixed_reactivated/huchu_fixed_reactivated_key_03_v01.png",
+        "01_keyframes_master/huchu/fixed_reactivated/huchu_fixed_reactivated_key_04_v01.png"
+      ],
+      "playback_frames": [
+        "03_animation_frames/huchu/fixed_reactivated/huchu_fixed_reactivated_frame_01_v01.png",
+        "03_animation_frames/huchu/fixed_reactivated/huchu_fixed_reactivated_frame_02_v01.png",
+        "03_animation_frames/huchu/fixed_reactivated/huchu_fixed_reactivated_frame_03_v01.png",
+        "03_animation_frames/huchu/fixed_reactivated/huchu_fixed_reactivated_frame_04_v01.png",
+        "03_animation_frames/huchu/fixed_reactivated/huchu_fixed_reactivated_frame_05_v01.png",
+        "03_animation_frames/huchu/fixed_reactivated/huchu_fixed_reactivated_frame_06_v01.png"
+      ],
+      "frame_order": [
+        0,
+        1,
+        2,
+        3,
+        2,
+        1
+      ],
+      "durations_ms": [
+        150,
+        170,
+        210,
+        300,
+        210,
+        170
+      ],
+      "total_duration_ms": 1210,
+      "loop": true,
+      "anchor": {
+        "x": 0.5,
+        "y": 0.94
+      },
+      "webp_1024": "04_animated_webp/master/huchu_fixed_reactivated_1024_v01.webp",
+      "webp_512": "04_animated_webp/app_512/huchu_fixed_reactivated_512_v01.webp",
+      "apng_1024": "05_apng/master/huchu_fixed_reactivated_1024_v01.png",
+      "apng_512": "05_apng/app_512/huchu_fixed_reactivated_512_v01.png"
+    },
+    {
+      "id": "mayo_fixed_reactivated",
+      "actor": "mayo",
+      "display_name": "마요",
+      "action": "fixed_reactivated",
+      "action_label": "고정비 재활성화",
+      "keyframes": [
+        "01_keyframes_master/mayo/fixed_reactivated/mayo_fixed_reactivated_key_01_v01.png",
+        "01_keyframes_master/mayo/fixed_reactivated/mayo_fixed_reactivated_key_02_v01.png",
+        "01_keyframes_master/mayo/fixed_reactivated/mayo_fixed_reactivated_key_03_v01.png",
+        "01_keyframes_master/mayo/fixed_reactivated/mayo_fixed_reactivated_key_04_v01.png"
+      ],
+      "playback_frames": [
+        "03_animation_frames/mayo/fixed_reactivated/mayo_fixed_reactivated_frame_01_v01.png",
+        "03_animation_frames/mayo/fixed_reactivated/mayo_fixed_reactivated_frame_02_v01.png",
+        "03_animation_frames/mayo/fixed_reactivated/mayo_fixed_reactivated_frame_03_v01.png",
+        "03_animation_frames/mayo/fixed_reactivated/mayo_fixed_reactivated_frame_04_v01.png",
+        "03_animation_frames/mayo/fixed_reactivated/mayo_fixed_reactivated_frame_05_v01.png",
+        "03_animation_frames/mayo/fixed_reactivated/mayo_fixed_reactivated_frame_06_v01.png"
+      ],
+      "frame_order": [
+        0,
+        1,
+        2,
+        3,
+        2,
+        1
+      ],
+      "durations_ms": [
+        150,
+        170,
+        210,
+        300,
+        210,
+        170
+      ],
+      "total_duration_ms": 1210,
+      "loop": true,
+      "anchor": {
+        "x": 0.5,
+        "y": 0.94
+      },
+      "webp_1024": "04_animated_webp/master/mayo_fixed_reactivated_1024_v01.webp",
+      "webp_512": "04_animated_webp/app_512/mayo_fixed_reactivated_512_v01.webp",
+      "apng_1024": "05_apng/master/mayo_fixed_reactivated_1024_v01.png",
+      "apng_512": "05_apng/app_512/mayo_fixed_reactivated_512_v01.png"
+    },
+    {
+      "id": "jjajang_fixed_reactivated",
+      "actor": "jjajang",
+      "display_name": "짜장",
+      "action": "fixed_reactivated",
+      "action_label": "고정비 재활성화",
+      "keyframes": [
+        "01_keyframes_master/jjajang/fixed_reactivated/jjajang_fixed_reactivated_key_01_v01.png",
+        "01_keyframes_master/jjajang/fixed_reactivated/jjajang_fixed_reactivated_key_02_v01.png",
+        "01_keyframes_master/jjajang/fixed_reactivated/jjajang_fixed_reactivated_key_03_v01.png",
+        "01_keyframes_master/jjajang/fixed_reactivated/jjajang_fixed_reactivated_key_04_v01.png"
+      ],
+      "playback_frames": [
+        "03_animation_frames/jjajang/fixed_reactivated/jjajang_fixed_reactivated_frame_01_v01.png",
+        "03_animation_frames/jjajang/fixed_reactivated/jjajang_fixed_reactivated_frame_02_v01.png",
+        "03_animation_frames/jjajang/fixed_reactivated/jjajang_fixed_reactivated_frame_03_v01.png",
+        "03_animation_frames/jjajang/fixed_reactivated/jjajang_fixed_reactivated_frame_04_v01.png",
+        "03_animation_frames/jjajang/fixed_reactivated/jjajang_fixed_reactivated_frame_05_v01.png",
+        "03_animation_frames/jjajang/fixed_reactivated/jjajang_fixed_reactivated_frame_06_v01.png"
+      ],
+      "frame_order": [
+        0,
+        1,
+        2,
+        3,
+        2,
+        1
+      ],
+      "durations_ms": [
+        150,
+        170,
+        210,
+        300,
+        210,
+        170
+      ],
+      "total_duration_ms": 1210,
+      "loop": true,
+      "anchor": {
+        "x": 0.5,
+        "y": 0.94
+      },
+      "webp_1024": "04_animated_webp/master/jjajang_fixed_reactivated_1024_v01.webp",
+      "webp_512": "04_animated_webp/app_512/jjajang_fixed_reactivated_512_v01.webp",
+      "apng_1024": "05_apng/master/jjajang_fixed_reactivated_1024_v01.png",
+      "apng_512": "05_apng/app_512/jjajang_fixed_reactivated_512_v01.png"
+    },
+    {
+      "id": "huchu_shared_fixed_saved",
+      "actor": "huchu",
+      "display_name": "후추",
+      "action": "shared_fixed_saved",
+      "action_label": "공용 고정비 저장",
+      "keyframes": [
+        "01_keyframes_master/huchu/shared_fixed_saved/huchu_shared_fixed_saved_key_01_v01.png",
+        "01_keyframes_master/huchu/shared_fixed_saved/huchu_shared_fixed_saved_key_02_v01.png",
+        "01_keyframes_master/huchu/shared_fixed_saved/huchu_shared_fixed_saved_key_03_v01.png",
+        "01_keyframes_master/huchu/shared_fixed_saved/huchu_shared_fixed_saved_key_04_v01.png"
+      ],
+      "playback_frames": [
+        "03_animation_frames/huchu/shared_fixed_saved/huchu_shared_fixed_saved_frame_01_v01.png",
+        "03_animation_frames/huchu/shared_fixed_saved/huchu_shared_fixed_saved_frame_02_v01.png",
+        "03_animation_frames/huchu/shared_fixed_saved/huchu_shared_fixed_saved_frame_03_v01.png",
+        "03_animation_frames/huchu/shared_fixed_saved/huchu_shared_fixed_saved_frame_04_v01.png",
+        "03_animation_frames/huchu/shared_fixed_saved/huchu_shared_fixed_saved_frame_05_v01.png",
+        "03_animation_frames/huchu/shared_fixed_saved/huchu_shared_fixed_saved_frame_06_v01.png"
+      ],
+      "frame_order": [
+        0,
+        1,
+        2,
+        3,
+        2,
+        1
+      ],
+      "durations_ms": [
+        150,
+        170,
+        210,
+        300,
+        210,
+        170
+      ],
+      "total_duration_ms": 1210,
+      "loop": true,
+      "anchor": {
+        "x": 0.5,
+        "y": 0.94
+      },
+      "webp_1024": "04_animated_webp/master/huchu_shared_fixed_saved_1024_v01.webp",
+      "webp_512": "04_animated_webp/app_512/huchu_shared_fixed_saved_512_v01.webp",
+      "apng_1024": "05_apng/master/huchu_shared_fixed_saved_1024_v01.png",
+      "apng_512": "05_apng/app_512/huchu_shared_fixed_saved_512_v01.png"
+    },
+    {
+      "id": "mayo_shared_fixed_saved",
+      "actor": "mayo",
+      "display_name": "마요",
+      "action": "shared_fixed_saved",
+      "action_label": "공용 고정비 저장",
+      "keyframes": [
+        "01_keyframes_master/mayo/shared_fixed_saved/mayo_shared_fixed_saved_key_01_v01.png",
+        "01_keyframes_master/mayo/shared_fixed_saved/mayo_shared_fixed_saved_key_02_v01.png",
+        "01_keyframes_master/mayo/shared_fixed_saved/mayo_shared_fixed_saved_key_03_v01.png",
+        "01_keyframes_master/mayo/shared_fixed_saved/mayo_shared_fixed_saved_key_04_v01.png"
+      ],
+      "playback_frames": [
+        "03_animation_frames/mayo/shared_fixed_saved/mayo_shared_fixed_saved_frame_01_v01.png",
+        "03_animation_frames/mayo/shared_fixed_saved/mayo_shared_fixed_saved_frame_02_v01.png",
+        "03_animation_frames/mayo/shared_fixed_saved/mayo_shared_fixed_saved_frame_03_v01.png",
+        "03_animation_frames/mayo/shared_fixed_saved/mayo_shared_fixed_saved_frame_04_v01.png",
+        "03_animation_frames/mayo/shared_fixed_saved/mayo_shared_fixed_saved_frame_05_v01.png",
+        "03_animation_frames/mayo/shared_fixed_saved/mayo_shared_fixed_saved_frame_06_v01.png"
+      ],
+      "frame_order": [
+        0,
+        1,
+        2,
+        3,
+        2,
+        1
+      ],
+      "durations_ms": [
+        150,
+        170,
+        210,
+        300,
+        210,
+        170
+      ],
+      "total_duration_ms": 1210,
+      "loop": true,
+      "anchor": {
+        "x": 0.5,
+        "y": 0.94
+      },
+      "webp_1024": "04_animated_webp/master/mayo_shared_fixed_saved_1024_v01.webp",
+      "webp_512": "04_animated_webp/app_512/mayo_shared_fixed_saved_512_v01.webp",
+      "apng_1024": "05_apng/master/mayo_shared_fixed_saved_1024_v01.png",
+      "apng_512": "05_apng/app_512/mayo_shared_fixed_saved_512_v01.png"
+    },
+    {
+      "id": "jjajang_shared_fixed_saved",
+      "actor": "jjajang",
+      "display_name": "짜장",
+      "action": "shared_fixed_saved",
+      "action_label": "공용 고정비 저장",
+      "keyframes": [
+        "01_keyframes_master/jjajang/shared_fixed_saved/jjajang_shared_fixed_saved_key_01_v01.png",
+        "01_keyframes_master/jjajang/shared_fixed_saved/jjajang_shared_fixed_saved_key_02_v01.png",
+        "01_keyframes_master/jjajang/shared_fixed_saved/jjajang_shared_fixed_saved_key_03_v01.png",
+        "01_keyframes_master/jjajang/shared_fixed_saved/jjajang_shared_fixed_saved_key_04_v01.png"
+      ],
+      "playback_frames": [
+        "03_animation_frames/jjajang/shared_fixed_saved/jjajang_shared_fixed_saved_frame_01_v01.png",
+        "03_animation_frames/jjajang/shared_fixed_saved/jjajang_shared_fixed_saved_frame_02_v01.png",
+        "03_animation_frames/jjajang/shared_fixed_saved/jjajang_shared_fixed_saved_frame_03_v01.png",
+        "03_animation_frames/jjajang/shared_fixed_saved/jjajang_shared_fixed_saved_frame_04_v01.png",
+        "03_animation_frames/jjajang/shared_fixed_saved/jjajang_shared_fixed_saved_frame_05_v01.png",
+        "03_animation_frames/jjajang/shared_fixed_saved/jjajang_shared_fixed_saved_frame_06_v01.png"
+      ],
+      "frame_order": [
+        0,
+        1,
+        2,
+        3,
+        2,
+        1
+      ],
+      "durations_ms": [
+        150,
+        170,
+        210,
+        300,
+        210,
+        170
+      ],
+      "total_duration_ms": 1210,
+      "loop": true,
+      "anchor": {
+        "x": 0.5,
+        "y": 0.94
+      },
+      "webp_1024": "04_animated_webp/master/jjajang_shared_fixed_saved_1024_v01.webp",
+      "webp_512": "04_animated_webp/app_512/jjajang_shared_fixed_saved_512_v01.webp",
+      "apng_1024": "05_apng/master/jjajang_shared_fixed_saved_1024_v01.png",
+      "apng_512": "05_apng/app_512/jjajang_shared_fixed_saved_512_v01.png"
+    },
+    {
+      "id": "huchu_expense_excluded",
+      "actor": "huchu",
+      "display_name": "후추",
+      "action": "expense_excluded",
+      "action_label": "지출 합계 제외",
+      "keyframes": [
+        "01_keyframes_master/huchu/expense_excluded/huchu_expense_excluded_key_01_v01.png",
+        "01_keyframes_master/huchu/expense_excluded/huchu_expense_excluded_key_02_v01.png",
+        "01_keyframes_master/huchu/expense_excluded/huchu_expense_excluded_key_03_v01.png",
+        "01_keyframes_master/huchu/expense_excluded/huchu_expense_excluded_key_04_v01.png"
+      ],
+      "playback_frames": [
+        "03_animation_frames/huchu/expense_excluded/huchu_expense_excluded_frame_01_v01.png",
+        "03_animation_frames/huchu/expense_excluded/huchu_expense_excluded_frame_02_v01.png",
+        "03_animation_frames/huchu/expense_excluded/huchu_expense_excluded_frame_03_v01.png",
+        "03_animation_frames/huchu/expense_excluded/huchu_expense_excluded_frame_04_v01.png",
+        "03_animation_frames/huchu/expense_excluded/huchu_expense_excluded_frame_05_v01.png",
+        "03_animation_frames/huchu/expense_excluded/huchu_expense_excluded_frame_06_v01.png"
+      ],
+      "frame_order": [
+        0,
+        1,
+        2,
+        3,
+        2,
+        1
+      ],
+      "durations_ms": [
+        150,
+        170,
+        210,
+        300,
+        210,
+        170
+      ],
+      "total_duration_ms": 1210,
+      "loop": true,
+      "anchor": {
+        "x": 0.5,
+        "y": 0.94
+      },
+      "webp_1024": "04_animated_webp/master/huchu_expense_excluded_1024_v01.webp",
+      "webp_512": "04_animated_webp/app_512/huchu_expense_excluded_512_v01.webp",
+      "apng_1024": "05_apng/master/huchu_expense_excluded_1024_v01.png",
+      "apng_512": "05_apng/app_512/huchu_expense_excluded_512_v01.png"
+    },
+    {
+      "id": "mayo_expense_excluded",
+      "actor": "mayo",
+      "display_name": "마요",
+      "action": "expense_excluded",
+      "action_label": "지출 합계 제외",
+      "keyframes": [
+        "01_keyframes_master/mayo/expense_excluded/mayo_expense_excluded_key_01_v01.png",
+        "01_keyframes_master/mayo/expense_excluded/mayo_expense_excluded_key_02_v01.png",
+        "01_keyframes_master/mayo/expense_excluded/mayo_expense_excluded_key_03_v01.png",
+        "01_keyframes_master/mayo/expense_excluded/mayo_expense_excluded_key_04_v01.png"
+      ],
+      "playback_frames": [
+        "03_animation_frames/mayo/expense_excluded/mayo_expense_excluded_frame_01_v01.png",
+        "03_animation_frames/mayo/expense_excluded/mayo_expense_excluded_frame_02_v01.png",
+        "03_animation_frames/mayo/expense_excluded/mayo_expense_excluded_frame_03_v01.png",
+        "03_animation_frames/mayo/expense_excluded/mayo_expense_excluded_frame_04_v01.png",
+        "03_animation_frames/mayo/expense_excluded/mayo_expense_excluded_frame_05_v01.png",
+        "03_animation_frames/mayo/expense_excluded/mayo_expense_excluded_frame_06_v01.png"
+      ],
+      "frame_order": [
+        0,
+        1,
+        2,
+        3,
+        2,
+        1
+      ],
+      "durations_ms": [
+        150,
+        170,
+        210,
+        300,
+        210,
+        170
+      ],
+      "total_duration_ms": 1210,
+      "loop": true,
+      "anchor": {
+        "x": 0.5,
+        "y": 0.94
+      },
+      "webp_1024": "04_animated_webp/master/mayo_expense_excluded_1024_v01.webp",
+      "webp_512": "04_animated_webp/app_512/mayo_expense_excluded_512_v01.webp",
+      "apng_1024": "05_apng/master/mayo_expense_excluded_1024_v01.png",
+      "apng_512": "05_apng/app_512/mayo_expense_excluded_512_v01.png"
+    },
+    {
+      "id": "jjajang_expense_excluded",
+      "actor": "jjajang",
+      "display_name": "짜장",
+      "action": "expense_excluded",
+      "action_label": "지출 합계 제외",
+      "keyframes": [
+        "01_keyframes_master/jjajang/expense_excluded/jjajang_expense_excluded_key_01_v01.png",
+        "01_keyframes_master/jjajang/expense_excluded/jjajang_expense_excluded_key_02_v01.png",
+        "01_keyframes_master/jjajang/expense_excluded/jjajang_expense_excluded_key_03_v01.png",
+        "01_keyframes_master/jjajang/expense_excluded/jjajang_expense_excluded_key_04_v01.png"
+      ],
+      "playback_frames": [
+        "03_animation_frames/jjajang/expense_excluded/jjajang_expense_excluded_frame_01_v01.png",
+        "03_animation_frames/jjajang/expense_excluded/jjajang_expense_excluded_frame_02_v01.png",
+        "03_animation_frames/jjajang/expense_excluded/jjajang_expense_excluded_frame_03_v01.png",
+        "03_animation_frames/jjajang/expense_excluded/jjajang_expense_excluded_frame_04_v01.png",
+        "03_animation_frames/jjajang/expense_excluded/jjajang_expense_excluded_frame_05_v01.png",
+        "03_animation_frames/jjajang/expense_excluded/jjajang_expense_excluded_frame_06_v01.png"
+      ],
+      "frame_order": [
+        0,
+        1,
+        2,
+        3,
+        2,
+        1
+      ],
+      "durations_ms": [
+        150,
+        170,
+        210,
+        300,
+        210,
+        170
+      ],
+      "total_duration_ms": 1210,
+      "loop": true,
+      "anchor": {
+        "x": 0.5,
+        "y": 0.94
+      },
+      "webp_1024": "04_animated_webp/master/jjajang_expense_excluded_1024_v01.webp",
+      "webp_512": "04_animated_webp/app_512/jjajang_expense_excluded_512_v01.webp",
+      "apng_1024": "05_apng/master/jjajang_expense_excluded_1024_v01.png",
+      "apng_512": "05_apng/app_512/jjajang_expense_excluded_512_v01.png"
+    },
+    {
+      "id": "huchu_transaction_corrected",
+      "actor": "huchu",
+      "display_name": "후추",
+      "action": "transaction_corrected",
+      "action_label": "거래 수정",
+      "keyframes": [
+        "01_keyframes_master/huchu/transaction_corrected/huchu_transaction_corrected_key_01_v01.png",
+        "01_keyframes_master/huchu/transaction_corrected/huchu_transaction_corrected_key_02_v01.png",
+        "01_keyframes_master/huchu/transaction_corrected/huchu_transaction_corrected_key_03_v01.png",
+        "01_keyframes_master/huchu/transaction_corrected/huchu_transaction_corrected_key_04_v01.png"
+      ],
+      "playback_frames": [
+        "03_animation_frames/huchu/transaction_corrected/huchu_transaction_corrected_frame_01_v01.png",
+        "03_animation_frames/huchu/transaction_corrected/huchu_transaction_corrected_frame_02_v01.png",
+        "03_animation_frames/huchu/transaction_corrected/huchu_transaction_corrected_frame_03_v01.png",
+        "03_animation_frames/huchu/transaction_corrected/huchu_transaction_corrected_frame_04_v01.png",
+        "03_animation_frames/huchu/transaction_corrected/huchu_transaction_corrected_frame_05_v01.png",
+        "03_animation_frames/huchu/transaction_corrected/huchu_transaction_corrected_frame_06_v01.png"
+      ],
+      "frame_order": [
+        0,
+        1,
+        2,
+        3,
+        2,
+        1
+      ],
+      "durations_ms": [
+        150,
+        170,
+        210,
+        300,
+        210,
+        170
+      ],
+      "total_duration_ms": 1210,
+      "loop": true,
+      "anchor": {
+        "x": 0.5,
+        "y": 0.94
+      },
+      "webp_1024": "04_animated_webp/master/huchu_transaction_corrected_1024_v01.webp",
+      "webp_512": "04_animated_webp/app_512/huchu_transaction_corrected_512_v01.webp",
+      "apng_1024": "05_apng/master/huchu_transaction_corrected_1024_v01.png",
+      "apng_512": "05_apng/app_512/huchu_transaction_corrected_512_v01.png"
+    },
+    {
+      "id": "mayo_transaction_corrected",
+      "actor": "mayo",
+      "display_name": "마요",
+      "action": "transaction_corrected",
+      "action_label": "거래 수정",
+      "keyframes": [
+        "01_keyframes_master/mayo/transaction_corrected/mayo_transaction_corrected_key_01_v01.png",
+        "01_keyframes_master/mayo/transaction_corrected/mayo_transaction_corrected_key_02_v01.png",
+        "01_keyframes_master/mayo/transaction_corrected/mayo_transaction_corrected_key_03_v01.png",
+        "01_keyframes_master/mayo/transaction_corrected/mayo_transaction_corrected_key_04_v01.png"
+      ],
+      "playback_frames": [
+        "03_animation_frames/mayo/transaction_corrected/mayo_transaction_corrected_frame_01_v01.png",
+        "03_animation_frames/mayo/transaction_corrected/mayo_transaction_corrected_frame_02_v01.png",
+        "03_animation_frames/mayo/transaction_corrected/mayo_transaction_corrected_frame_03_v01.png",
+        "03_animation_frames/mayo/transaction_corrected/mayo_transaction_corrected_frame_04_v01.png",
+        "03_animation_frames/mayo/transaction_corrected/mayo_transaction_corrected_frame_05_v01.png",
+        "03_animation_frames/mayo/transaction_corrected/mayo_transaction_corrected_frame_06_v01.png"
+      ],
+      "frame_order": [
+        0,
+        1,
+        2,
+        3,
+        2,
+        1
+      ],
+      "durations_ms": [
+        150,
+        170,
+        210,
+        300,
+        210,
+        170
+      ],
+      "total_duration_ms": 1210,
+      "loop": true,
+      "anchor": {
+        "x": 0.5,
+        "y": 0.94
+      },
+      "webp_1024": "04_animated_webp/master/mayo_transaction_corrected_1024_v01.webp",
+      "webp_512": "04_animated_webp/app_512/mayo_transaction_corrected_512_v01.webp",
+      "apng_1024": "05_apng/master/mayo_transaction_corrected_1024_v01.png",
+      "apng_512": "05_apng/app_512/mayo_transaction_corrected_512_v01.png"
+    },
+    {
+      "id": "jjajang_transaction_corrected",
+      "actor": "jjajang",
+      "display_name": "짜장",
+      "action": "transaction_corrected",
+      "action_label": "거래 수정",
+      "keyframes": [
+        "01_keyframes_master/jjajang/transaction_corrected/jjajang_transaction_corrected_key_01_v01.png",
+        "01_keyframes_master/jjajang/transaction_corrected/jjajang_transaction_corrected_key_02_v01.png",
+        "01_keyframes_master/jjajang/transaction_corrected/jjajang_transaction_corrected_key_03_v01.png",
+        "01_keyframes_master/jjajang/transaction_corrected/jjajang_transaction_corrected_key_04_v01.png"
+      ],
+      "playback_frames": [
+        "03_animation_frames/jjajang/transaction_corrected/jjajang_transaction_corrected_frame_01_v01.png",
+        "03_animation_frames/jjajang/transaction_corrected/jjajang_transaction_corrected_frame_02_v01.png",
+        "03_animation_frames/jjajang/transaction_corrected/jjajang_transaction_corrected_frame_03_v01.png",
+        "03_animation_frames/jjajang/transaction_corrected/jjajang_transaction_corrected_frame_04_v01.png",
+        "03_animation_frames/jjajang/transaction_corrected/jjajang_transaction_corrected_frame_05_v01.png",
+        "03_animation_frames/jjajang/transaction_corrected/jjajang_transaction_corrected_frame_06_v01.png"
+      ],
+      "frame_order": [
+        0,
+        1,
+        2,
+        3,
+        2,
+        1
+      ],
+      "durations_ms": [
+        150,
+        170,
+        210,
+        300,
+        210,
+        170
+      ],
+      "total_duration_ms": 1210,
+      "loop": true,
+      "anchor": {
+        "x": 0.5,
+        "y": 0.94
+      },
+      "webp_1024": "04_animated_webp/master/jjajang_transaction_corrected_1024_v01.webp",
+      "webp_512": "04_animated_webp/app_512/jjajang_transaction_corrected_512_v01.webp",
+      "apng_1024": "05_apng/master/jjajang_transaction_corrected_1024_v01.png",
+      "apng_512": "05_apng/app_512/jjajang_transaction_corrected_512_v01.png"
+    },
+    {
+      "id": "huchu_networth_goal",
+      "actor": "huchu",
+      "display_name": "후추",
+      "action": "networth_goal",
+      "action_label": "순자산 목표 설정",
+      "keyframes": [
+        "01_keyframes_master/huchu/networth_goal/huchu_networth_goal_key_01_v01.png",
+        "01_keyframes_master/huchu/networth_goal/huchu_networth_goal_key_02_v01.png",
+        "01_keyframes_master/huchu/networth_goal/huchu_networth_goal_key_03_v01.png",
+        "01_keyframes_master/huchu/networth_goal/huchu_networth_goal_key_04_v01.png"
+      ],
+      "playback_frames": [
+        "03_animation_frames/huchu/networth_goal/huchu_networth_goal_frame_01_v01.png",
+        "03_animation_frames/huchu/networth_goal/huchu_networth_goal_frame_02_v01.png",
+        "03_animation_frames/huchu/networth_goal/huchu_networth_goal_frame_03_v01.png",
+        "03_animation_frames/huchu/networth_goal/huchu_networth_goal_frame_04_v01.png",
+        "03_animation_frames/huchu/networth_goal/huchu_networth_goal_frame_05_v01.png",
+        "03_animation_frames/huchu/networth_goal/huchu_networth_goal_frame_06_v01.png"
+      ],
+      "frame_order": [
+        0,
+        1,
+        2,
+        3,
+        2,
+        1
+      ],
+      "durations_ms": [
+        150,
+        170,
+        210,
+        300,
+        210,
+        170
+      ],
+      "total_duration_ms": 1210,
+      "loop": true,
+      "anchor": {
+        "x": 0.5,
+        "y": 0.94
+      },
+      "webp_1024": "04_animated_webp/master/huchu_networth_goal_1024_v01.webp",
+      "webp_512": "04_animated_webp/app_512/huchu_networth_goal_512_v01.webp",
+      "apng_1024": "05_apng/master/huchu_networth_goal_1024_v01.png",
+      "apng_512": "05_apng/app_512/huchu_networth_goal_512_v01.png"
+    },
+    {
+      "id": "mayo_networth_goal",
+      "actor": "mayo",
+      "display_name": "마요",
+      "action": "networth_goal",
+      "action_label": "순자산 목표 설정",
+      "keyframes": [
+        "01_keyframes_master/mayo/networth_goal/mayo_networth_goal_key_01_v01.png",
+        "01_keyframes_master/mayo/networth_goal/mayo_networth_goal_key_02_v01.png",
+        "01_keyframes_master/mayo/networth_goal/mayo_networth_goal_key_03_v01.png",
+        "01_keyframes_master/mayo/networth_goal/mayo_networth_goal_key_04_v01.png"
+      ],
+      "playback_frames": [
+        "03_animation_frames/mayo/networth_goal/mayo_networth_goal_frame_01_v01.png",
+        "03_animation_frames/mayo/networth_goal/mayo_networth_goal_frame_02_v01.png",
+        "03_animation_frames/mayo/networth_goal/mayo_networth_goal_frame_03_v01.png",
+        "03_animation_frames/mayo/networth_goal/mayo_networth_goal_frame_04_v01.png",
+        "03_animation_frames/mayo/networth_goal/mayo_networth_goal_frame_05_v01.png",
+        "03_animation_frames/mayo/networth_goal/mayo_networth_goal_frame_06_v01.png"
+      ],
+      "frame_order": [
+        0,
+        1,
+        2,
+        3,
+        2,
+        1
+      ],
+      "durations_ms": [
+        150,
+        170,
+        210,
+        300,
+        210,
+        170
+      ],
+      "total_duration_ms": 1210,
+      "loop": true,
+      "anchor": {
+        "x": 0.5,
+        "y": 0.94
+      },
+      "webp_1024": "04_animated_webp/master/mayo_networth_goal_1024_v01.webp",
+      "webp_512": "04_animated_webp/app_512/mayo_networth_goal_512_v01.webp",
+      "apng_1024": "05_apng/master/mayo_networth_goal_1024_v01.png",
+      "apng_512": "05_apng/app_512/mayo_networth_goal_512_v01.png"
+    },
+    {
+      "id": "jjajang_networth_goal",
+      "actor": "jjajang",
+      "display_name": "짜장",
+      "action": "networth_goal",
+      "action_label": "순자산 목표 설정",
+      "keyframes": [
+        "01_keyframes_master/jjajang/networth_goal/jjajang_networth_goal_key_01_v01.png",
+        "01_keyframes_master/jjajang/networth_goal/jjajang_networth_goal_key_02_v01.png",
+        "01_keyframes_master/jjajang/networth_goal/jjajang_networth_goal_key_03_v01.png",
+        "01_keyframes_master/jjajang/networth_goal/jjajang_networth_goal_key_04_v01.png"
+      ],
+      "playback_frames": [
+        "03_animation_frames/jjajang/networth_goal/jjajang_networth_goal_frame_01_v01.png",
+        "03_animation_frames/jjajang/networth_goal/jjajang_networth_goal_frame_02_v01.png",
+        "03_animation_frames/jjajang/networth_goal/jjajang_networth_goal_frame_03_v01.png",
+        "03_animation_frames/jjajang/networth_goal/jjajang_networth_goal_frame_04_v01.png",
+        "03_animation_frames/jjajang/networth_goal/jjajang_networth_goal_frame_05_v01.png",
+        "03_animation_frames/jjajang/networth_goal/jjajang_networth_goal_frame_06_v01.png"
+      ],
+      "frame_order": [
+        0,
+        1,
+        2,
+        3,
+        2,
+        1
+      ],
+      "durations_ms": [
+        150,
+        170,
+        210,
+        300,
+        210,
+        170
+      ],
+      "total_duration_ms": 1210,
+      "loop": true,
+      "anchor": {
+        "x": 0.5,
+        "y": 0.94
+      },
+      "webp_1024": "04_animated_webp/master/jjajang_networth_goal_1024_v01.webp",
+      "webp_512": "04_animated_webp/app_512/jjajang_networth_goal_512_v01.webp",
+      "apng_1024": "05_apng/master/jjajang_networth_goal_1024_v01.png",
+      "apng_512": "05_apng/app_512/jjajang_networth_goal_512_v01.png"
+    },
+    {
+      "id": "huchu_investment_note",
+      "actor": "huchu",
+      "display_name": "후추",
+      "action": "investment_note",
+      "action_label": "투자 판단 기록",
+      "keyframes": [
+        "01_keyframes_master/huchu/investment_note/huchu_investment_note_key_01_v01.png",
+        "01_keyframes_master/huchu/investment_note/huchu_investment_note_key_02_v01.png",
+        "01_keyframes_master/huchu/investment_note/huchu_investment_note_key_03_v01.png",
+        "01_keyframes_master/huchu/investment_note/huchu_investment_note_key_04_v01.png"
+      ],
+      "playback_frames": [
+        "03_animation_frames/huchu/investment_note/huchu_investment_note_frame_01_v01.png",
+        "03_animation_frames/huchu/investment_note/huchu_investment_note_frame_02_v01.png",
+        "03_animation_frames/huchu/investment_note/huchu_investment_note_frame_03_v01.png",
+        "03_animation_frames/huchu/investment_note/huchu_investment_note_frame_04_v01.png",
+        "03_animation_frames/huchu/investment_note/huchu_investment_note_frame_05_v01.png",
+        "03_animation_frames/huchu/investment_note/huchu_investment_note_frame_06_v01.png"
+      ],
+      "frame_order": [
+        0,
+        1,
+        2,
+        3,
+        2,
+        1
+      ],
+      "durations_ms": [
+        150,
+        170,
+        210,
+        300,
+        210,
+        170
+      ],
+      "total_duration_ms": 1210,
+      "loop": true,
+      "anchor": {
+        "x": 0.5,
+        "y": 0.94
+      },
+      "webp_1024": "04_animated_webp/master/huchu_investment_note_1024_v01.webp",
+      "webp_512": "04_animated_webp/app_512/huchu_investment_note_512_v01.webp",
+      "apng_1024": "05_apng/master/huchu_investment_note_1024_v01.png",
+      "apng_512": "05_apng/app_512/huchu_investment_note_512_v01.png"
+    },
+    {
+      "id": "mayo_investment_note",
+      "actor": "mayo",
+      "display_name": "마요",
+      "action": "investment_note",
+      "action_label": "투자 판단 기록",
+      "keyframes": [
+        "01_keyframes_master/mayo/investment_note/mayo_investment_note_key_01_v01.png",
+        "01_keyframes_master/mayo/investment_note/mayo_investment_note_key_02_v01.png",
+        "01_keyframes_master/mayo/investment_note/mayo_investment_note_key_03_v01.png",
+        "01_keyframes_master/mayo/investment_note/mayo_investment_note_key_04_v01.png"
+      ],
+      "playback_frames": [
+        "03_animation_frames/mayo/investment_note/mayo_investment_note_frame_01_v01.png",
+        "03_animation_frames/mayo/investment_note/mayo_investment_note_frame_02_v01.png",
+        "03_animation_frames/mayo/investment_note/mayo_investment_note_frame_03_v01.png",
+        "03_animation_frames/mayo/investment_note/mayo_investment_note_frame_04_v01.png",
+        "03_animation_frames/mayo/investment_note/mayo_investment_note_frame_05_v01.png",
+        "03_animation_frames/mayo/investment_note/mayo_investment_note_frame_06_v01.png"
+      ],
+      "frame_order": [
+        0,
+        1,
+        2,
+        3,
+        2,
+        1
+      ],
+      "durations_ms": [
+        150,
+        170,
+        210,
+        300,
+        210,
+        170
+      ],
+      "total_duration_ms": 1210,
+      "loop": true,
+      "anchor": {
+        "x": 0.5,
+        "y": 0.94
+      },
+      "webp_1024": "04_animated_webp/master/mayo_investment_note_1024_v01.webp",
+      "webp_512": "04_animated_webp/app_512/mayo_investment_note_512_v01.webp",
+      "apng_1024": "05_apng/master/mayo_investment_note_1024_v01.png",
+      "apng_512": "05_apng/app_512/mayo_investment_note_512_v01.png"
+    },
+    {
+      "id": "jjajang_investment_note",
+      "actor": "jjajang",
+      "display_name": "짜장",
+      "action": "investment_note",
+      "action_label": "투자 판단 기록",
+      "keyframes": [
+        "01_keyframes_master/jjajang/investment_note/jjajang_investment_note_key_01_v01.png",
+        "01_keyframes_master/jjajang/investment_note/jjajang_investment_note_key_02_v01.png",
+        "01_keyframes_master/jjajang/investment_note/jjajang_investment_note_key_03_v01.png",
+        "01_keyframes_master/jjajang/investment_note/jjajang_investment_note_key_04_v01.png"
+      ],
+      "playback_frames": [
+        "03_animation_frames/jjajang/investment_note/jjajang_investment_note_frame_01_v01.png",
+        "03_animation_frames/jjajang/investment_note/jjajang_investment_note_frame_02_v01.png",
+        "03_animation_frames/jjajang/investment_note/jjajang_investment_note_frame_03_v01.png",
+        "03_animation_frames/jjajang/investment_note/jjajang_investment_note_frame_04_v01.png",
+        "03_animation_frames/jjajang/investment_note/jjajang_investment_note_frame_05_v01.png",
+        "03_animation_frames/jjajang/investment_note/jjajang_investment_note_frame_06_v01.png"
+      ],
+      "frame_order": [
+        0,
+        1,
+        2,
+        3,
+        2,
+        1
+      ],
+      "durations_ms": [
+        150,
+        170,
+        210,
+        300,
+        210,
+        170
+      ],
+      "total_duration_ms": 1210,
+      "loop": true,
+      "anchor": {
+        "x": 0.5,
+        "y": 0.94
+      },
+      "webp_1024": "04_animated_webp/master/jjajang_investment_note_1024_v01.webp",
+      "webp_512": "04_animated_webp/app_512/jjajang_investment_note_512_v01.webp",
+      "apng_1024": "05_apng/master/jjajang_investment_note_1024_v01.png",
+      "apng_512": "05_apng/app_512/jjajang_investment_note_512_v01.png"
+    },
+    {
+      "id": "huchu_market_refresh",
+      "actor": "huchu",
+      "display_name": "후추",
+      "action": "market_refresh",
+      "action_label": "시세 새로고침",
+      "keyframes": [
+        "01_keyframes_master/huchu/market_refresh/huchu_market_refresh_key_01_v01.png",
+        "01_keyframes_master/huchu/market_refresh/huchu_market_refresh_key_02_v01.png",
+        "01_keyframes_master/huchu/market_refresh/huchu_market_refresh_key_03_v01.png",
+        "01_keyframes_master/huchu/market_refresh/huchu_market_refresh_key_04_v01.png"
+      ],
+      "playback_frames": [
+        "03_animation_frames/huchu/market_refresh/huchu_market_refresh_frame_01_v01.png",
+        "03_animation_frames/huchu/market_refresh/huchu_market_refresh_frame_02_v01.png",
+        "03_animation_frames/huchu/market_refresh/huchu_market_refresh_frame_03_v01.png",
+        "03_animation_frames/huchu/market_refresh/huchu_market_refresh_frame_04_v01.png",
+        "03_animation_frames/huchu/market_refresh/huchu_market_refresh_frame_05_v01.png",
+        "03_animation_frames/huchu/market_refresh/huchu_market_refresh_frame_06_v01.png"
+      ],
+      "frame_order": [
+        0,
+        1,
+        2,
+        3,
+        2,
+        1
+      ],
+      "durations_ms": [
+        150,
+        170,
+        210,
+        300,
+        210,
+        170
+      ],
+      "total_duration_ms": 1210,
+      "loop": true,
+      "anchor": {
+        "x": 0.5,
+        "y": 0.94
+      },
+      "webp_1024": "04_animated_webp/master/huchu_market_refresh_1024_v01.webp",
+      "webp_512": "04_animated_webp/app_512/huchu_market_refresh_512_v01.webp",
+      "apng_1024": "05_apng/master/huchu_market_refresh_1024_v01.png",
+      "apng_512": "05_apng/app_512/huchu_market_refresh_512_v01.png"
+    },
+    {
+      "id": "mayo_market_refresh",
+      "actor": "mayo",
+      "display_name": "마요",
+      "action": "market_refresh",
+      "action_label": "시세 새로고침",
+      "keyframes": [
+        "01_keyframes_master/mayo/market_refresh/mayo_market_refresh_key_01_v01.png",
+        "01_keyframes_master/mayo/market_refresh/mayo_market_refresh_key_02_v01.png",
+        "01_keyframes_master/mayo/market_refresh/mayo_market_refresh_key_03_v01.png",
+        "01_keyframes_master/mayo/market_refresh/mayo_market_refresh_key_04_v01.png"
+      ],
+      "playback_frames": [
+        "03_animation_frames/mayo/market_refresh/mayo_market_refresh_frame_01_v01.png",
+        "03_animation_frames/mayo/market_refresh/mayo_market_refresh_frame_02_v01.png",
+        "03_animation_frames/mayo/market_refresh/mayo_market_refresh_frame_03_v01.png",
+        "03_animation_frames/mayo/market_refresh/mayo_market_refresh_frame_04_v01.png",
+        "03_animation_frames/mayo/market_refresh/mayo_market_refresh_frame_05_v01.png",
+        "03_animation_frames/mayo/market_refresh/mayo_market_refresh_frame_06_v01.png"
+      ],
+      "frame_order": [
+        0,
+        1,
+        2,
+        3,
+        2,
+        1
+      ],
+      "durations_ms": [
+        150,
+        170,
+        210,
+        300,
+        210,
+        170
+      ],
+      "total_duration_ms": 1210,
+      "loop": true,
+      "anchor": {
+        "x": 0.5,
+        "y": 0.94
+      },
+      "webp_1024": "04_animated_webp/master/mayo_market_refresh_1024_v01.webp",
+      "webp_512": "04_animated_webp/app_512/mayo_market_refresh_512_v01.webp",
+      "apng_1024": "05_apng/master/mayo_market_refresh_1024_v01.png",
+      "apng_512": "05_apng/app_512/mayo_market_refresh_512_v01.png"
+    },
+    {
+      "id": "jjajang_market_refresh",
+      "actor": "jjajang",
+      "display_name": "짜장",
+      "action": "market_refresh",
+      "action_label": "시세 새로고침",
+      "keyframes": [
+        "01_keyframes_master/jjajang/market_refresh/jjajang_market_refresh_key_01_v01.png",
+        "01_keyframes_master/jjajang/market_refresh/jjajang_market_refresh_key_02_v01.png",
+        "01_keyframes_master/jjajang/market_refresh/jjajang_market_refresh_key_03_v01.png",
+        "01_keyframes_master/jjajang/market_refresh/jjajang_market_refresh_key_04_v01.png"
+      ],
+      "playback_frames": [
+        "03_animation_frames/jjajang/market_refresh/jjajang_market_refresh_frame_01_v01.png",
+        "03_animation_frames/jjajang/market_refresh/jjajang_market_refresh_frame_02_v01.png",
+        "03_animation_frames/jjajang/market_refresh/jjajang_market_refresh_frame_03_v01.png",
+        "03_animation_frames/jjajang/market_refresh/jjajang_market_refresh_frame_04_v01.png",
+        "03_animation_frames/jjajang/market_refresh/jjajang_market_refresh_frame_05_v01.png",
+        "03_animation_frames/jjajang/market_refresh/jjajang_market_refresh_frame_06_v01.png"
+      ],
+      "frame_order": [
+        0,
+        1,
+        2,
+        3,
+        2,
+        1
+      ],
+      "durations_ms": [
+        150,
+        170,
+        210,
+        300,
+        210,
+        170
+      ],
+      "total_duration_ms": 1210,
+      "loop": true,
+      "anchor": {
+        "x": 0.5,
+        "y": 0.94
+      },
+      "webp_1024": "04_animated_webp/master/jjajang_market_refresh_1024_v01.webp",
+      "webp_512": "04_animated_webp/app_512/jjajang_market_refresh_512_v01.webp",
+      "apng_1024": "05_apng/master/jjajang_market_refresh_1024_v01.png",
+      "apng_512": "05_apng/app_512/jjajang_market_refresh_512_v01.png"
+    },
+    {
+      "id": "huchu_portfolio_repaired",
+      "actor": "huchu",
+      "display_name": "후추",
+      "action": "portfolio_repaired",
+      "action_label": "포트폴리오 이상값 교정",
+      "keyframes": [
+        "01_keyframes_master/huchu/portfolio_repaired/huchu_portfolio_repaired_key_01_v01.png",
+        "01_keyframes_master/huchu/portfolio_repaired/huchu_portfolio_repaired_key_02_v01.png",
+        "01_keyframes_master/huchu/portfolio_repaired/huchu_portfolio_repaired_key_03_v01.png",
+        "01_keyframes_master/huchu/portfolio_repaired/huchu_portfolio_repaired_key_04_v01.png"
+      ],
+      "playback_frames": [
+        "03_animation_frames/huchu/portfolio_repaired/huchu_portfolio_repaired_frame_01_v01.png",
+        "03_animation_frames/huchu/portfolio_repaired/huchu_portfolio_repaired_frame_02_v01.png",
+        "03_animation_frames/huchu/portfolio_repaired/huchu_portfolio_repaired_frame_03_v01.png",
+        "03_animation_frames/huchu/portfolio_repaired/huchu_portfolio_repaired_frame_04_v01.png",
+        "03_animation_frames/huchu/portfolio_repaired/huchu_portfolio_repaired_frame_05_v01.png",
+        "03_animation_frames/huchu/portfolio_repaired/huchu_portfolio_repaired_frame_06_v01.png"
+      ],
+      "frame_order": [
+        0,
+        1,
+        2,
+        3,
+        2,
+        1
+      ],
+      "durations_ms": [
+        150,
+        170,
+        210,
+        300,
+        210,
+        170
+      ],
+      "total_duration_ms": 1210,
+      "loop": true,
+      "anchor": {
+        "x": 0.5,
+        "y": 0.94
+      },
+      "webp_1024": "04_animated_webp/master/huchu_portfolio_repaired_1024_v01.webp",
+      "webp_512": "04_animated_webp/app_512/huchu_portfolio_repaired_512_v01.webp",
+      "apng_1024": "05_apng/master/huchu_portfolio_repaired_1024_v01.png",
+      "apng_512": "05_apng/app_512/huchu_portfolio_repaired_512_v01.png"
+    },
+    {
+      "id": "mayo_portfolio_repaired",
+      "actor": "mayo",
+      "display_name": "마요",
+      "action": "portfolio_repaired",
+      "action_label": "포트폴리오 이상값 교정",
+      "keyframes": [
+        "01_keyframes_master/mayo/portfolio_repaired/mayo_portfolio_repaired_key_01_v01.png",
+        "01_keyframes_master/mayo/portfolio_repaired/mayo_portfolio_repaired_key_02_v01.png",
+        "01_keyframes_master/mayo/portfolio_repaired/mayo_portfolio_repaired_key_03_v01.png",
+        "01_keyframes_master/mayo/portfolio_repaired/mayo_portfolio_repaired_key_04_v01.png"
+      ],
+      "playback_frames": [
+        "03_animation_frames/mayo/portfolio_repaired/mayo_portfolio_repaired_frame_01_v01.png",
+        "03_animation_frames/mayo/portfolio_repaired/mayo_portfolio_repaired_frame_02_v01.png",
+        "03_animation_frames/mayo/portfolio_repaired/mayo_portfolio_repaired_frame_03_v01.png",
+        "03_animation_frames/mayo/portfolio_repaired/mayo_portfolio_repaired_frame_04_v01.png",
+        "03_animation_frames/mayo/portfolio_repaired/mayo_portfolio_repaired_frame_05_v01.png",
+        "03_animation_frames/mayo/portfolio_repaired/mayo_portfolio_repaired_frame_06_v01.png"
+      ],
+      "frame_order": [
+        0,
+        1,
+        2,
+        3,
+        2,
+        1
+      ],
+      "durations_ms": [
+        150,
+        170,
+        210,
+        300,
+        210,
+        170
+      ],
+      "total_duration_ms": 1210,
+      "loop": true,
+      "anchor": {
+        "x": 0.5,
+        "y": 0.94
+      },
+      "webp_1024": "04_animated_webp/master/mayo_portfolio_repaired_1024_v01.webp",
+      "webp_512": "04_animated_webp/app_512/mayo_portfolio_repaired_512_v01.webp",
+      "apng_1024": "05_apng/master/mayo_portfolio_repaired_1024_v01.png",
+      "apng_512": "05_apng/app_512/mayo_portfolio_repaired_512_v01.png"
+    },
+    {
+      "id": "jjajang_portfolio_repaired",
+      "actor": "jjajang",
+      "display_name": "짜장",
+      "action": "portfolio_repaired",
+      "action_label": "포트폴리오 이상값 교정",
+      "keyframes": [
+        "01_keyframes_master/jjajang/portfolio_repaired/jjajang_portfolio_repaired_key_01_v01.png",
+        "01_keyframes_master/jjajang/portfolio_repaired/jjajang_portfolio_repaired_key_02_v01.png",
+        "01_keyframes_master/jjajang/portfolio_repaired/jjajang_portfolio_repaired_key_03_v01.png",
+        "01_keyframes_master/jjajang/portfolio_repaired/jjajang_portfolio_repaired_key_04_v01.png"
+      ],
+      "playback_frames": [
+        "03_animation_frames/jjajang/portfolio_repaired/jjajang_portfolio_repaired_frame_01_v01.png",
+        "03_animation_frames/jjajang/portfolio_repaired/jjajang_portfolio_repaired_frame_02_v01.png",
+        "03_animation_frames/jjajang/portfolio_repaired/jjajang_portfolio_repaired_frame_03_v01.png",
+        "03_animation_frames/jjajang/portfolio_repaired/jjajang_portfolio_repaired_frame_04_v01.png",
+        "03_animation_frames/jjajang/portfolio_repaired/jjajang_portfolio_repaired_frame_05_v01.png",
+        "03_animation_frames/jjajang/portfolio_repaired/jjajang_portfolio_repaired_frame_06_v01.png"
+      ],
+      "frame_order": [
+        0,
+        1,
+        2,
+        3,
+        2,
+        1
+      ],
+      "durations_ms": [
+        150,
+        170,
+        210,
+        300,
+        210,
+        170
+      ],
+      "total_duration_ms": 1210,
+      "loop": true,
+      "anchor": {
+        "x": 0.5,
+        "y": 0.94
+      },
+      "webp_1024": "04_animated_webp/master/jjajang_portfolio_repaired_1024_v01.webp",
+      "webp_512": "04_animated_webp/app_512/jjajang_portfolio_repaired_512_v01.webp",
+      "apng_1024": "05_apng/master/jjajang_portfolio_repaired_1024_v01.png",
+      "apng_512": "05_apng/app_512/jjajang_portfolio_repaired_512_v01.png"
+    },
+    {
+      "id": "huchu_classification_rule_saved",
+      "actor": "huchu",
+      "display_name": "후추",
+      "action": "classification_rule_saved",
+      "action_label": "분류 규칙 저장",
+      "keyframes": [
+        "01_keyframes_master/huchu/classification_rule_saved/huchu_classification_rule_saved_key_01_v01.png",
+        "01_keyframes_master/huchu/classification_rule_saved/huchu_classification_rule_saved_key_02_v01.png",
+        "01_keyframes_master/huchu/classification_rule_saved/huchu_classification_rule_saved_key_03_v01.png",
+        "01_keyframes_master/huchu/classification_rule_saved/huchu_classification_rule_saved_key_04_v01.png"
+      ],
+      "playback_frames": [
+        "03_animation_frames/huchu/classification_rule_saved/huchu_classification_rule_saved_frame_01_v01.png",
+        "03_animation_frames/huchu/classification_rule_saved/huchu_classification_rule_saved_frame_02_v01.png",
+        "03_animation_frames/huchu/classification_rule_saved/huchu_classification_rule_saved_frame_03_v01.png",
+        "03_animation_frames/huchu/classification_rule_saved/huchu_classification_rule_saved_frame_04_v01.png",
+        "03_animation_frames/huchu/classification_rule_saved/huchu_classification_rule_saved_frame_05_v01.png",
+        "03_animation_frames/huchu/classification_rule_saved/huchu_classification_rule_saved_frame_06_v01.png"
+      ],
+      "frame_order": [
+        0,
+        1,
+        2,
+        3,
+        2,
+        1
+      ],
+      "durations_ms": [
+        150,
+        170,
+        210,
+        300,
+        210,
+        170
+      ],
+      "total_duration_ms": 1210,
+      "loop": true,
+      "anchor": {
+        "x": 0.5,
+        "y": 0.94
+      },
+      "webp_1024": "04_animated_webp/master/huchu_classification_rule_saved_1024_v01.webp",
+      "webp_512": "04_animated_webp/app_512/huchu_classification_rule_saved_512_v01.webp",
+      "apng_1024": "05_apng/master/huchu_classification_rule_saved_1024_v01.png",
+      "apng_512": "05_apng/app_512/huchu_classification_rule_saved_512_v01.png"
+    },
+    {
+      "id": "mayo_classification_rule_saved",
+      "actor": "mayo",
+      "display_name": "마요",
+      "action": "classification_rule_saved",
+      "action_label": "분류 규칙 저장",
+      "keyframes": [
+        "01_keyframes_master/mayo/classification_rule_saved/mayo_classification_rule_saved_key_01_v01.png",
+        "01_keyframes_master/mayo/classification_rule_saved/mayo_classification_rule_saved_key_02_v01.png",
+        "01_keyframes_master/mayo/classification_rule_saved/mayo_classification_rule_saved_key_03_v01.png",
+        "01_keyframes_master/mayo/classification_rule_saved/mayo_classification_rule_saved_key_04_v01.png"
+      ],
+      "playback_frames": [
+        "03_animation_frames/mayo/classification_rule_saved/mayo_classification_rule_saved_frame_01_v01.png",
+        "03_animation_frames/mayo/classification_rule_saved/mayo_classification_rule_saved_frame_02_v01.png",
+        "03_animation_frames/mayo/classification_rule_saved/mayo_classification_rule_saved_frame_03_v01.png",
+        "03_animation_frames/mayo/classification_rule_saved/mayo_classification_rule_saved_frame_04_v01.png",
+        "03_animation_frames/mayo/classification_rule_saved/mayo_classification_rule_saved_frame_05_v01.png",
+        "03_animation_frames/mayo/classification_rule_saved/mayo_classification_rule_saved_frame_06_v01.png"
+      ],
+      "frame_order": [
+        0,
+        1,
+        2,
+        3,
+        2,
+        1
+      ],
+      "durations_ms": [
+        150,
+        170,
+        210,
+        300,
+        210,
+        170
+      ],
+      "total_duration_ms": 1210,
+      "loop": true,
+      "anchor": {
+        "x": 0.5,
+        "y": 0.94
+      },
+      "webp_1024": "04_animated_webp/master/mayo_classification_rule_saved_1024_v01.webp",
+      "webp_512": "04_animated_webp/app_512/mayo_classification_rule_saved_512_v01.webp",
+      "apng_1024": "05_apng/master/mayo_classification_rule_saved_1024_v01.png",
+      "apng_512": "05_apng/app_512/mayo_classification_rule_saved_512_v01.png"
+    },
+    {
+      "id": "jjajang_classification_rule_saved",
+      "actor": "jjajang",
+      "display_name": "짜장",
+      "action": "classification_rule_saved",
+      "action_label": "분류 규칙 저장",
+      "keyframes": [
+        "01_keyframes_master/jjajang/classification_rule_saved/jjajang_classification_rule_saved_key_01_v01.png",
+        "01_keyframes_master/jjajang/classification_rule_saved/jjajang_classification_rule_saved_key_02_v01.png",
+        "01_keyframes_master/jjajang/classification_rule_saved/jjajang_classification_rule_saved_key_03_v01.png",
+        "01_keyframes_master/jjajang/classification_rule_saved/jjajang_classification_rule_saved_key_04_v01.png"
+      ],
+      "playback_frames": [
+        "03_animation_frames/jjajang/classification_rule_saved/jjajang_classification_rule_saved_frame_01_v01.png",
+        "03_animation_frames/jjajang/classification_rule_saved/jjajang_classification_rule_saved_frame_02_v01.png",
+        "03_animation_frames/jjajang/classification_rule_saved/jjajang_classification_rule_saved_frame_03_v01.png",
+        "03_animation_frames/jjajang/classification_rule_saved/jjajang_classification_rule_saved_frame_04_v01.png",
+        "03_animation_frames/jjajang/classification_rule_saved/jjajang_classification_rule_saved_frame_05_v01.png",
+        "03_animation_frames/jjajang/classification_rule_saved/jjajang_classification_rule_saved_frame_06_v01.png"
+      ],
+      "frame_order": [
+        0,
+        1,
+        2,
+        3,
+        2,
+        1
+      ],
+      "durations_ms": [
+        150,
+        170,
+        210,
+        300,
+        210,
+        170
+      ],
+      "total_duration_ms": 1210,
+      "loop": true,
+      "anchor": {
+        "x": 0.5,
+        "y": 0.94
+      },
+      "webp_1024": "04_animated_webp/master/jjajang_classification_rule_saved_1024_v01.webp",
+      "webp_512": "04_animated_webp/app_512/jjajang_classification_rule_saved_512_v01.webp",
+      "apng_1024": "05_apng/master/jjajang_classification_rule_saved_1024_v01.png",
+      "apng_512": "05_apng/app_512/jjajang_classification_rule_saved_512_v01.png"
+    },
+    {
+      "id": "huchu_fixed_schedule_adjusted",
+      "actor": "huchu",
+      "display_name": "후추",
+      "action": "fixed_schedule_adjusted",
+      "action_label": "고정비 일정 조정",
+      "keyframes": [
+        "01_keyframes_master/huchu/fixed_schedule_adjusted/huchu_fixed_schedule_adjusted_key_01_v01.png",
+        "01_keyframes_master/huchu/fixed_schedule_adjusted/huchu_fixed_schedule_adjusted_key_02_v01.png",
+        "01_keyframes_master/huchu/fixed_schedule_adjusted/huchu_fixed_schedule_adjusted_key_03_v01.png",
+        "01_keyframes_master/huchu/fixed_schedule_adjusted/huchu_fixed_schedule_adjusted_key_04_v01.png"
+      ],
+      "playback_frames": [
+        "03_animation_frames/huchu/fixed_schedule_adjusted/huchu_fixed_schedule_adjusted_frame_01_v01.png",
+        "03_animation_frames/huchu/fixed_schedule_adjusted/huchu_fixed_schedule_adjusted_frame_02_v01.png",
+        "03_animation_frames/huchu/fixed_schedule_adjusted/huchu_fixed_schedule_adjusted_frame_03_v01.png",
+        "03_animation_frames/huchu/fixed_schedule_adjusted/huchu_fixed_schedule_adjusted_frame_04_v01.png",
+        "03_animation_frames/huchu/fixed_schedule_adjusted/huchu_fixed_schedule_adjusted_frame_05_v01.png",
+        "03_animation_frames/huchu/fixed_schedule_adjusted/huchu_fixed_schedule_adjusted_frame_06_v01.png"
+      ],
+      "frame_order": [
+        0,
+        1,
+        2,
+        3,
+        2,
+        1
+      ],
+      "durations_ms": [
+        150,
+        170,
+        210,
+        300,
+        210,
+        170
+      ],
+      "total_duration_ms": 1210,
+      "loop": true,
+      "anchor": {
+        "x": 0.5,
+        "y": 0.94
+      },
+      "webp_1024": "04_animated_webp/master/huchu_fixed_schedule_adjusted_1024_v01.webp",
+      "webp_512": "04_animated_webp/app_512/huchu_fixed_schedule_adjusted_512_v01.webp",
+      "apng_1024": "05_apng/master/huchu_fixed_schedule_adjusted_1024_v01.png",
+      "apng_512": "05_apng/app_512/huchu_fixed_schedule_adjusted_512_v01.png"
+    },
+    {
+      "id": "mayo_fixed_schedule_adjusted",
+      "actor": "mayo",
+      "display_name": "마요",
+      "action": "fixed_schedule_adjusted",
+      "action_label": "고정비 일정 조정",
+      "keyframes": [
+        "01_keyframes_master/mayo/fixed_schedule_adjusted/mayo_fixed_schedule_adjusted_key_01_v01.png",
+        "01_keyframes_master/mayo/fixed_schedule_adjusted/mayo_fixed_schedule_adjusted_key_02_v01.png",
+        "01_keyframes_master/mayo/fixed_schedule_adjusted/mayo_fixed_schedule_adjusted_key_03_v01.png",
+        "01_keyframes_master/mayo/fixed_schedule_adjusted/mayo_fixed_schedule_adjusted_key_04_v01.png"
+      ],
+      "playback_frames": [
+        "03_animation_frames/mayo/fixed_schedule_adjusted/mayo_fixed_schedule_adjusted_frame_01_v01.png",
+        "03_animation_frames/mayo/fixed_schedule_adjusted/mayo_fixed_schedule_adjusted_frame_02_v01.png",
+        "03_animation_frames/mayo/fixed_schedule_adjusted/mayo_fixed_schedule_adjusted_frame_03_v01.png",
+        "03_animation_frames/mayo/fixed_schedule_adjusted/mayo_fixed_schedule_adjusted_frame_04_v01.png",
+        "03_animation_frames/mayo/fixed_schedule_adjusted/mayo_fixed_schedule_adjusted_frame_05_v01.png",
+        "03_animation_frames/mayo/fixed_schedule_adjusted/mayo_fixed_schedule_adjusted_frame_06_v01.png"
+      ],
+      "frame_order": [
+        0,
+        1,
+        2,
+        3,
+        2,
+        1
+      ],
+      "durations_ms": [
+        150,
+        170,
+        210,
+        300,
+        210,
+        170
+      ],
+      "total_duration_ms": 1210,
+      "loop": true,
+      "anchor": {
+        "x": 0.5,
+        "y": 0.94
+      },
+      "webp_1024": "04_animated_webp/master/mayo_fixed_schedule_adjusted_1024_v01.webp",
+      "webp_512": "04_animated_webp/app_512/mayo_fixed_schedule_adjusted_512_v01.webp",
+      "apng_1024": "05_apng/master/mayo_fixed_schedule_adjusted_1024_v01.png",
+      "apng_512": "05_apng/app_512/mayo_fixed_schedule_adjusted_512_v01.png"
+    },
+    {
+      "id": "jjajang_fixed_schedule_adjusted",
+      "actor": "jjajang",
+      "display_name": "짜장",
+      "action": "fixed_schedule_adjusted",
+      "action_label": "고정비 일정 조정",
+      "keyframes": [
+        "01_keyframes_master/jjajang/fixed_schedule_adjusted/jjajang_fixed_schedule_adjusted_key_01_v01.png",
+        "01_keyframes_master/jjajang/fixed_schedule_adjusted/jjajang_fixed_schedule_adjusted_key_02_v01.png",
+        "01_keyframes_master/jjajang/fixed_schedule_adjusted/jjajang_fixed_schedule_adjusted_key_03_v01.png",
+        "01_keyframes_master/jjajang/fixed_schedule_adjusted/jjajang_fixed_schedule_adjusted_key_04_v01.png"
+      ],
+      "playback_frames": [
+        "03_animation_frames/jjajang/fixed_schedule_adjusted/jjajang_fixed_schedule_adjusted_frame_01_v01.png",
+        "03_animation_frames/jjajang/fixed_schedule_adjusted/jjajang_fixed_schedule_adjusted_frame_02_v01.png",
+        "03_animation_frames/jjajang/fixed_schedule_adjusted/jjajang_fixed_schedule_adjusted_frame_03_v01.png",
+        "03_animation_frames/jjajang/fixed_schedule_adjusted/jjajang_fixed_schedule_adjusted_frame_04_v01.png",
+        "03_animation_frames/jjajang/fixed_schedule_adjusted/jjajang_fixed_schedule_adjusted_frame_05_v01.png",
+        "03_animation_frames/jjajang/fixed_schedule_adjusted/jjajang_fixed_schedule_adjusted_frame_06_v01.png"
+      ],
+      "frame_order": [
+        0,
+        1,
+        2,
+        3,
+        2,
+        1
+      ],
+      "durations_ms": [
+        150,
+        170,
+        210,
+        300,
+        210,
+        170
+      ],
+      "total_duration_ms": 1210,
+      "loop": true,
+      "anchor": {
+        "x": 0.5,
+        "y": 0.94
+      },
+      "webp_1024": "04_animated_webp/master/jjajang_fixed_schedule_adjusted_1024_v01.webp",
+      "webp_512": "04_animated_webp/app_512/jjajang_fixed_schedule_adjusted_512_v01.webp",
+      "apng_1024": "05_apng/master/jjajang_fixed_schedule_adjusted_1024_v01.png",
+      "apng_512": "05_apng/app_512/jjajang_fixed_schedule_adjusted_512_v01.png"
+    },
+    {
+      "id": "huchu_investment_trade_logged",
+      "actor": "huchu",
+      "display_name": "후추",
+      "action": "investment_trade_logged",
+      "action_label": "투자 거래 기록",
+      "keyframes": [
+        "01_keyframes_master/huchu/investment_trade_logged/huchu_investment_trade_logged_key_01_v01.png",
+        "01_keyframes_master/huchu/investment_trade_logged/huchu_investment_trade_logged_key_02_v01.png",
+        "01_keyframes_master/huchu/investment_trade_logged/huchu_investment_trade_logged_key_03_v01.png",
+        "01_keyframes_master/huchu/investment_trade_logged/huchu_investment_trade_logged_key_04_v01.png"
+      ],
+      "playback_frames": [
+        "03_animation_frames/huchu/investment_trade_logged/huchu_investment_trade_logged_frame_01_v01.png",
+        "03_animation_frames/huchu/investment_trade_logged/huchu_investment_trade_logged_frame_02_v01.png",
+        "03_animation_frames/huchu/investment_trade_logged/huchu_investment_trade_logged_frame_03_v01.png",
+        "03_animation_frames/huchu/investment_trade_logged/huchu_investment_trade_logged_frame_04_v01.png",
+        "03_animation_frames/huchu/investment_trade_logged/huchu_investment_trade_logged_frame_05_v01.png",
+        "03_animation_frames/huchu/investment_trade_logged/huchu_investment_trade_logged_frame_06_v01.png"
+      ],
+      "frame_order": [
+        0,
+        1,
+        2,
+        3,
+        2,
+        1
+      ],
+      "durations_ms": [
+        150,
+        170,
+        210,
+        300,
+        210,
+        170
+      ],
+      "total_duration_ms": 1210,
+      "loop": true,
+      "anchor": {
+        "x": 0.5,
+        "y": 0.94
+      },
+      "webp_1024": "04_animated_webp/master/huchu_investment_trade_logged_1024_v01.webp",
+      "webp_512": "04_animated_webp/app_512/huchu_investment_trade_logged_512_v01.webp",
+      "apng_1024": "05_apng/master/huchu_investment_trade_logged_1024_v01.png",
+      "apng_512": "05_apng/app_512/huchu_investment_trade_logged_512_v01.png"
+    },
+    {
+      "id": "mayo_investment_trade_logged",
+      "actor": "mayo",
+      "display_name": "마요",
+      "action": "investment_trade_logged",
+      "action_label": "투자 거래 기록",
+      "keyframes": [
+        "01_keyframes_master/mayo/investment_trade_logged/mayo_investment_trade_logged_key_01_v01.png",
+        "01_keyframes_master/mayo/investment_trade_logged/mayo_investment_trade_logged_key_02_v01.png",
+        "01_keyframes_master/mayo/investment_trade_logged/mayo_investment_trade_logged_key_03_v01.png",
+        "01_keyframes_master/mayo/investment_trade_logged/mayo_investment_trade_logged_key_04_v01.png"
+      ],
+      "playback_frames": [
+        "03_animation_frames/mayo/investment_trade_logged/mayo_investment_trade_logged_frame_01_v01.png",
+        "03_animation_frames/mayo/investment_trade_logged/mayo_investment_trade_logged_frame_02_v01.png",
+        "03_animation_frames/mayo/investment_trade_logged/mayo_investment_trade_logged_frame_03_v01.png",
+        "03_animation_frames/mayo/investment_trade_logged/mayo_investment_trade_logged_frame_04_v01.png",
+        "03_animation_frames/mayo/investment_trade_logged/mayo_investment_trade_logged_frame_05_v01.png",
+        "03_animation_frames/mayo/investment_trade_logged/mayo_investment_trade_logged_frame_06_v01.png"
+      ],
+      "frame_order": [
+        0,
+        1,
+        2,
+        3,
+        2,
+        1
+      ],
+      "durations_ms": [
+        150,
+        170,
+        210,
+        300,
+        210,
+        170
+      ],
+      "total_duration_ms": 1210,
+      "loop": true,
+      "anchor": {
+        "x": 0.5,
+        "y": 0.94
+      },
+      "webp_1024": "04_animated_webp/master/mayo_investment_trade_logged_1024_v01.webp",
+      "webp_512": "04_animated_webp/app_512/mayo_investment_trade_logged_512_v01.webp",
+      "apng_1024": "05_apng/master/mayo_investment_trade_logged_1024_v01.png",
+      "apng_512": "05_apng/app_512/mayo_investment_trade_logged_512_v01.png"
+    },
+    {
+      "id": "jjajang_investment_trade_logged",
+      "actor": "jjajang",
+      "display_name": "짜장",
+      "action": "investment_trade_logged",
+      "action_label": "투자 거래 기록",
+      "keyframes": [
+        "01_keyframes_master/jjajang/investment_trade_logged/jjajang_investment_trade_logged_key_01_v01.png",
+        "01_keyframes_master/jjajang/investment_trade_logged/jjajang_investment_trade_logged_key_02_v01.png",
+        "01_keyframes_master/jjajang/investment_trade_logged/jjajang_investment_trade_logged_key_03_v01.png",
+        "01_keyframes_master/jjajang/investment_trade_logged/jjajang_investment_trade_logged_key_04_v01.png"
+      ],
+      "playback_frames": [
+        "03_animation_frames/jjajang/investment_trade_logged/jjajang_investment_trade_logged_frame_01_v01.png",
+        "03_animation_frames/jjajang/investment_trade_logged/jjajang_investment_trade_logged_frame_02_v01.png",
+        "03_animation_frames/jjajang/investment_trade_logged/jjajang_investment_trade_logged_frame_03_v01.png",
+        "03_animation_frames/jjajang/investment_trade_logged/jjajang_investment_trade_logged_frame_04_v01.png",
+        "03_animation_frames/jjajang/investment_trade_logged/jjajang_investment_trade_logged_frame_05_v01.png",
+        "03_animation_frames/jjajang/investment_trade_logged/jjajang_investment_trade_logged_frame_06_v01.png"
+      ],
+      "frame_order": [
+        0,
+        1,
+        2,
+        3,
+        2,
+        1
+      ],
+      "durations_ms": [
+        150,
+        170,
+        210,
+        300,
+        210,
+        170
+      ],
+      "total_duration_ms": 1210,
+      "loop": true,
+      "anchor": {
+        "x": 0.5,
+        "y": 0.94
+      },
+      "webp_1024": "04_animated_webp/master/jjajang_investment_trade_logged_1024_v01.webp",
+      "webp_512": "04_animated_webp/app_512/jjajang_investment_trade_logged_512_v01.webp",
+      "apng_1024": "05_apng/master/jjajang_investment_trade_logged_1024_v01.png",
+      "apng_512": "05_apng/app_512/jjajang_investment_trade_logged_512_v01.png"
+    },
+    {
+      "id": "group_group_fixed_plan",
+      "actor": "group",
+      "display_name": "세 마리",
+      "action": "group_fixed_plan",
+      "action_label": "함께 고정비 계획",
+      "keyframes": [
+        "01_keyframes_master/group/group_fixed_plan/group_group_fixed_plan_key_01_v01.png",
+        "01_keyframes_master/group/group_fixed_plan/group_group_fixed_plan_key_02_v01.png",
+        "01_keyframes_master/group/group_fixed_plan/group_group_fixed_plan_key_03_v01.png",
+        "01_keyframes_master/group/group_fixed_plan/group_group_fixed_plan_key_04_v01.png"
+      ],
+      "playback_frames": [
+        "03_animation_frames/group/group_fixed_plan/group_group_fixed_plan_frame_01_v01.png",
+        "03_animation_frames/group/group_fixed_plan/group_group_fixed_plan_frame_02_v01.png",
+        "03_animation_frames/group/group_fixed_plan/group_group_fixed_plan_frame_03_v01.png",
+        "03_animation_frames/group/group_fixed_plan/group_group_fixed_plan_frame_04_v01.png",
+        "03_animation_frames/group/group_fixed_plan/group_group_fixed_plan_frame_05_v01.png",
+        "03_animation_frames/group/group_fixed_plan/group_group_fixed_plan_frame_06_v01.png"
+      ],
+      "frame_order": [
+        0,
+        1,
+        2,
+        3,
+        2,
+        1
+      ],
+      "durations_ms": [
+        150,
+        170,
+        210,
+        300,
+        210,
+        170
+      ],
+      "total_duration_ms": 1210,
+      "loop": true,
+      "anchor": {
+        "x": 0.5,
+        "y": 0.94
+      },
+      "webp_1024": "04_animated_webp/master/group_group_fixed_plan_1024_v01.webp",
+      "webp_512": "04_animated_webp/app_512/group_group_fixed_plan_512_v01.webp",
+      "apng_1024": "05_apng/master/group_group_fixed_plan_1024_v01.png",
+      "apng_512": "05_apng/app_512/group_group_fixed_plan_512_v01.png"
+    },
+    {
+      "id": "group_group_goal_map",
+      "actor": "group",
+      "display_name": "세 마리",
+      "action": "group_goal_map",
+      "action_label": "함께 목표 지도",
+      "keyframes": [
+        "01_keyframes_master/group/group_goal_map/group_group_goal_map_key_01_v01.png",
+        "01_keyframes_master/group/group_goal_map/group_group_goal_map_key_02_v01.png",
+        "01_keyframes_master/group/group_goal_map/group_group_goal_map_key_03_v01.png",
+        "01_keyframes_master/group/group_goal_map/group_group_goal_map_key_04_v01.png"
+      ],
+      "playback_frames": [
+        "03_animation_frames/group/group_goal_map/group_group_goal_map_frame_01_v01.png",
+        "03_animation_frames/group/group_goal_map/group_group_goal_map_frame_02_v01.png",
+        "03_animation_frames/group/group_goal_map/group_group_goal_map_frame_03_v01.png",
+        "03_animation_frames/group/group_goal_map/group_group_goal_map_frame_04_v01.png",
+        "03_animation_frames/group/group_goal_map/group_group_goal_map_frame_05_v01.png",
+        "03_animation_frames/group/group_goal_map/group_group_goal_map_frame_06_v01.png"
+      ],
+      "frame_order": [
+        0,
+        1,
+        2,
+        3,
+        2,
+        1
+      ],
+      "durations_ms": [
+        150,
+        170,
+        210,
+        300,
+        210,
+        170
+      ],
+      "total_duration_ms": 1210,
+      "loop": true,
+      "anchor": {
+        "x": 0.5,
+        "y": 0.94
+      },
+      "webp_1024": "04_animated_webp/master/group_group_goal_map_1024_v01.webp",
+      "webp_512": "04_animated_webp/app_512/group_group_goal_map_512_v01.webp",
+      "apng_1024": "05_apng/master/group_group_goal_map_1024_v01.png",
+      "apng_512": "05_apng/app_512/group_group_goal_map_512_v01.png"
+    }
+  ]
+}

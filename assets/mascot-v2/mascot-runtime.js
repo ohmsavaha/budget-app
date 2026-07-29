@@ -4,6 +4,14 @@ const REDUCED_MOTION = window.matchMedia("(prefers-reduced-motion: reduce)");
 const ENABLED_KEY = "mascot_v2_enabled";
 
 const PHASE_ACTIONS = Object.freeze({
+  phase2k: new Set([
+    "fixed_plan_saved", "fixed_plan_updated", "fixed_archived",
+    "fixed_reactivated", "shared_fixed_saved", "expense_excluded",
+    "transaction_corrected", "networth_goal", "investment_note",
+    "market_refresh", "portfolio_repaired", "classification_rule_saved",
+    "fixed_schedule_adjusted", "investment_trade_logged",
+    "group_fixed_plan", "group_goal_map",
+  ]),
   phase2i: new Set([
     "shopping_item_add", "purchase_complete", "repurchase_pick",
     "product_register", "price_record", "price_compare",
@@ -72,6 +80,7 @@ const AMBIENT_BY_TAB = Object.freeze({
     { character: "huchu", action: "explore", message: "후추가 자산 변화를 차근차근 탐색해요." },
     { character: "jjajang", action: "head_tilt", message: "짜장이 자산 흐름을 유심히 바라봐요." },
     { character: "huchu", action: "account_balance_check", message: "후추가 계좌 잔액을 하나씩 대조해요." },
+    { character: "group", action: "group_goal_map", message: "세 마리가 자산 목표로 가는 길을 함께 정리해요." },
   ],
   calendar: [
     { character: "mayo", action: "focus_record", message: "마요가 날짜별 기록을 하나씩 정리해요." },
@@ -82,6 +91,7 @@ const AMBIENT_BY_TAB = Object.freeze({
     { character: "jjajang", action: "encourage", message: "짜장이 이번 달 고정비 관리도 응원해요." },
     { character: "mayo", action: "fixed_due_check", message: "마요가 다가오는 고정비 예정일을 살펴봐요." },
     { character: "huchu", action: "recurring_found", message: "후추가 반복되는 결제 기록을 확인해요." },
+    { character: "group", action: "group_fixed_plan", message: "세 마리가 반복되는 고정비 계획을 함께 맞춰봐요." },
   ],
   invest: [
     { character: "huchu", action: "explore", message: "후추가 투자 흐름을 성급하지 않게 살펴봐요." },
@@ -114,6 +124,22 @@ const IDLE_BY_TAB = Object.freeze({
 });
 
 const PREFERRED_CHARACTER = Object.freeze({
+  fixed_plan_saved: "huchu",
+  fixed_plan_updated: "mayo",
+  fixed_archived: "huchu",
+  fixed_reactivated: "jjajang",
+  shared_fixed_saved: "mayo",
+  expense_excluded: "huchu",
+  transaction_corrected: "mayo",
+  networth_goal: "jjajang",
+  investment_note: "mayo",
+  market_refresh: "huchu",
+  portfolio_repaired: "jjajang",
+  classification_rule_saved: "huchu",
+  fixed_schedule_adjusted: "mayo",
+  investment_trade_logged: "jjajang",
+  group_fixed_plan: "group",
+  group_goal_map: "group",
   shopping_item_add: "huchu",
   purchase_complete: "jjajang",
   repurchase_pick: "mayo",
@@ -217,6 +243,22 @@ const PREFERRED_CHARACTER = Object.freeze({
 });
 
 const ACTION_COPY = Object.freeze({
+  fixed_plan_saved: ["고정비 계획 저장", "새 고정비의 금액과 납부일을 계획에 넣었어요.", "good"],
+  fixed_plan_updated: ["고정비 계획 수정", "바뀐 금액과 결제 정보를 최신 상태로 맞췄어요.", "good"],
+  fixed_archived: ["고정비 보관", "지금은 쓰지 않는 고정비를 나중에 다시 찾을 수 있게 보관했어요.", "neutral"],
+  fixed_reactivated: ["고정비 다시 활성화", "보관했던 고정비를 이번 달 계획에 다시 넣었어요.", "good"],
+  shared_fixed_saved: ["공용 고정비 저장", "함께 부담할 고정비와 결제 방법을 저장했어요.", "good"],
+  expense_excluded: ["소비 합계에서 제외", "이체나 충전처럼 실제 소비가 아닌 기록을 합계에서 뺐어요.", "neutral"],
+  transaction_corrected: ["거래 수정 완료", "날짜·금액·계정·결제수단을 바뀐 내용으로 맞췄어요.", "good"],
+  networth_goal: ["순자산 목표 설정", "현재 자산에서 목표까지 갈 기준점을 세웠어요.", "good"],
+  investment_note: ["투자 판단 기록", "매수·매도 이유와 생각을 나중에 복기할 수 있게 남겼어요.", "neutral"],
+  market_refresh: ["시세 새로고침 완료", "현재 환율과 시세로 투자 평가액을 다시 맞췄어요.", "good"],
+  portfolio_repaired: ["포트폴리오 값 교정", "비정상 평가액을 현재가와 환율 기준으로 바로잡았어요.", "good"],
+  classification_rule_saved: ["분류 규칙 저장", "같은 사용처를 다음부터 더 정확히 자동 분류할 수 있어요.", "good"],
+  fixed_schedule_adjusted: ["고정비 일정 조정", "납부 주기나 공용 부담 비율을 새 계획에 맞췄어요.", "good"],
+  investment_trade_logged: ["투자 거래 기록", "보유 수량 변화를 매수·매도 일지로 자동 기록했어요.", "neutral"],
+  group_fixed_plan: ["함께 고정비 계획", "세 마리가 공용 고정비와 반복 일정을 함께 확인해요.", "neutral"],
+  group_goal_map: ["함께 목표 지도", "세 마리가 여러 자산 목표로 가는 길을 함께 정리해요.", "neutral"],
   shopping_item_add: ["장바구니에 담았어요", "살 품목과 예상 금액을 장보기 계획에 추가했어요.", "good"],
   purchase_complete: ["구매 완료", "실제 구매 금액과 구입처를 장바구니 기록에 남겼어요.", "good"],
   repurchase_pick: ["재구매 품목 저장", "다시 사고 싶은 품목을 가성비 픽으로 표시했어요.", "good"],
@@ -313,6 +355,22 @@ const ACTION_COPY = Object.freeze({
 });
 
 const PRIORITY = Object.freeze({
+  fixed_plan_saved: 4,
+  fixed_plan_updated: 4,
+  fixed_archived: 3,
+  fixed_reactivated: 4,
+  shared_fixed_saved: 4,
+  expense_excluded: 3,
+  transaction_corrected: 3,
+  networth_goal: 4,
+  investment_note: 3,
+  market_refresh: 4,
+  portfolio_repaired: 5,
+  classification_rule_saved: 4,
+  fixed_schedule_adjusted: 3,
+  investment_trade_logged: 4,
+  group_fixed_plan: 3,
+  group_goal_map: 3,
   purchase_complete: 4,
   shared_plan_saved: 4,
   split_created: 4,
@@ -381,7 +439,7 @@ function phaseFor(action) {
 }
 
 function animatedName(phase, character, action) {
-  const suffix = ["phase2a", "phase2b", "phase2c", "phase2f", "phase2g", "phase2h", "phase2i"].includes(phase) ? "_512_v01.webp" : "_v01.webp";
+  const suffix = ["phase2a", "phase2b", "phase2c", "phase2f", "phase2g", "phase2h", "phase2i", "phase2k"].includes(phase) ? "_512_v01.webp" : "_v01.webp";
   return `${character}_${action}${suffix}`;
 }
 

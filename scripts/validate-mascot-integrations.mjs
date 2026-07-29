@@ -37,6 +37,27 @@ const requiredAppEvents = [
   "shared_plan_saved",
   "split_created",
   "group_shopping_plan",
+  "budget_set",
+  "lowest_price",
+  "emergency_fund",
+  "debt_payoff",
+  "joint_settlement",
+  "fixed_plan_saved",
+  "fixed_plan_updated",
+  "fixed_archived",
+  "fixed_reactivated",
+  "shared_fixed_saved",
+  "expense_excluded",
+  "transaction_corrected",
+  "networth_goal",
+  "investment_note",
+  "market_refresh",
+  "portfolio_repaired",
+  "classification_rule_saved",
+  "fixed_schedule_adjusted",
+  "investment_trade_logged",
+  "group_fixed_plan",
+  "group_goal_map",
 ];
 const requiredRuntimeActions = [
   ...requiredAppEvents,
@@ -55,10 +76,25 @@ for (const action of requiredRuntimeActions) {
     failures.push(`런타임 동작 누락: ${action}`);
   }
 }
-if (!app.includes("나의 가계부 · v133")) failures.push("앱 버전 v133 표기 누락");
-if (!worker.includes('const CACHE = "budget-v133"')) failures.push("서비스 워커 v133 캐시 누락");
+const sharedTransactionSheet = app.slice(app.indexOf("function showAddDeposit()"), app.indexOf("function showDepositGoal()"));
+if (sharedTransactionSheet.includes('mascotEvent("shared_fixed_saved"')) failures.push("일반 공용 입출금에 공용 고정비 동작이 섞여 있어요");
+if (sharedTransactionSheet.includes('mascotEvent("group_fixed_plan"')) failures.push("일반 공용 입출금에 고정비 그룹 동작이 섞여 있어요");
+const fixedAddSheet = app.slice(app.indexOf("function showAddFixed("), app.indexOf("function showEditFixed("));
+if (!fixedAddSheet.includes('selAcc==="공용"')) failures.push("공용 고정비 신규 저장의 전용 분기 누락");
+const settlementHelper = app.slice(app.indexOf("function buildRecent()"), app.indexOf("function showSearch("));
+if (!settlementHelper.includes("splitError") || !settlementHelper.includes("transactionError")) failures.push("정산 도우미 실패 시 성공 동작 차단 누락");
+const monthlyBudgetEditor = app.slice(app.indexOf("const bdBtn="), app.indexOf("const card=", app.indexOf("const bdBtn=")));
+if (!monthlyBudgetEditor.includes("nextBudget") || !monthlyBudgetEditor.includes('mascotEvent("budget_set"')) failures.push("월 총예산 저장 성공 동작 누락");
+if (monthlyBudgetEditor.indexOf("S.budget=nextBudget") < monthlyBudgetEditor.indexOf("if(error)")) failures.push("월 총예산 저장 실패 시 화면 값 변경 차단 누락");
+const sharedDepositCorrection = app.slice(app.indexOf("// ③-B"), app.indexOf("// ── 생활비 입금 섹션"));
+if (!sharedDepositCorrection.includes('mascotEvent("shared_deposit"')) failures.push("이체→공용입금 교정 성공 동작 누락");
+const directHoldingAdd = app.slice(app.indexOf("const addBtn=h(\"button\"", app.indexOf("function showHoldings")), app.indexOf("const fetchBtn=", app.indexOf("function showHoldings")));
+if (!directHoldingAdd.includes("saveHoldings(holdings)") || !directHoldingAdd.includes('mascotEvent("holding_add"')) failures.push("직접 투자 종목 추가 성공 동작 누락");
+if (!app.includes("나의 가계부 · v142")) failures.push("앱 버전 v142 표기 누락");
+if (!worker.includes('const CACHE = "budget-v142"')) failures.push("서비스 워커 v142 캐시 누락");
 if (!runtime.includes('"phase2h"')) failures.push("Phase 2H 애니메이션 파일명 규칙 누락");
 if (!runtime.includes('"phase2i"')) failures.push("Phase 2I 애니메이션 파일명 규칙 누락");
+if (!runtime.includes('"phase2k"')) failures.push("Phase 2K 애니메이션 파일명 규칙 누락");
 
 if (failures.length) {
   console.error(failures.join("\n"));
@@ -68,6 +104,6 @@ if (failures.length) {
     status: "passed",
     appEvents: requiredAppEvents.length,
     runtimeActions: requiredRuntimeActions.length,
-    version: "v133",
+    version: "v142",
   }));
 }
