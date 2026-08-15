@@ -90,8 +90,16 @@ const sharedDepositCorrection = app.slice(app.indexOf("// ③-B"), app.indexOf("
 if (!sharedDepositCorrection.includes('mascotEvent("shared_deposit"')) failures.push("이체→공용입금 교정 성공 동작 누락");
 const directHoldingAdd = app.slice(app.indexOf("const addBtn=h(\"button\"", app.indexOf("function showHoldings")), app.indexOf("const fetchBtn=", app.indexOf("function showHoldings")));
 if (!directHoldingAdd.includes("saveHoldings(holdings)") || !directHoldingAdd.includes('mascotEvent("holding_add"')) failures.push("직접 투자 종목 추가 성공 동작 누락");
-if (!app.includes("나의 가계부 · v143")) failures.push("앱 버전 v143 표기 누락");
-if (!worker.includes('const CACHE = "budget-v143"')) failures.push("서비스 워커 v143 캐시 누락");
+const yearlyView = app.slice(app.indexOf("function buildYearly()"), app.indexOf("// ── 거래 검색 ──"));
+for (const className of ["year-dashboard", "year-hero", "year-cashflow-card", "year-savings-card", "year-quarter-card", "year-mode-chart-card", "year-mode-card", "year-calendar-card", "year-monthly-card"]) {
+  if (!yearlyView.includes(className)) failures.push(`연간 화면 계층 클래스 누락: ${className}`);
+}
+const dbView = app.slice(app.indexOf("function buildDbTab()"), app.indexOf("function showBillDateSort()"));
+for (const className of ["db-dashboard", "db-hero", "db-summary-grid", "db-main-card", "db-toolbar", "db-category-rail", "db-product-list", "db-product-row", "db-price-status"]) {
+  if (!dbView.includes(className)) failures.push(`품목 DB 화면 계층 클래스 누락: ${className}`);
+}
+if (!app.includes("나의 가계부 · v145")) failures.push("앱 버전 v145 표기 누락");
+if (!worker.includes('const CACHE = "budget-v145"')) failures.push("서비스 워커 v145 캐시 누락");
 if (!runtime.includes('"phase2h"')) failures.push("Phase 2H 애니메이션 파일명 규칙 누락");
 if (!runtime.includes('"phase2i"')) failures.push("Phase 2I 애니메이션 파일명 규칙 누락");
 if (!runtime.includes('"phase2k"')) failures.push("Phase 2K 애니메이션 파일명 규칙 누락");
@@ -104,6 +112,6 @@ if (failures.length) {
     status: "passed",
     appEvents: requiredAppEvents.length,
     runtimeActions: requiredRuntimeActions.length,
-    version: "v143",
+    version: "v145",
   }));
 }

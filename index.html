@@ -292,6 +292,90 @@ button:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-vis
   .calendar-cell{min-height:61px!important}
   .calendar-cell .num{font-size:9.5px!important}
 }
+
+/* ── v144 연간 · 연간 판단 → 월별 비교 → 상세 순서 정리 ── */
+.year-dashboard{gap:14px!important}
+.year-hero{border-color:#dce8df!important;background:linear-gradient(145deg,#fff 0%,#f4faf6 58%,#eef5ef 100%)!important;box-shadow:0 11px 27px rgba(30,110,82,.075)!important}
+.year-hero::before{content:"";position:absolute;left:0;top:0;width:100%;height:4px;background:linear-gradient(90deg,#1e6e52,#77ae93 62%,rgba(119,174,147,0))}
+.year-highlight-chips{gap:7px!important}
+.year-highlight-chip{border:1px solid rgba(255,255,255,.72);box-shadow:0 2px 7px rgba(58,48,35,.025)}
+.year-cashflow-card,.year-savings-card,.year-quarter-card,.year-mode-chart-card,.year-heatmap-card,.year-calendar-card,.year-category-card{border-color:#e6e2da!important}
+.year-cashflow-grid,.year-quarter-grid,.year-forecast-grid{gap:9px!important}
+.year-cashflow-tile{border:1px solid #e3ebe5;background:#f8fbf9!important}
+.year-cashflow-tile:nth-child(2){background:#fcfbf8!important;border-color:#ece7de}
+.year-cashflow-tile:nth-child(3){background:#f7f9fd!important;border-color:#e2e7f1}
+.year-cashflow-tile:nth-child(4){background:#fff!important}
+.year-compare-line{padding:9px 11px!important;border:1px solid #ece7de;border-radius:11px;background:#fcfbf8}
+.year-savings-card{background:linear-gradient(145deg,#fff 0%,#f8fcf9 100%)!important}
+.year-savings-track{height:11px!important;background:#e8eee9!important}
+.year-quarter-tile{border:1px solid #ebe6dd!important;background:#fcfbf8!important}
+.year-quarter-tile.is-current{border-color:#cfe3d7!important;background:#f2f9f4!important;box-shadow:0 4px 11px rgba(30,110,82,.045)}
+.year-forecast-card{border-color:#dbe5ea!important;background:linear-gradient(135deg,#f4f8fc,#eef6f1)!important}
+.year-forecast-tile{border:1px solid rgba(255,255,255,.82);background:rgba(255,255,255,.7)!important}
+.year-mode-chart-card{box-shadow:0 7px 18px rgba(58,48,35,.035)}
+.year-bar-chart{padding:9px 8px 4px!important;border:1px solid #eee9e1;border-radius:13px;background:#fcfbf8}
+.year-heatmap-grid{gap:7px!important}
+.year-heatmap-cell,.year-calendar-cell{border:1px solid transparent!important;transition:transform .14s ease,border-color .14s ease,box-shadow .14s ease}
+.year-heatmap-cell:hover,.year-calendar-cell.is-clickable:hover{transform:translateY(-1px);border-color:#e3ddd3!important;box-shadow:0 4px 10px rgba(58,48,35,.055)}
+.year-mode-card{padding:5px!important;border-color:#e7e2da!important;background:#fbfaf7!important}
+.year-mode-rail{gap:5px!important}
+.year-mode-button{min-height:42px;border-color:transparent!important}
+.year-mode-button.is-active{box-shadow:0 4px 10px rgba(40,37,31,.11)}
+.year-calendar-grid{gap:8px!important}
+.year-calendar-cell{min-height:68px!important}
+.year-monthly-card,.year-category-rank,.year-networth-card{border-color:#e6e2da!important}
+.year-month-row{border:1px solid transparent!important;border-radius:11px!important;padding:11px 7px!important}
+.year-month-row:hover{border-color:#e8e2d8!important;background:#fcfbf8!important}
+.year-month-row.is-current{border-color:#d8e7dd!important;background:#f2f9f4!important}
+.year-category-body{padding:9px 10px;border:1px solid #eee9e1;border-radius:14px;background:#fcfbf8}
+.year-category-row{border:1px solid transparent;border-radius:10px;padding:9px 7px!important}
+.year-category-row:hover{border-color:#ece7de;background:#fcfbf8}
+@media (max-width:380px){
+  .year-hero{padding:17px 16px!important}
+  .year-cashflow-tile{padding:10px 8px!important}
+  .year-cashflow-tile .num{font-size:13px!important}
+  .year-quarter-tile{padding:10px 9px!important}
+  .year-mode-chart-card{padding:16px 14px 13px!important}
+  .year-mode-chart-card>.num{font-size:25px!important}
+  .year-calendar-grid{gap:6px!important}
+  .year-calendar-cell{padding:9px 5px!important}
+}
+
+/* ── v145 품목 DB · 가격 판단과 품목 탐색을 분리 ── */
+.db-dashboard{display:flex;flex-direction:column;gap:12px}
+.db-hero{position:relative;overflow:hidden;border:1px solid #dce7e1;background:linear-gradient(145deg,#fff 0%,#f4faf6 62%,#eef5f1 100%);border-radius:18px;padding:18px;box-shadow:0 10px 24px rgba(30,110,82,.07)}
+.db-hero::after{content:"";position:absolute;right:-28px;bottom:-52px;width:150px;height:150px;border:20px solid rgba(30,110,82,.055);border-radius:50%;pointer-events:none}
+.db-hero-title,.db-summary-grid{position:relative;z-index:1}
+.db-summary-grid{gap:8px!important;margin-top:13px}
+.db-summary-tile{border:1px solid #e1ebe5;background:rgba(255,255,255,.72)!important}
+.db-main-card,.db-setup-card{border-color:#e6e2da!important}
+.db-toolbar{padding:5px;border:1px solid #e7e2da;border-radius:14px;background:#fbfaf7}
+.db-search{background:#fff!important;border-color:#e3ddd3!important;min-height:44px}
+.db-add-button{min-height:44px;box-shadow:0 6px 14px rgba(30,110,82,.13)}
+.db-category-rail{display:flex;gap:6px;overflow-x:auto;padding:10px 1px 4px;scrollbar-width:none}
+.db-category-rail::-webkit-scrollbar{display:none}
+.db-category-button{flex:0 0 auto;border:1px solid #e8e2d8!important;background:#fff!important;color:#716b62!important}
+.db-category-button.is-active{border-color:#cfe1d6!important;background:#edf7f0!important;color:#1e6e52!important;box-shadow:0 3px 9px rgba(30,110,82,.055)}
+.db-product-list{display:flex;flex-direction:column;gap:5px;margin-top:10px!important}
+.db-product-row{border:1px solid transparent!important;border-radius:12px!important;padding:11px 8px!important;transition:transform .15s ease,border-color .15s ease,box-shadow .15s ease,background .15s ease}
+.db-product-row:hover{transform:translateY(-1px);border-color:#e7e1d7!important;background:#fcfbf8!important;box-shadow:0 4px 11px rgba(58,48,35,.045)}
+.db-product-icon{border:1px solid #dce9e1;background:#f0f8f3!important}
+.db-product-category{border:1px solid #e8e3da;background:#f4f1eb!important}
+.db-product-price{font-variant-numeric:tabular-nums}
+.db-price-status{display:inline-flex;align-items:center;justify-content:center;margin-top:3px;padding:2px 6px;border-radius:999px;background:#f3f1ec;color:#8c857a!important}
+.db-price-status.is-lowest{background:#edf8f1;color:#1e6e52!important}
+.db-detail-sheet{box-shadow:0 -12px 32px rgba(40,37,31,.12)}
+.db-price-row{border:1px solid transparent!important;border-radius:10px;padding:10px 7px!important}
+.db-price-row:hover{border-color:#ece6dc!important;background:#fcfbf8}
+.db-price-form{padding:12px;border:1px solid #e8e2d9;border-radius:13px;background:#fbfaf7}
+@media (max-width:380px){
+  .db-hero{padding:16px}
+  .db-summary-tile{padding:10px 8px!important}
+  .db-summary-tile .num{font-size:14px!important}
+  .db-toolbar{gap:5px!important}
+  .db-add-button{padding:10px 11px!important}
+  .db-product-row{gap:9px!important;padding:10px 6px!important}
+}
 </style>
 </head>
 <body>
@@ -972,7 +1056,7 @@ function renderDash(){
     h("div",{class:"app-header",style:{display:"flex",alignItems:"center",justifyContent:"space-between",marginBottom:"16px"}},
       h("div",{style:{display:"flex",alignItems:"center",gap:"9px"}},
         h("span",{style:{fontSize:"21px"}},SN[Number(S.curYm.split("-")[1])]||"📒"),
-        h("div",{},h("div",{style:{fontSize:"11.5px",color:C.sub}},"🐾 나의 가계부 · v143"),h("div",{style:{fontSize:"16.5px",fontWeight:"800",letterSpacing:"-.01em",cursor:"pointer",display:"flex",alignItems:"center",gap:"4px"},onclick:()=>showMonthPicker()},yml(S.curYm),h("span",{style:{fontSize:"10px",color:C.faint}},"▾")))
+        h("div",{},h("div",{style:{fontSize:"11.5px",color:C.sub}},"🐾 나의 가계부 · v145"),h("div",{style:{fontSize:"16.5px",fontWeight:"800",letterSpacing:"-.01em",cursor:"pointer",display:"flex",alignItems:"center",gap:"4px"},onclick:()=>showMonthPicker()},yml(S.curYm),h("span",{style:{fontSize:"10px",color:C.faint}},"▾")))
       ),
       h("div",{class:"app-month-nav",style:{display:"flex",alignItems:"center",gap:"4px",background:C.w,border:`1px solid ${C.line}`,borderRadius:"999px",padding:"3px 4px"}},prevBtn,todayBtn,nextBtn)
     ),
@@ -1905,7 +1989,7 @@ function showProductDetail(pid){
   const p=(S.dbProducts||[]).find(x=>x.id===pid);if(!p)return;
   const ov=h("div",{style:{position:"fixed",inset:"0",background:"rgba(40,37,31,.5)",display:"flex",alignItems:"flex-end",justifyContent:"center",zIndex:"84"}});
   ov.onclick=e=>{if(e.target===ov)ov.remove();};
-  const sh=h("div",{style:{width:"100%",maxWidth:"520px",background:C.w,borderRadius:"20px 20px 0 0",maxHeight:"86vh",display:"flex",flexDirection:"column",overflow:"hidden"}});
+  const sh=h("div",{class:"db-detail-sheet",style:{width:"100%",maxWidth:"520px",background:C.w,borderRadius:"20px 20px 0 0",maxHeight:"86vh",display:"flex",flexDirection:"column",overflow:"hidden"}});
   const body=h("div",{style:{flex:"1",overflowY:"auto",padding:"0 20px 24px"}});
   const redraw=()=>{
     const cur=(S.dbProducts||[]).find(x=>x.id===pid);if(!cur){ov.remove();return;}
@@ -1916,7 +2000,7 @@ function showProductDetail(pid){
     body.append(h("div",{style:{fontSize:"12px",fontWeight:"800",color:C.sub,margin:"6px 0 8px"}},`가격 기록 ${recs.length}건${lo?` · 최저 ${W(lo.price)} (${lo.source||""})`:""}`));
     if(!recs.length)body.append(empty("아직 가격 기록이 없어요.\n아래에서 첫 기록을 추가해보세요."));
     recs.forEach(r=>{
-      body.append(h("div",{style:{display:"flex",alignItems:"center",gap:"10px",padding:"10px 2px",borderBottom:`1px solid ${C.line}`}},
+      body.append(h("div",{class:"db-price-row",style:{display:"flex",alignItems:"center",gap:"10px",padding:"10px 2px",borderBottom:`1px solid ${C.line}`}},
         h("div",{style:{flex:"1",minWidth:"0"}},
           h("div",{style:{fontSize:"13.5px",fontWeight:"700"}},(r.source||"기록")+(lo&&r.id===lo.id?" 🏆":"")),
           h("div",{style:{fontSize:"11px",color:C.sub,marginTop:"1px"}},(r.date||"").slice(0,10)+(r.url?" · 🔗":""))),
@@ -1939,7 +2023,7 @@ function showProductDetail(pid){
       const priceAction=previousLowest!=null&&pr<previousLowest?"lowest_price":dbPricesOf(pid).length>=2?"price_compare":"price_record";
       mascotEvent(priceAction,{character:priceAction==="price_record"?"huchu":"jjajang"});
     }},"추가");
-    body.append(h("div",{style:{marginTop:"14px"}},
+    body.append(h("div",{class:"db-price-form",style:{marginTop:"14px"}},
       h("div",{style:{fontSize:"12px",fontWeight:"800",color:C.sub,marginBottom:"7px"}},"➕ 가격 기록 추가"),
       h("div",{style:{display:"flex",gap:"7px"}},srcEl,prEl,addB),
       urlEl));
@@ -1955,45 +2039,76 @@ function showProductDetail(pid){
   ov.append(sh);document.body.append(ov);
 }
 function buildDbTab(){
-  const card=sec("🗃️ 품목 DB","우리집 가격사전");
+  const dashboard=h("div",{class:"db-dashboard"});
+  const card=sec("🗃️ 품목 DB","장보기 전에 가격 확인");card.classList.add("db-main-card");
   const wrap=h("div",{});
   if(S.dbMissing){
+    card.classList.add("db-setup-card");
     wrap.append(
       h("div",{style:{fontSize:"12.5px",color:C.sub,lineHeight:"1.7",marginBottom:"10px"}},"품목 DB를 쓰려면 1분 설정이 필요해요.\n① 아래 버튼으로 SQL 복사 ② Supabase SQL Editor에 붙여넣기 ③ Run ④ 앱 새로고침"),
       h("button",{style:{width:"100%",fontSize:"13px",fontWeight:"800",padding:"11px",borderRadius:"11px",border:"none",background:C.brand,color:"#fff",cursor:"pointer",marginBottom:"7px"},onclick:async()=>{try{await navigator.clipboard.writeText(DB_SQL);toast("📋 SQL 복사됨 — Supabase에 붙여넣고 Run!");}catch{prompt("아래 SQL을 복사하세요",DB_SQL);}}},"📋 설정 SQL 복사"),
       h("button",{style:{width:"100%",fontSize:"12px",fontWeight:"700",padding:"10px",borderRadius:"11px",border:`1px solid ${C.line}`,background:C.w,color:C.sub,cursor:"pointer"},onclick:async()=>{const u="https://supabase.com/dashboard/project/axlxdkybghxcltilsqgj/sql/new";try{await navigator.clipboard.writeText(u);toast("🔗 SQL Editor 주소 복사됨");}catch{prompt("주소",u);}}},"🔗 SQL Editor 주소 복사"));
-    card.append(wrap);return [card];
+    card.append(wrap);dashboard.append(card);return [dashboard];
   }
-  const inpS=h("input",{placeholder:"🔍 품목 검색 (예: 휴지)",style:{flex:"1",border:`1px solid ${C.line}`,borderRadius:"11px",padding:"11px 13px",fontSize:"14px",minWidth:"0"}});
-  const addB=h("button",{style:{flexShrink:"0",fontSize:"13px",fontWeight:"800",padding:"11px 14px",borderRadius:"11px",border:"none",background:C.brand,color:"#fff",cursor:"pointer"},onclick:()=>showProductEdit(null,()=>{drawList();})},"＋ 품목");
-  const listWrap=h("div",{style:{marginTop:"12px"}});
+  const products=S.dbProducts||[],prices=S.dbPrices||[];
+  const tracked=products.filter(p=>dbPricesOf(p.id).length>0).length;
+  const compared=products.filter(p=>dbPricesOf(p.id).length>=2).length;
+  const categories=[...new Set(products.map(p=>(p.category||"").trim()).filter(Boolean))].sort((a,b)=>a.localeCompare(b,"ko"));
+  const stat=(label,value,note)=>h("div",{class:"db-summary-tile",style:{background:"rgba(255,255,255,.72)",borderRadius:"11px",padding:"11px 12px"}},
+    h("div",{style:{fontSize:"10.5px",fontWeight:"700",color:C.sub,marginBottom:"4px"}},label),
+    h("div",{class:"num",style:{fontSize:"17px",fontWeight:"800",color:C.ink}},value),
+    h("div",{style:{fontSize:"9.5px",color:C.faint,marginTop:"2px"}},note));
+  const hero=h("div",{class:"db-hero"},
+    h("div",{class:"db-hero-title"},
+      h("div",{style:{fontSize:"12px",fontWeight:"800",color:C.brand}},"🛒 우리집 가격사전"),
+      h("div",{style:{fontSize:"18px",fontWeight:"800",color:C.ink,marginTop:"5px"}},products.length?`${tracked}개 품목의 가격을 비교 중이에요`:"자주 사는 물건부터 기록해보세요"),
+      h("div",{style:{fontSize:"11.5px",color:C.sub,marginTop:"5px",lineHeight:"1.55"}},"최근 가격과 최저가를 함께 보면 장보기 전에 판단하기 쉬워요.")),
+    h("div",{class:"db-summary-grid",style:{display:"grid",gridTemplateColumns:"repeat(3,1fr)",gap:"8px"}},
+      stat("등록 품목",`${products.length}개`,`${categories.length}개 분류`),
+      stat("가격 기록",`${prices.length}건`,`${tracked}개 추적`),
+      stat("비교 가능",`${compared}개`,"2건 이상")));
+  let activeCat="전체";
+  const reloadDbView=()=>{const ct=document.getElementById("ct");if(ct&&S.tab==="db"){ct.innerHTML="";buildDbTab().forEach(n=>ct.append(n));}};
+  const inpS=h("input",{class:"db-search",placeholder:"🔍 품목·별칭·분류 검색","aria-label":"품목 검색",style:{flex:"1",border:`1px solid ${C.line}`,borderRadius:"11px",padding:"11px 13px",fontSize:"14px",minWidth:"0"}});
+  const addB=h("button",{class:"db-add-button",style:{flexShrink:"0",fontSize:"13px",fontWeight:"800",padding:"11px 14px",borderRadius:"11px",border:"none",background:C.brand,color:"#fff",cursor:"pointer"},onclick:()=>showProductEdit(null,reloadDbView)},"＋ 품목");
+  const catRail=h("div",{class:"db-category-rail","aria-label":"품목 분류 필터"});
+  const listWrap=h("div",{class:"db-product-list",style:{marginTop:"12px"}});
+  const drawCats=()=>{
+    catRail.innerHTML="";
+    ["전체",...categories].forEach(cat=>{const on=activeCat===cat;catRail.append(h("button",{class:`db-category-button${on?" is-active":""}`,style:{fontSize:"11.5px",fontWeight:"700",padding:"7px 11px",borderRadius:"999px",cursor:"pointer"},onclick:()=>{activeCat=cat;drawCats();drawList();}},cat));});
+  };
   const drawList=()=>{
     listWrap.innerHTML="";
     const q=dbNorm(inpS.value);
-    const items=(S.dbProducts||[]).filter(p=>{
+    const items=products.filter(p=>{
+      if(activeCat!=="전체"&&(p.category||"")!==activeCat)return false;
       if(!q)return true;
       return [p.name,p.aliases||"",p.category||""].some(x=>dbNorm(x).includes(q));
     });
-    if(!items.length){listWrap.append(empty(q?"검색 결과가 없어요.":"아직 품목이 없어요.\n'＋ 품목'으로 첫 품목을 등록해보세요!\n(예: 휴지, 세제, 물티슈)"));return;}
+    if(!items.length){listWrap.append(empty(q||activeCat!=="전체"?"조건에 맞는 품목이 없어요.":"아직 품목이 없어요.\n'＋ 품목'으로 첫 품목을 등록해보세요!\n(예: 휴지, 세제, 물티슈)"));return;}
     items.forEach(p=>{
       const lt=dbLatest(p.id),lo=dbLowest(p.id),cnt=dbPricesOf(p.id).length;
-      listWrap.append(h("div",{style:{display:"flex",alignItems:"center",gap:"11px",padding:"12px 2px",borderBottom:`1px solid ${C.line}`,cursor:"pointer",borderRadius:"6px"},
-        onmouseenter:e=>{e.currentTarget.style.background="#F6F4EF";},onmouseleave:e=>{e.currentTarget.style.background="transparent";},
+      const latestPrice=Number(lt?.price)||0,lowestPrice=Number(lo?.price)||0;
+      const isLowest=cnt>0&&latestPrice===lowestPrice;
+      const gapPct=lowestPrice>0&&latestPrice>lowestPrice?Math.round((latestPrice-lowestPrice)/lowestPrice*100):0;
+      const status=cnt===0?"기록 추가 ›":isLowest?"현재 최저가":cnt>=2?`최저가보다 +${gapPct}%`:`${cnt}건 · 최저`;
+      listWrap.append(h("div",{class:"db-product-row",style:{display:"flex",alignItems:"center",gap:"11px",padding:"12px 2px",borderBottom:`1px solid ${C.line}`,cursor:"pointer",borderRadius:"6px"},
         onclick:()=>showProductDetail(p.id)},
-        h("div",{style:{width:"36px",height:"36px",borderRadius:"10px",background:C.soft,display:"flex",alignItems:"center",justifyContent:"center",fontSize:"17px",flexShrink:"0"}},"🗃️"),
+        h("div",{class:"db-product-icon",style:{width:"36px",height:"36px",borderRadius:"10px",background:C.soft,display:"flex",alignItems:"center",justifyContent:"center",fontSize:"17px",flexShrink:"0"}},"🗃️"),
         h("div",{style:{flex:"1",minWidth:"0"}},
-          h("div",{style:{fontSize:"14px",fontWeight:"700",whiteSpace:"nowrap",overflow:"hidden",textOverflow:"ellipsis"}},p.name,p.category?h("span",{style:{fontSize:"10.5px",fontWeight:"700",color:C.sub,background:"#EFEDE7",borderRadius:"5px",padding:"2px 6px",marginLeft:"6px"}},p.category):""),
+          h("div",{style:{fontSize:"14px",fontWeight:"700",whiteSpace:"nowrap",overflow:"hidden",textOverflow:"ellipsis"}},p.name,p.category?h("span",{class:"db-product-category",style:{fontSize:"10.5px",fontWeight:"700",color:C.sub,background:"#EFEDE7",borderRadius:"5px",padding:"2px 6px",marginLeft:"6px"}},p.category):""),
           h("div",{style:{fontSize:"11.5px",color:C.sub,marginTop:"2px"}},lt?`최근 ${lt.source||"기록"} ${W(lt.price)} (${(lt.date||"").slice(5,10)})`:"가격 기록 없음")),
         h("div",{style:{textAlign:"right",flexShrink:"0"}},
-          lo?h("div",{class:"num",style:{fontSize:"14px",fontWeight:"800",color:C.brand}},W(lo.price)):h("div",{style:{fontSize:"12px",color:C.faint}},"—"),
-          h("div",{style:{fontSize:"10px",color:C.faint,marginTop:"1px"}},cnt?`${cnt}건 · 최저`:"기록 추가 ›"))));
+          lo?h("div",{class:"num db-product-price",style:{fontSize:"14px",fontWeight:"800",color:C.brand}},W(lo.price)):h("div",{style:{fontSize:"12px",color:C.faint}},"—"),
+          h("div",{class:`db-price-status${isLowest?" is-lowest":""}`,style:{fontSize:"10px",color:C.faint,marginTop:"1px"}},status))));
     });
   };
   inpS.oninput=drawList;
-  wrap.append(h("div",{style:{display:"flex",gap:"8px"}},inpS,addB),listWrap);
-  drawList();
+  wrap.append(h("div",{class:"db-toolbar",style:{display:"flex",gap:"8px"}},inpS,addB),catRail,listWrap);
+  drawCats();drawList();
   card.append(wrap);
-  return [card];
+  dashboard.append(hero,card);
+  return [dashboard];
 }
 function showBillDateSort(){
   // 이번 달 할부 전체를 3분류: 카드결제일있음 / 카드미지정(플랫폼) / 이미정렬됨
@@ -3133,7 +3248,7 @@ function showCardStatement(pm,opt){
 // ── 연간 막대 차트 ──
 function barChart(data,hl){
   const max=Math.max(...data,1);
-  return h("div",{style:{display:"flex",alignItems:"flex-end",gap:"5px",height:"120px",padding:"4px 0"}},
+  return h("div",{class:"year-bar-chart",style:{display:"flex",alignItems:"flex-end",gap:"5px",height:"120px",padding:"4px 0"}},
     ...data.map((v,i)=>{
       const pct=v>0?Math.max((v/max)*100,4):0;
       const isHL=i===hl,inten=v/max;
@@ -3212,7 +3327,7 @@ function buildYearly(){
     return arr;
   };
 
-  const container=h("div",{style:{display:"flex",flexDirection:"column",gap:"12px"}});
+  const container=h("div",{class:"year-dashboard",style:{display:"flex",flexDirection:"column",gap:"12px"}});
   const draw=()=>{
     container.innerHTML="";
     // 🗓️ 올해 한눈에 (컬러풀 하이라이트)
@@ -3222,13 +3337,13 @@ function buildYearly(){
       let maxS=-1,maxSi=-1,minS=Infinity,minSi=-1,maxI=-1,maxIi=-1;
       for(let i=0;i<12;i++){if(mSpend[i]>maxS){maxS=mSpend[i];maxSi=i;}if(mSpend[i]>0&&i<=curM&&mSpend[i]<minS){minS=mSpend[i];minSi=i;}if(mInc[i]>maxI){maxI=mInc[i];maxIi=i;}}
       const ys0=calcStatsFor(S.yearTxns||[]),yc0=getSharedCfg();const ySh0=Math.round(ys0.cNet*(yc0.ratio||50)/100);const ySp0=ys0.pNet+ySh0;
-      const hchip=(emo,txt,bg,col)=>h("div",{style:{display:"flex",alignItems:"center",gap:"5px",background:bg,borderRadius:"999px",padding:"6px 11px"}},h("span",{style:{fontSize:"13px"}},emo),h("span",{style:{fontSize:"11.5px",fontWeight:"700",color:col}},txt));
-      const chips=h("div",{style:{display:"flex",gap:"7px",flexWrap:"wrap",marginTop:"14px"}});
+      const hchip=(emo,txt,bg,col)=>h("div",{class:"year-highlight-chip",style:{display:"flex",alignItems:"center",gap:"5px",background:bg,borderRadius:"999px",padding:"6px 11px"}},h("span",{style:{fontSize:"13px"}},emo),h("span",{style:{fontSize:"11.5px",fontWeight:"700",color:col}},txt));
+      const chips=h("div",{class:"year-highlight-chips",style:{display:"flex",gap:"7px",flexWrap:"wrap",marginTop:"14px"}});
       if(maxSi>=0&&maxS>0)chips.append(hchip("🔥",`최고 지출 ${maxSi+1}월`,"#FFF1EC",C.over));
       if(minSi>=0&&minS<Infinity)chips.append(hchip("💚",`가장 아낀 ${minSi+1}월`,"#EAF7F0",C.brand));
       if(maxIi>=0&&maxI>0)chips.append(hchip("💰",`최고 수입 ${maxIi+1}월`,"#FEF6E0","#B8860B"));
       const catImg=["🐈","🐈‍⬛"][Math.floor(Math.random()*2)];
-      container.append(h("div",{style:{background:"linear-gradient(135deg,#F5F0E7 0%,#E8F2EC 100%)",border:`1px solid ${C.line}`,borderRadius:"18px",padding:"19px 19px 17px",position:"relative",overflow:"hidden"}},
+      container.append(h("div",{class:"year-hero",style:{background:"linear-gradient(135deg,#F5F0E7 0%,#E8F2EC 100%)",border:`1px solid ${C.line}`,borderRadius:"18px",padding:"19px 19px 17px",position:"relative",overflow:"hidden"}},
         h("div",{style:{fontSize:"13px",fontWeight:"800",color:C.sub}},`🗓️ ${yr}년 한눈에`),
         h("div",{style:{fontSize:"13.5px",lineHeight:"1.75",marginTop:"9px",color:C.ink,maxWidth:"88%"}},ys0.income>0||ySp0>0?`지금까지 ${W(ys0.income)} 벌어서 ${W(ySp0)} 쓰고 ${W(ys0.save)} 모았어요 ${catImg}`:`${yr}년 기록을 쌓아가는 중이에요 ${catImg}`),
         chips,
@@ -3240,14 +3355,14 @@ function buildYearly(){
       const ys=calcStatsFor(S.yearTxns||[]),ycfg=getSharedCfg();
       const yShared=Math.round(ys.cNet*(ycfg.ratio||50)/100);
       const ySpend=ys.pNet+yShared,yNet=ys.income-ySpend-ys.save;
-      const yc=(lbl,v,col)=>h("div",{style:{background:C.soft,borderRadius:"11px",padding:"11px 12px"}},h("div",{style:{fontSize:"10.5px",color:C.sub,marginBottom:"4px"}},lbl),h("div",{class:"num",style:{fontSize:"15px",fontWeight:"800",color:col||C.ink}},v));
-      container.append(h("div",{style:{background:C.w,border:`1px solid ${C.line}`,borderRadius:"16px",padding:"15px"}},
+      const yc=(lbl,v,col)=>h("div",{class:"year-cashflow-tile",style:{background:C.soft,borderRadius:"11px",padding:"11px 12px"}},h("div",{style:{fontSize:"10.5px",color:C.sub,marginBottom:"4px"}},lbl),h("div",{class:"num",style:{fontSize:"15px",fontWeight:"800",color:col||C.ink}},v));
+      container.append(h("div",{class:"year-cashflow-card",style:{background:C.w,border:`1px solid ${C.line}`,borderRadius:"16px",padding:"15px"}},
         h("div",{style:{fontSize:"12.5px",fontWeight:"800",color:C.sub,marginBottom:"10px"}},`📊 ${yr}년 현금 흐름`),
-        h("div",{style:{display:"grid",gridTemplateColumns:"1fr 1fr",gap:"8px"}},
+        h("div",{class:"year-cashflow-grid",style:{display:"grid",gridTemplateColumns:"1fr 1fr",gap:"8px"}},
           yc("총수입",W(ys.income),C.brand),yc("총지출",W(ySpend),C.ink),
           yc("총저축·투자",W(ys.save),C.ink),yc(yNet>=0?"순증가":"순감소",W(Math.abs(yNet)),yNet>=0?C.brand:C.over))));
       // 전년 동기 대비 (비동기 로드)
-      const cmpEl=h("div",{style:{fontSize:"11.5px",color:C.faint,marginTop:"10px",padding:"0 2px",lineHeight:"1.6"}},"작년 같은 기간과 비교 중…");
+      const cmpEl=h("div",{class:"year-compare-line",style:{fontSize:"11.5px",color:C.faint,marginTop:"10px",padding:"0 2px",lineHeight:"1.6"}},"작년 같은 기간과 비교 중…");
       container.append(cmpEl);
       (async()=>{
         try{
@@ -3279,40 +3394,40 @@ function buildYearly(){
       const ySh2=Math.round(Y.cNet*(ycfg2.ratio||50)/100),ySpend2=Y.pNet+ySh2;
       const saveRate=Y.income>0?Math.round(Y.save/Y.income*100):0;
       const gw=Math.min(100,Math.max(0,saveRate)),gcol=saveRate>=20?C.brand:saveRate>=10?C.warn:C.over,gcol2=saveRate>=20?"#37A57E":saveRate>=10?"#E0A93E":"#D9694E";
-      container.append(h("div",{style:{background:C.w,border:`1px solid ${C.line}`,borderRadius:"16px",padding:"16px 18px"}},
+      container.append(h("div",{class:"year-savings-card",style:{background:C.w,border:`1px solid ${C.line}`,borderRadius:"16px",padding:"16px 18px"}},
         h("div",{style:{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:"12px"}},
           h("div",{style:{fontSize:"12.5px",fontWeight:"800",color:C.sub}},`🏦 ${yr}년 저축률`),
           h("div",{class:"num",style:{fontSize:"22px",fontWeight:"800",color:gcol}},`${saveRate}%`)),
-        h("div",{style:{height:"13px",borderRadius:"999px",background:"#F0ECE3",overflow:"hidden"}},
+        h("div",{class:"year-savings-track",style:{height:"13px",borderRadius:"999px",background:"#F0ECE3",overflow:"hidden"}},
           h("div",{style:{width:gw+"%",height:"100%",background:`linear-gradient(90deg,${gcol},${gcol2})`,borderRadius:"999px",transition:"width .5s"}})),
         h("div",{style:{fontSize:"11px",color:C.faint,marginTop:"9px",lineHeight:"1.5"}},
           saveRate>=20?"훌륭해요! 수입의 20% 이상을 모으고 있어요 👍":saveRate>=10?"좋아요. 조금만 더 올려볼까요?":Y.income>0?"저축률을 조금씩 올려보면 좋아요. 자동이체가 도움돼요.":"수입·저축 기록이 쌓이면 저축률이 표시돼요.")));
       const qSpend=[0,0,0,0],qInc=[0,0,0,0];
       for(const t of (S.yearTxns||[])){const mm=parseInt(t.date.slice(5,7))-1;if(mm<0||mm>11)continue;if(isInternalTransfer(t))continue;const q=Math.floor(mm/3),k=kindOf(t.type);if(k==="spend")qSpend[q]+=Number(t.amount)||0;else if(k==="income")qInc[q]+=Number(t.amount)||0;}
-      const qgrid=h("div",{style:{display:"grid",gridTemplateColumns:"1fr 1fr",gap:"9px"}});
+      const qgrid=h("div",{class:"year-quarter-grid",style:{display:"grid",gridTemplateColumns:"1fr 1fr",gap:"9px"}});
       const QN=["1분기 · 1~3월","2분기 · 4~6월","3분기 · 7~9월","4분기 · 10~12월"],curQ=Math.floor(curM/3);
       for(let q=0;q<4;q++){const isCurQ=q===curQ,fut=q>curQ;
-        qgrid.append(h("div",{style:{background:isCurQ?C.soft:"#F8F6F1",borderRadius:"12px",padding:"12px 13px",border:`1px solid ${isCurQ?C.brand:"transparent"}`,opacity:fut?".5":"1"}},
+        qgrid.append(h("div",{class:`year-quarter-tile${isCurQ?" is-current":""}`,style:{background:isCurQ?C.soft:"#F8F6F1",borderRadius:"12px",padding:"12px 13px",border:`1px solid ${isCurQ?C.brand:"transparent"}`,opacity:fut?".5":"1"}},
           h("div",{style:{fontSize:"11px",fontWeight:"700",color:isCurQ?C.brand:C.sub,marginBottom:"7px"}},QN[q]+(isCurQ?" ●":"")),
           h("div",{style:{display:"flex",justifyContent:"space-between",fontSize:"11.5px",marginBottom:"3px"}},h("span",{style:{color:C.faint}},"지출"),h("span",{class:"num",style:{fontWeight:"700",color:C.ink}},W(qSpend[q]))),
           h("div",{style:{display:"flex",justifyContent:"space-between",fontSize:"11.5px"}},h("span",{style:{color:C.faint}},"수입"),h("span",{class:"num",style:{fontWeight:"700",color:C.brand}},W(qInc[q])))));
       }
-      container.append(h("div",{style:{background:C.w,border:`1px solid ${C.line}`,borderRadius:"16px",padding:"16px 18px"}},
+      container.append(h("div",{class:"year-quarter-card",style:{background:C.w,border:`1px solid ${C.line}`,borderRadius:"16px",padding:"16px 18px"}},
         h("div",{style:{fontSize:"12.5px",fontWeight:"800",color:C.sub,marginBottom:"12px"}},`📆 ${yr}년 분기별 요약`),qgrid));
       if(yr===String(new Date().getFullYear())){
         const elapsed=curM+1;
         if(elapsed>0&&ySpend2>0){
           const projSpend=Math.round(ySpend2/elapsed*12),projInc=Math.round(Y.income/elapsed*12);
-          container.append(h("div",{style:{background:"linear-gradient(135deg,#EDF4FF,#EAF3ED)",border:`1px solid ${C.line}`,borderRadius:"16px",padding:"16px 18px"}},
+          container.append(h("div",{class:"year-forecast-card",style:{background:"linear-gradient(135deg,#EDF4FF,#EAF3ED)",border:`1px solid ${C.line}`,borderRadius:"16px",padding:"16px 18px"}},
             h("div",{style:{fontSize:"12.5px",fontWeight:"800",color:C.sub,marginBottom:"10px"}},"🔮 이 페이스면 올해 말"),
-            h("div",{style:{display:"grid",gridTemplateColumns:"1fr 1fr",gap:"9px"}},
-              h("div",{style:{background:"rgba(255,255,255,.6)",borderRadius:"11px",padding:"11px 12px"}},h("div",{style:{fontSize:"10.5px",color:C.sub,marginBottom:"4px"}},"예상 총지출"),h("div",{class:"num",style:{fontSize:"17px",fontWeight:"800",color:C.ink}},W(projSpend))),
-              h("div",{style:{background:"rgba(255,255,255,.6)",borderRadius:"11px",padding:"11px 12px"}},h("div",{style:{fontSize:"10.5px",color:C.sub,marginBottom:"4px"}},"예상 총수입"),h("div",{class:"num",style:{fontSize:"17px",fontWeight:"800",color:C.brand}},W(projInc)))),
+            h("div",{class:"year-forecast-grid",style:{display:"grid",gridTemplateColumns:"1fr 1fr",gap:"9px"}},
+              h("div",{class:"year-forecast-tile",style:{background:"rgba(255,255,255,.6)",borderRadius:"11px",padding:"11px 12px"}},h("div",{style:{fontSize:"10.5px",color:C.sub,marginBottom:"4px"}},"예상 총지출"),h("div",{class:"num",style:{fontSize:"17px",fontWeight:"800",color:C.ink}},W(projSpend))),
+              h("div",{class:"year-forecast-tile",style:{background:"rgba(255,255,255,.6)",borderRadius:"11px",padding:"11px 12px"}},h("div",{style:{fontSize:"10.5px",color:C.sub,marginBottom:"4px"}},"예상 총수입"),h("div",{class:"num",style:{fontSize:"17px",fontWeight:"800",color:C.brand}},W(projInc)))),
             h("div",{style:{fontSize:"10.5px",color:C.faint,marginTop:"9px"}},`현재 ${elapsed}개월 평균 기준 예측이에요.`)));
         }
       }
     }
-    container.append(h("div",{style:{background:C.w,border:`1px solid ${C.line}`,borderRadius:"18px",padding:"18px 18px 14px"}},
+    container.append(h("div",{class:"year-mode-chart-card",style:{background:C.w,border:`1px solid ${C.line}`,borderRadius:"18px",padding:"18px 18px 14px"}},
       h("div",{style:{display:"flex",justifyContent:"space-between",alignItems:"flex-start",marginBottom:"14px"}},
         h("div",{},
           h("div",{style:{fontSize:"12.5px",color:C.sub,marginBottom:"4px"}},yr+"년 "+mode+" 합계"),
@@ -3332,28 +3447,28 @@ function buildYearly(){
     // 🔥 월별 히트맵
     {
       const hmax=Math.max(...monthly,1);
-      const hm=h("div",{style:{display:"grid",gridTemplateColumns:"repeat(6,1fr)",gap:"6px"}});
+      const hm=h("div",{class:"year-heatmap-grid",style:{display:"grid",gridTemplateColumns:"repeat(6,1fr)",gap:"6px"}});
       monthly.forEach((v,i)=>{
         const inten=v>0?v/hmax:0,isHLm=i===curM,fut=i>curM&&v===0;
-        hm.append(h("div",{style:{aspectRatio:"1",borderRadius:"9px",background:v>0?`rgba(30,110,82,${(0.12+inten*0.78).toFixed(2)})`:"#F2EEE6",display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",gap:"1px",border:`1.5px solid ${isHLm?C.ink:"transparent"}`,opacity:fut?".4":"1"}},
+        hm.append(h("div",{class:"year-heatmap-cell",style:{aspectRatio:"1",borderRadius:"9px",background:v>0?`rgba(30,110,82,${(0.12+inten*0.78).toFixed(2)})`:"#F2EEE6",display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",gap:"1px",border:`1.5px solid ${isHLm?C.ink:"transparent"}`,opacity:fut?".4":"1"}},
           h("div",{style:{fontSize:"11px",fontWeight:"800",color:inten>0.5?"#fff":C.ink}},(i+1)+"월"),
           h("div",{class:"num",style:{fontSize:"8.5px",fontWeight:"700",color:inten>0.5?"rgba(255,255,255,.92)":C.sub}},v>0?shortNum(v):"-")));
       });
-      container.append(h("div",{style:{background:C.w,border:`1px solid ${C.line}`,borderRadius:"16px",padding:"16px 18px"}},
+      container.append(h("div",{class:"year-heatmap-card",style:{background:C.w,border:`1px solid ${C.line}`,borderRadius:"16px",padding:"16px 18px"}},
         h("div",{style:{fontSize:"12.5px",fontWeight:"800",color:C.sub,marginBottom:"12px"}},`🔥 ${yr}년 ${mode} 히트맵`),hm,
         h("div",{style:{fontSize:"10px",color:C.faint,marginTop:"10px",textAlign:"center"}},"색이 진할수록 많은 달이에요.")));
     }
 
     // 모드 토글
-    const toggleRow=h("div",{style:{display:"flex",gap:"8px"}});
+    const toggleRow=h("div",{class:"year-mode-rail",style:{display:"flex",gap:"8px"}});
     ["개인소비","공용소비","수입","저축"].forEach(m=>{
       const sel=mode===m;
-      toggleRow.append(h("button",{
+      toggleRow.append(h("button",{class:`year-mode-button${sel?" is-active":""}`,
         style:{flex:"1",fontSize:"12px",fontWeight:"700",padding:"10px 4px",borderRadius:"10px",border:`1px solid ${sel?C.ink:C.line}`,background:sel?C.ink:C.w,color:sel?C.w:C.sub,cursor:"pointer",whiteSpace:"nowrap"},
         onclick:()=>{mode=m;draw();}
       },m));
     });
-    container.append(h("div",{style:{background:C.w,border:`1px solid ${C.line}`,borderRadius:"14px",padding:"14px"}},toggleRow));
+    container.append(h("div",{class:"year-mode-card",style:{background:C.w,border:`1px solid ${C.line}`,borderRadius:"14px",padding:"14px"}},toggleRow));
 
     // 월별 수입/소비/저축/투자 집계
     const mInc=Array(12).fill(0),mSp=Array(12).fill(0),mSv=Array(12).fill(0),mIv=Array(12).fill(0);
@@ -3362,29 +3477,29 @@ function buildYearly(){
     // 📅 12개월 그리드 (연 달력)
     {
       const gMax=Math.max(1,...mSp);
-      const grid=h("div",{style:{display:"grid",gridTemplateColumns:"repeat(3,1fr)",gap:"7px"}});
+      const grid=h("div",{class:"year-calendar-grid",style:{display:"grid",gridTemplateColumns:"repeat(3,1fr)",gap:"7px"}});
       for(let i=0;i<12;i++){
         const inc=mInc[i],sp=mSp[i],hasData=(inc+sp+mSv[i]+mIv[i])>0,fut=i>curM&&!hasData,inten=sp>0?sp/gMax:0,isHL=i===curM;
         const memoKey=`${yr}-${String(i+1).padStart(2,"0")}`;
-        grid.append(h("div",{style:{borderRadius:"12px",padding:"10px 7px",cursor:hasData?"pointer":"default",background:sp>0?`rgba(194,85,61,${(0.06+inten*0.30).toFixed(2)})`:"#F7F5F0",border:`1.5px solid ${isHL?C.ink:"transparent"}`,opacity:fut?".45":"1",minHeight:"60px",display:"flex",flexDirection:"column",justifyContent:"center",alignItems:"center",gap:"2px"},onclick:hasData?()=>showYearMonthDetail(yr,i):null},
+        grid.append(h("div",{class:`year-calendar-cell${hasData?" is-clickable":""}`,style:{borderRadius:"12px",padding:"10px 7px",cursor:hasData?"pointer":"default",background:sp>0?`rgba(194,85,61,${(0.06+inten*0.30).toFixed(2)})`:"#F7F5F0",border:`1.5px solid ${isHL?C.ink:"transparent"}`,opacity:fut?".45":"1",minHeight:"60px",display:"flex",flexDirection:"column",justifyContent:"center",alignItems:"center",gap:"2px"},onclick:hasData?()=>showYearMonthDetail(yr,i):null},
           h("div",{style:{fontSize:"13px",fontWeight:"800",color:isHL?C.brand:C.ink}},(i+1)+"월"+(yMemos[memoKey]?" 📝":"")),
           inc>0?h("div",{class:"num",style:{fontSize:"10px",fontWeight:"700",color:C.brand,lineHeight:"1.35"}},"+"+shortNum(inc)):"",
           sp>0?h("div",{class:"num",style:{fontSize:"10px",fontWeight:"700",color:C.over,lineHeight:"1.35"}},"-"+shortNum(sp)):""
         ));
       }
-      container.append(h("div",{style:{background:C.w,border:`1px solid ${C.line}`,borderRadius:"18px",padding:"16px"}},
+      container.append(h("div",{class:"year-calendar-card",style:{background:C.w,border:`1px solid ${C.line}`,borderRadius:"18px",padding:"16px"}},
         h("div",{style:{fontSize:"12.5px",fontWeight:"800",color:C.sub,marginBottom:"12px"}},`📅 ${yr}년 달력 · 월을 탭하면 상세·메모`),grid));
     }
     // 📋 월별 상세 표
     {
-      const tbl=sec("📋 월별 상세",h("span",{style:{fontSize:"10.5px",color:C.faint}},"탭하면 내역"));
+      const tbl=sec("📋 월별 상세",h("span",{style:{fontSize:"10.5px",color:C.faint}},"탭하면 내역"));tbl.classList.add("year-monthly-card");
       const cell=(lb,val,col)=>h("div",{style:{textAlign:"center"}},h("div",{style:{fontSize:"9px",color:C.faint,marginBottom:"2px"}},lb),h("div",{class:"num",style:{fontSize:"11px",fontWeight:"700",color:col}},val));
       let shown=0;
       for(let i=0;i<12;i++){
         const inc=mInc[i],sp=mSp[i],sv=mSv[i],iv=mIv[i],any=inc+sp+sv+iv;
         if(any===0&&i!==curM)continue;
         shown++;const net=inc-sp-sv-iv,isHL=i===curM;
-        tbl.append(h("div",{class:"catrow",style:{padding:"10px 6px",borderBottom:`1px solid ${C.line}`,cursor:"pointer",background:isHL?C.soft:"transparent",borderRadius:isHL?"8px":"0"},onclick:()=>showYearMonthDetail(yr,i)},
+        tbl.append(h("div",{class:`catrow year-month-row${isHL?" is-current":""}`,style:{padding:"10px 6px",borderBottom:`1px solid ${C.line}`,cursor:"pointer",background:isHL?C.soft:"transparent",borderRadius:isHL?"8px":"0"},onclick:()=>showYearMonthDetail(yr,i)},
           h("div",{style:{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:"8px"}},
             h("span",{style:{fontSize:"13px",fontWeight:isHL?"800":"700",color:isHL?C.brand:C.ink}},(i+1)+"월"+(isHL?" ·이번달":"")+(yMemos[`${yr}-${String(i+1).padStart(2,"0")}`]?" 📝":"")),
             h("span",{class:"num",style:{fontSize:"13.5px",fontWeight:"800",color:net>=0?C.brand:C.over}},`${net>=0?"+":"−"}${W(Math.abs(net)).slice(1)}`)),
@@ -3424,16 +3539,16 @@ function buildYearly(){
               h("span",{style:{width:"10px",height:"10px",borderRadius:"3px",background:g.c,flexShrink:"0"}}),
               h("span",{style:{flex:"1",color:C.ink,whiteSpace:"nowrap",overflow:"hidden",textOverflow:"ellipsis"}},g.n),
               h("span",{class:"num",style:{color:C.sub,fontWeight:"700",flexShrink:"0"}},Math.round(g.v/tot*100)+"%"))));
-            container.append(h("div",{style:{background:C.w,border:`1px solid ${C.line}`,borderRadius:"16px",padding:"16px 18px"}},
+            container.append(h("div",{class:"year-category-card",style:{background:C.w,border:`1px solid ${C.line}`,borderRadius:"16px",padding:"16px 18px"}},
               h("div",{style:{fontSize:"12.5px",fontWeight:"800",color:C.sub,marginBottom:"14px"}},`🍩 ${yr}년 ${mode} 비중`),
-              h("div",{style:{display:"flex",alignItems:"center",gap:"15px"}},donut,legend)));
+              h("div",{class:"year-category-body",style:{display:"flex",alignItems:"center",gap:"15px"}},donut,legend)));
           }
         }
-        const cSec=sec(yr+"년 "+mode+" TOP 카테고리","");
+        const cSec=sec(yr+"년 "+mode+" TOP 카테고리","");cSec.classList.add("year-category-rank");
         const cmax=crows[0][1];
         crows.forEach(([n,v])=>{
           const c=CM[n]||CM["기타"];
-          cSec.append(h("div",{style:{display:"flex",alignItems:"center",gap:"10px",padding:"8px 4px"}},
+          cSec.append(h("div",{class:"year-category-row",style:{display:"flex",alignItems:"center",gap:"10px",padding:"8px 4px"}},
             h("span",{style:{fontSize:"14px",width:"20px",textAlign:"center"}},c.i),
             h("div",{style:{flex:"1"}},
               h("div",{style:{display:"flex",justifyContent:"space-between",marginBottom:"4px"}},
@@ -3455,7 +3570,7 @@ function buildYearly(){
       const yk=Object.keys(nh).filter(k=>k.slice(0,4)===yr).sort();
       if(yk.length>=2){
         const a=nh[yk[0]],b=nh[yk[yk.length-1]],diff=b-a;
-        const nwSec=sec(yr+"년 순자산 변화",`${yk.length}개월 기록`);
+        const nwSec=sec(yr+"년 순자산 변화",`${yk.length}개월 기록`);nwSec.classList.add("year-networth-card");
         nwSec.append(h("div",{style:{display:"flex",justifyContent:"space-between",alignItems:"center",padding:"6px 2px"}},
           h("span",{style:{fontSize:"12.5px",color:C.sub}},`${Number(yk[0].slice(5,7))}월 ${W(a)} → ${Number(yk[yk.length-1].slice(5,7))}월 ${W(b)}`),
           h("span",{class:"num",style:{fontSize:"15px",fontWeight:"800",color:diff>=0?C.brand:C.over}},`${diff>=0?"+":""}${W(diff)}`)));
