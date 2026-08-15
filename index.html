@@ -392,6 +392,16 @@ async function deleteRowChecked(table,id){
   if(!data?.id)throw new Error("삭제된 항목을 확인하지 못했어요.");
   return data;
 }
+async function deleteRowsChecked(query,expectedIds){
+  const expected=[...new Set((expectedIds||[]).filter(Boolean))];
+  if(!expected.length)throw new Error("삭제할 항목이 없어요.");
+  const{data,error}=await query.select("id");
+  if(error)throw error;
+  const deletedIds=(data||[]).map(row=>row.id).filter(Boolean),deleted=new Set(deletedIds);
+  const missingIds=expected.filter(id=>!deleted.has(id));
+  if(missingIds.length){const partial=new Error(`${expected.length}건 중 ${deletedIds.length}건만 삭제됐어요.`);partial.deletedIds=deletedIds;partial.missingIds=missingIds;throw partial;}
+  return data;
+}
 const mascotEvent=(action,detail={})=>{try{window.dispatchEvent(new CustomEvent("budget-mascot",{detail:{action,...detail}}));}catch{}};
 const nativeAlert=window.alert.bind(window);
 const alert=(message)=>{
@@ -1062,7 +1072,7 @@ function renderDash(){
     h("div",{class:"app-header",style:{display:"flex",alignItems:"center",justifyContent:"space-between",marginBottom:"16px"}},
       h("div",{style:{display:"flex",alignItems:"center",gap:"9px"}},
         h("span",{style:{fontSize:"21px"}},SN[Number(S.curYm.split("-")[1])]||"📒"),
-        h("div",{},h("div",{style:{fontSize:"11.5px",color:C.sub}},"🐾 나의 가계부 · v152"),h("div",{style:{fontSize:"16.5px",fontWeight:"800",letterSpacing:"-.01em",cursor:"pointer",display:"flex",alignItems:"center",gap:"4px"},onclick:()=>showMonthPicker()},yml(S.curYm),h("span",{style:{fontSize:"10px",color:C.faint}},"▾")))
+        h("div",{},h("div",{style:{fontSize:"11.5px",color:C.sub}},"🐾 나의 가계부 · v153"),h("div",{style:{fontSize:"16.5px",fontWeight:"800",letterSpacing:"-.01em",cursor:"pointer",display:"flex",alignItems:"center",gap:"4px"},onclick:()=>showMonthPicker()},yml(S.curYm),h("span",{style:{fontSize:"10px",color:C.faint}},"▾")))
       ),
       h("div",{class:"app-month-nav",style:{display:"flex",alignItems:"center",gap:"4px",background:C.w,border:`1px solid ${C.line}`,borderRadius:"999px",padding:"3px 4px"}},prevBtn,todayBtn,nextBtn)
     ),
@@ -1254,18 +1264,18 @@ function showDupCleaner(){
           i===0?h("span",{style:{fontSize:"10.5px",fontWeight:"800",color:C.brand,background:C.soft,borderRadius:"6px",padding:"3px 8px",flexShrink:"0"}},"유지")
                :h("button",{style:{fontSize:"11.5px",fontWeight:"700",color:C.over,background:"#FBEDE9",border:"none",borderRadius:"7px",padding:"5px 11px",cursor:"pointer",flexShrink:"0"},onclick:async(ev)=>{
                   const btn=ev.currentTarget;btn.textContent="…";btn.disabled=true;
-                  const{error}=await sb.from("transactions").delete().eq("id",t.id);
-                  if(error){btn.textContent="삭제";btn.disabled=false;toast("삭제 실패: "+error.message,false);return;}
+                  try{await deleteRowChecked("transactions",t.id);}
+                  catch(error){btn.textContent="삭제";btn.disabled=false;toast("삭제 실패: "+(error?.message||error),false);mascotEvent("retry_calm",{character:"mayo"});return;}
                   touched=true;const gi=groups.indexOf(rs);rs.splice(i,1);if(rs.length<2)groups.splice(gi,1);draw();toast("🗑️ 1건 삭제");
                 }},"삭제"));
         gEl.append(rowEl);
       });
       if(rs.length>2)gEl.append(h("button",{style:{width:"100%",marginTop:"6px",fontSize:"11.5px",fontWeight:"700",color:C.over,background:"transparent",border:`1px dashed ${C.over}`,borderRadius:"8px",padding:"7px",cursor:"pointer"},onclick:async(ev)=>{
         if(!confirm(`이 그룹에서 '유지' 1건 빼고 ${rs.length-1}건을 모두 삭제할까요?`))return;
-        ev.currentTarget.disabled=true;
+        const btn=ev.currentTarget;btn.disabled=true;btn.textContent="삭제 중…";
         const dels=rs.slice(1).map(x=>x.id);
-        const{error}=await sb.from("transactions").delete().in("id",dels);
-        if(error){toast("삭제 실패: "+error.message,false);return;}
+        try{await deleteRowsChecked(sb.from("transactions").delete().in("id",dels),dels);}
+        catch(error){if(error?.deletedIds?.length)touched=true;toast(error?.deletedIds?.length?"일부만 삭제돼 목록을 다시 확인했어요.":"일괄 삭제에 실패했어요. 다시 시도해주세요.",false);mascotEvent("retry_calm",{character:"mayo"});await load();return;}
         touched=true;const gi=groups.indexOf(rs);groups.splice(gi,1);draw();toast(`🗑️ ${dels.length}건 삭제`);
       }},`이 그룹 ${rs.length-1}건 한번에 삭제`));
       body.append(gEl);
@@ -1359,7 +1369,7 @@ function showBudgetBreakdown(){
             h("div",{style:{flex:"1",minWidth:"0"}},h("div",{style:{fontSize:"12.5px",fontWeight:"600",whiteSpace:"nowrap",overflow:"hidden",textOverflow:"ellipsis"}},(t.merchant||t.category||t.type)+(dup?"  ⟵ 중복?":"")),
               h("div",{style:{fontSize:"10.5px",color:C.faint,marginTop:"1px"}},`${t.date||""} · ${t.category||""} · ${t.payment_method||""}`)),
             h("div",{class:"num",style:{fontSize:"12.5px",fontWeight:"700",flexShrink:"0"}},W(t.amount)),
-            h("button",{style:{fontSize:"12px",fontWeight:"700",color:dup?C.w:C.faint,background:dup?C.over:"transparent",border:dup?"none":`1px solid ${C.line}`,borderRadius:"7px",padding:"6px 10px",cursor:"pointer",flexShrink:"0"},onclick:async()=>{if(!confirm("이 거래를 삭제할까요?"))return;await sb.from("transactions").delete().eq("id",t.id);await loadMonth();render();refreshHome();}},"삭제")));
+            h("button",{style:{fontSize:"12px",fontWeight:"700",color:dup?C.w:C.faint,background:dup?C.over:"transparent",border:dup?"none":`1px solid ${C.line}`,borderRadius:"7px",padding:"6px 10px",cursor:"pointer",flexShrink:"0"},onclick:async e=>{if(!confirm("이 거래를 삭제할까요?"))return;const btn=e.currentTarget;btn.disabled=true;btn.textContent="…";try{await deleteRowChecked("transactions",t.id);}catch(error){toast("삭제 실패: "+(error?.message||error),false);btn.disabled=false;btn.textContent="삭제";mascotEvent("retry_calm",{character:"mayo"});return;}await loadMonth();render();refreshHome();}},"삭제")));
         });
       });
     }
@@ -3240,7 +3250,7 @@ function showCardStatement(pm,opt){
       h("span",{class:"num",style:{fontSize:"16px",fontWeight:"800"}},W(grand))));
     // 이번 청구월 실제 청구 확정 (명세서 안에서만)
     if(opt&&opt.bym){
-      const{data:existBill}=await sb.from("transactions").select("amount").eq("type","카드대금").eq("merchant",pm).gte("date",opt.bym+"-01").lte("date",opt.bym+"-31");
+      const{data:existBill}=await sb.from("transactions").select("id,amount").eq("type","카드대금").eq("merchant",pm).gte("date",opt.bym+"-01").lte("date",opt.bym+"-31");
       const done=existBill&&existBill.length;
       const cbox=h("div",{style:{background:done?"#EAF4EE":"#FFFBEE",borderRadius:"12px",padding:"13px 15px",marginBottom:"14px",border:`1px solid ${done?C.brand:C.line}`}});
       if(done){
@@ -3248,7 +3258,7 @@ function showCardStatement(pm,opt){
         cbox.append(h("div",{style:{display:"flex",justifyContent:"space-between",alignItems:"center"}},
           h("span",{style:{fontSize:"12.5px",fontWeight:"800",color:C.brand}},`✓ ${yml(opt.bym)} 청구 확정됨`),
           h("span",{class:"num",style:{fontSize:"15px",fontWeight:"800",color:C.brand}},W(sum))));
-        cbox.append(h("button",{style:{marginTop:"9px",width:"100%",fontSize:"11.5px",fontWeight:"700",padding:"8px",borderRadius:"9px",border:`1px solid ${C.line}`,background:C.w,color:C.sub,cursor:"pointer"},onclick:async()=>{if(!confirm(`${yml(opt.bym)} 확정을 취소할까요?`))return;await sb.from("transactions").delete().eq("type","카드대금").eq("merchant",pm).gte("date",opt.bym+"-01").lte("date",opt.bym+"-31");await loadMonth();ov.remove();toast("확정을 취소했어요");if(opt.onConfirmed)opt.onConfirmed();}},"확정 취소"));
+        cbox.append(h("button",{style:{marginTop:"9px",width:"100%",fontSize:"11.5px",fontWeight:"700",padding:"8px",borderRadius:"9px",border:`1px solid ${C.line}`,background:C.w,color:C.sub,cursor:"pointer"},onclick:async e=>{if(!confirm(`${yml(opt.bym)} 확정을 취소할까요?`))return;const btn=e.currentTarget,ids=existBill.map(row=>row.id).filter(Boolean);btn.disabled=true;btn.textContent="취소 중…";try{await deleteRowsChecked(sb.from("transactions").delete().in("id",ids),ids);}catch(error){toast(error?.deletedIds?.length?"일부만 취소돼 명세서를 다시 불러왔어요.":"확정 취소에 실패했어요. 다시 시도해주세요.",false);mascotEvent("retry_calm",{character:"mayo"});if(error?.deletedIds?.length){ov.remove();showCardStatement(pm,opt);}else{btn.disabled=false;btn.textContent="확정 다시 취소";}return;}await loadMonth();ov.remove();toast("확정을 취소했어요");if(opt.onConfirmed)opt.onConfirmed();}},"확정 취소"));
       }else{
         cbox.append(h("div",{style:{fontSize:"12px",color:C.sub,marginBottom:"9px",lineHeight:"1.6"}},`💡 ${yml(opt.bym)} 명세서가 나왔으면 실제 청구액을 확정하세요. (예상 ${W(opt.estimate||0)})`));
         cbox.append(h("button",{style:{width:"100%",fontSize:"13px",fontWeight:"800",padding:"11px",borderRadius:"10px",border:"none",background:C.brand,color:"#fff",cursor:"pointer"},onclick:()=>{ov.remove();showBillConfirm(pm,opt.estimate||0,opt.bym,opt.onConfirmed);}},"✓ 실제 청구 확정하기"));
