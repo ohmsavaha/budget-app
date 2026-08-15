@@ -1,0 +1,29 @@
+{
+  "pack": "humajja-mascot-v2-phase2l",
+  "version": "1.0.0",
+  "purpose": "가계부 핵심 화면에서 세 캐릭터가 함께 기록을 검토하는 대표 장면",
+  "canvas": {
+    "source": [1024, 1024],
+    "runtime": [512, 512],
+    "fallback": [128, 128]
+  },
+  "animation_count": 1,
+  "solo_action_count": 0,
+  "group_action_count": 1,
+  "animations": [
+    {
+      "id": "group_group_budget_review",
+      "actor": "group",
+      "display_name": "후추 · 마요 · 짜장",
+      "action": "group_budget_review",
+      "action_label": "함께 가계부 회의",
+      "durations_ms": [150, 170, 210, 300, 210, 170],
+      "total_duration_ms": 1210,
+      "loop": true,
+      "anchor": { "x": 0.5, "y": 0.95 },
+      "source_png": "source/group_group_budget_review_master_v01.png",
+      "webp_512": "webp/group_group_budget_review_512_v01.webp",
+      "static_128": "static/group_group_budget_review_frame_01_v01.png"
+    }
+  ]
+}

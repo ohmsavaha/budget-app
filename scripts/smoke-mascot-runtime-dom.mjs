@@ -43,7 +43,8 @@ await new Promise((resolve) => setTimeout(resolve, 0));
 const stage = document.querySelector("[data-budget-mascot-stage]");
 const image = stage?.querySelector(".budget-mascot-image");
 if (!stage?.classList.contains("budget-mascot-stage")) throw new Error("안전영역 초기화 실패");
-if (!image?.getAttribute("src")?.includes("mayo_breathe")) throw new Error("홈 대기 동작 실패");
+if (!image?.getAttribute("src")?.includes("phase2l/webp/group_group_budget_review_512")) throw new Error("홈 가계부 회의 대기 동작 실패");
+if (stage.dataset.actor !== "group") throw new Error("홈 그룹 무대 크기 상태 실패");
 
 window.dispatchEvent(new window.CustomEvent("budget-mascot", {
   detail: { action: "card_payment", character: "huchu", duration: 10 },
@@ -104,6 +105,12 @@ await new Promise((resolve) => setTimeout(resolve, 15));
 window.BudgetMascot.play({ action: "group_goal_map", character: "group", duration: 10 });
 if (!image.getAttribute("src")?.includes("phase2k/webp/group_group_goal_map_512")) {
   throw new Error("Phase 2K 그룹 목표 동작 실패");
+}
+await new Promise((resolve) => setTimeout(resolve, 15));
+
+window.BudgetMascot.play({ action: "group_budget_review", character: "group", duration: 10 });
+if (!image.getAttribute("src")?.includes("phase2l/webp/group_group_budget_review_512")) {
+  throw new Error("Phase 2L 가계부 회의 동작 실패");
 }
 await new Promise((resolve) => setTimeout(resolve, 15));
 
@@ -173,7 +180,7 @@ window.BudgetMascot.setEnabled(false);
 
 console.log(JSON.stringify({
   status: "passed",
-  idle: "mayo_breathe",
+  idle: "group_budget_review",
   reaction: "huchu_card_payment",
   reducedMotion: "jjajang_refund_frame_01",
   phase2f: "head_tilt + group_cuddle",
@@ -182,5 +189,6 @@ console.log(JSON.stringify({
   phase2i: "purchase_complete + group_shopping_plan + account_link",
   phase2j: "budget_set + lowest_price + emergency_fund + debt_payoff + joint_settlement",
   phase2k: "fixed_plan_saved + group_goal_map + portfolio_repaired",
+  phase2l: "group_budget_review",
   toggle: "passed",
 }));

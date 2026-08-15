@@ -36,6 +36,11 @@ function inspectAnimatedWebP(path) {
   return { width, height, hasAlpha, durations };
 }
 
+function pngHasAlpha(path) {
+  const buffer = readFileSync(path);
+  return buffer.subarray(1, 4).toString() === "PNG" && [4, 6].includes(buffer[25]);
+}
+
 for (const phase of phases) {
   const block = source.match(new RegExp(`${phase}: new Set\\(\\[([\\s\\S]*?)\\]\\)`));
   if (!block) {
@@ -59,13 +64,16 @@ for (const phase of phases) {
           const size = statSync(path).size;
           totalBytes += size;
           if (size < 100) failures.push(`비정상적으로 작은 파일: ${path} (${size} bytes)`);
+          if (phase === "phase2l" && path.endsWith(".png") && !pngHasAlpha(path)) {
+            failures.push(`Phase 2L 정적 PNG 알파 누락: ${path}`);
+          }
         }
       }
     }
   }
 }
 
-const manifestPhases = ["phase2f", "phase2g", "phase2h", "phase2i", "phase2k"];
+const manifestPhases = ["phase2f", "phase2g", "phase2h", "phase2i", "phase2k", "phase2l"];
 for (const phase of manifestPhases) {
   const manifestPath = join(repoRoot, `assets/mascot-v2/${phase}/manifest.json`);
   if (!existsSync(manifestPath)) {
@@ -85,7 +93,7 @@ for (const phase of manifestPhases) {
           const size = statSync(path).size;
           totalBytes += size;
           if (size < 100) failures.push(`비정상적으로 작은 파일: ${path} (${size} bytes)`);
-          if (["phase2i", "phase2k"].includes(phase) && path.endsWith(".webp")) {
+          if (["phase2i", "phase2k", "phase2l"].includes(phase) && path.endsWith(".webp")) {
             try {
               const info = inspectAnimatedWebP(path);
               const expectedDurations = [150, 170, 210, 300, 210, 170];
@@ -104,6 +112,14 @@ for (const phase of manifestPhases) {
       }
     }
   }
+}
+
+const phase2lMaster = join(repoRoot, "assets/mascot-v2/phase2l/source/group_group_budget_review_master_v01.png");
+checked += 1;
+if (!existsSync(phase2lMaster)) failures.push(`Phase 2L 원화 누락: ${phase2lMaster}`);
+else {
+  totalBytes += statSync(phase2lMaster).size;
+  if (!pngHasAlpha(phase2lMaster)) failures.push(`Phase 2L 원화 PNG 알파 누락: ${phase2lMaster}`);
 }
 
 for (const character of characters) {

@@ -63,6 +63,7 @@ const requiredRuntimeActions = [
   ...requiredAppEvents,
   "annual_review",
   "group_household_inventory",
+  "group_budget_review",
 ];
 const failures = [];
 
@@ -127,11 +128,14 @@ for (const [name,editor] of [["계좌",accountEditor],["저축",savingEditor],["
 if (!app.includes("async function deleteRowChecked(") || !app.includes('.delete().eq("id",id).select("id").single()')) failures.push("삭제 결과 확인 공통 헬퍼 누락");
 if (!app.includes("async function deleteRowsChecked(") || !app.includes("partial.deletedIds=deletedIds")) failures.push("일괄 삭제 부분 성공 확인 헬퍼 누락");
 for (const marker of ["[품목삭제실패]", "[가격삭제실패]", "[거래삭제실패]", "[더치페이삭제실패]"]) if (!app.includes(marker)) failures.push(`삭제 실패 복구 누락: ${marker}`);
-if (!app.includes("나의 가계부 · v153")) failures.push("앱 버전 v153 표기 누락");
-if (!worker.includes('const CACHE = "budget-v153"')) failures.push("서비스 워커 v153 캐시 누락");
+for (const table of ["shopping_items", "fixed_costs", "investment_holdings", "loans"]) if (!app.includes(`deleteRowChecked("${table}"`)) failures.push(`${table} 삭제 결과 확인 누락`);
+if (!app.includes("나의 가계부 · v154")) failures.push("앱 버전 v154 표기 누락");
+if (!worker.includes('const CACHE = "budget-v154"')) failures.push("서비스 워커 v154 캐시 누락");
 if (!runtime.includes('"phase2h"')) failures.push("Phase 2H 애니메이션 파일명 규칙 누락");
 if (!runtime.includes('"phase2i"')) failures.push("Phase 2I 애니메이션 파일명 규칙 누락");
 if (!runtime.includes('"phase2k"')) failures.push("Phase 2K 애니메이션 파일명 규칙 누락");
+if (!runtime.includes('"phase2l"')) failures.push("Phase 2L 애니메이션 파일명 규칙 누락");
+if (!worker.includes("group_group_budget_review_512_v01.webp")) failures.push("Phase 2L 홈 애니메이션 오프라인 캐시 누락");
 
 if (failures.length) {
   console.error(failures.join("\n"));
@@ -141,6 +145,6 @@ if (failures.length) {
     status: "passed",
     appEvents: requiredAppEvents.length,
     runtimeActions: requiredRuntimeActions.length,
-    version: "v153",
+    version: "v154",
   }));
 }

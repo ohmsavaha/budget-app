@@ -1072,7 +1072,7 @@ function renderDash(){
     h("div",{class:"app-header",style:{display:"flex",alignItems:"center",justifyContent:"space-between",marginBottom:"16px"}},
       h("div",{style:{display:"flex",alignItems:"center",gap:"9px"}},
         h("span",{style:{fontSize:"21px"}},SN[Number(S.curYm.split("-")[1])]||"📒"),
-        h("div",{},h("div",{style:{fontSize:"11.5px",color:C.sub}},"🐾 나의 가계부 · v153"),h("div",{style:{fontSize:"16.5px",fontWeight:"800",letterSpacing:"-.01em",cursor:"pointer",display:"flex",alignItems:"center",gap:"4px"},onclick:()=>showMonthPicker()},yml(S.curYm),h("span",{style:{fontSize:"10px",color:C.faint}},"▾")))
+        h("div",{},h("div",{style:{fontSize:"11.5px",color:C.sub}},"🐾 나의 가계부 · v154"),h("div",{style:{fontSize:"16.5px",fontWeight:"800",letterSpacing:"-.01em",cursor:"pointer",display:"flex",alignItems:"center",gap:"4px"},onclick:()=>showMonthPicker()},yml(S.curYm),h("span",{style:{fontSize:"10px",color:C.faint}},"▾")))
       ),
       h("div",{class:"app-month-nav",style:{display:"flex",alignItems:"center",gap:"4px",background:C.w,border:`1px solid ${C.line}`,borderRadius:"999px",padding:"3px 4px"}},prevBtn,todayBtn,nextBtn)
     ),
@@ -2413,7 +2413,7 @@ function buildShoppingList(){
       h("div",{style:{flex:"1",minWidth:"0"}},
         h("div",{style:{fontSize:"13px",fontWeight:"600",whiteSpace:"nowrap",overflow:"hidden",textOverflow:"ellipsis"}},x.name),
         x.est_price?h("div",{style:{fontSize:"10.5px",color:C.faint}},"예상 "+W(x.est_price)):""),
-      h("button",{style:{fontSize:"13px",color:C.faint,background:"transparent",border:"none",cursor:"pointer",flexShrink:"0"},onclick:async()=>{await sb.from("shopping_items").delete().eq("id",x.id);toast("지웠어요");render();}},"✕"));
+      h("button",{style:{fontSize:"13px",color:C.faint,background:"transparent",border:"none",cursor:"pointer",flexShrink:"0"},onclick:async e=>{const btn=e.currentTarget;btn.disabled=true;btn.textContent="…";try{await deleteRowChecked("shopping_items",x.id);}catch(error){dlog("[장바구니삭제실패]",error);toast("장바구니 삭제에 실패했어요. 다시 시도해주세요.",false);btn.disabled=false;btn.textContent="✕";mascotEvent("retry_calm",{character:"mayo"});return;}toast("지웠어요");render();}},"✕"));
     if(req.length){body.append(subHd(`📌 필수 ${req.length}개${psum(req)?` · 예상 ${W(psum(req))}`:""}`));req.forEach(x=>body.append(row(x)));}
     if(wish.length){body.append(subHd(`⭐ 위시 ${wish.length}개${psum(wish)?` · 예상 ${W(psum(wish))}`:""}`));wish.forEach(x=>body.append(row(x)));}
     if(!todo.length)body.append(h("div",{style:{fontSize:"12px",color:C.faint,padding:"10px 2px"}},"지금 살 건 없어요. 위 입력창에 담아두세요!"));
@@ -4724,7 +4724,7 @@ function buildFixed(){
         h("div",{style:{flex:"1",minWidth:"0"}},h("div",{style:{fontSize:"13px",fontWeight:"600",whiteSpace:"nowrap",overflow:"hidden",textOverflow:"ellipsis"}},fc.name),
           h("div",{style:{fontSize:"11px",color:C.faint,marginTop:"1px"}},W(fc.amount)+(fc.payment_method?" · "+fc.payment_method:""))),
         h("button",{style:{fontSize:"11.5px",fontWeight:"700",color:C.brand,background:C.soft,border:`1px solid ${C.brand}`,borderRadius:"8px",padding:"6px 11px",cursor:"pointer",flexShrink:"0"},onclick:async()=>{const{error}=await sb.from("fixed_costs").update({is_active:true}).eq("id",fc.id);if(error){alert("처리 실패: "+error.message);return;}await reloadFixed();mascotEvent("fixed_reactivated",{character:"jjajang"});}},"↩ 활성화"),
-        h("button",{style:{fontSize:"13px",color:C.faint,padding:"4px",flexShrink:"0"},onclick:async()=>{if(!confirm(`'${fc.name}'을 완전히 삭제할까요? 되돌릴 수 없어요.`))return;await sb.from("fixed_costs").delete().eq("id",fc.id);await reloadFixed();}},"🗑️")
+        h("button",{style:{fontSize:"13px",color:C.faint,padding:"4px",flexShrink:"0"},onclick:async e=>{if(!confirm(`'${fc.name}'을 완전히 삭제할까요? 되돌릴 수 없어요.`))return;const btn=e.currentTarget;btn.disabled=true;btn.textContent="…";try{await deleteRowChecked("fixed_costs",fc.id);}catch(error){dlog("[고정비삭제실패]",error);toast("고정비 삭제에 실패했어요. 다시 시도해주세요.",false);btn.disabled=false;btn.textContent="🗑️";mascotEvent("retry_calm",{character:"mayo"});return;}await reloadFixed();}},"🗑️")
       ));
     });
     sections.push(offSec);
@@ -5269,7 +5269,7 @@ function showHoldingManage(snapshotDate){
     listEl.innerHTML="";
     if(!holdings.length){listEl.append(h("div",{style:{fontSize:"12.5px",color:C.faint,textAlign:"center",padding:"10px"}},"이 날짜에 종목이 없어요."));return;}
     holdings.forEach(x=>{
-      const del=h("button",{style:{color:C.over,fontSize:"15px",padding:"6px",flexShrink:"0"},onclick:async()=>{if(!confirm(`'${x.name}' 종목을 삭제할까요?`))return;await sb.from("investment_holdings").delete().eq("id",x.id);holdings=holdings.filter(y=>y.id!==x.id);drawList();}},"🗑️");
+      const del=h("button",{style:{color:C.over,fontSize:"15px",padding:"6px",flexShrink:"0"},onclick:async()=>{if(!confirm(`'${x.name}' 종목을 삭제할까요?`))return;del.disabled=true;del.textContent="…";try{await deleteRowChecked("investment_holdings",x.id);}catch(error){dlog("[투자종목삭제실패]",error);toast("투자 종목 삭제에 실패했어요. 다시 시도해주세요.",false);del.disabled=false;del.textContent="🗑️";mascotEvent("retry_calm",{character:"mayo"});return;}holdings=holdings.filter(y=>y.id!==x.id);drawList();}},"🗑️");
       listEl.append(h("div",{style:{display:"flex",alignItems:"center",gap:"10px",padding:"9px 4px",borderBottom:`1px solid ${C.line}`}},
         h("div",{style:{flex:"1",minWidth:"0"}},h("div",{style:{fontSize:"13.5px",fontWeight:"600"}},x.name),h("div",{style:{fontSize:"11px",color:C.sub,marginTop:"1px"}},(x.ticker||"")+(x.eval_value_krw?" · "+W(x.eval_value_krw):""))),
         del
@@ -8404,7 +8404,7 @@ function showLoanEdit(l0){
     h("div",{style:{display:"grid",gridTemplateColumns:"1fr 1fr",gap:"10px",marginBottom:"13px"}},h("div",{},lbl("대출 원금"),prinEl),h("div",{},lbl("현재 잔액(남은 빚)"),balEl)),
     h("div",{style:{display:"grid",gridTemplateColumns:"1fr 1fr 1fr",gap:"10px",marginBottom:"4px"}},h("div",{},lbl("연 금리%"),rateEl),h("div",{},lbl("월 상환액"),monEl),h("div",{},lbl("상환일"),dayEl)),
     repayCalc(()=>Number(balEl.value)||0,()=>Number(rateEl.value)||0,[balEl,rateEl]),
-    isEdit?h("button",{style:{width:"100%",marginTop:"12px",fontSize:"13px",color:C.over,fontWeight:"700",padding:"11px",border:`1px solid ${C.over}`,borderRadius:"11px",background:C.w,cursor:"pointer"},onclick:async e=>{if(!confirm(`'${l0.name}'을 삭제할까요? 되돌릴 수 없어요.`))return;const btn=e.currentTarget;btn.disabled=true;btn.textContent="삭제 중…";try{const{error}=await sb.from("loans").delete().eq("id",l0.id);if(error)throw error;ov.remove();reloadAssets();}catch(error){alert("삭제 실패: "+(error?.message||error));btn.disabled=false;btn.textContent="🗑️ 다시 삭제";mascotEvent("retry_calm",{character:"mayo"});}}},"🗑️ 삭제"):"",
+    isEdit?h("button",{style:{width:"100%",marginTop:"12px",fontSize:"13px",color:C.over,fontWeight:"700",padding:"11px",border:`1px solid ${C.over}`,borderRadius:"11px",background:C.w,cursor:"pointer"},onclick:async e=>{if(!confirm(`'${l0.name}'을 삭제할까요? 되돌릴 수 없어요.`))return;const btn=e.currentTarget;btn.disabled=true;btn.textContent="삭제 중…";try{await deleteRowChecked("loans",l0.id);ov.remove();reloadAssets();}catch(error){alert("삭제 실패: "+(error?.message||error));btn.disabled=false;btn.textContent="🗑️ 다시 삭제";mascotEvent("retry_calm",{character:"mayo"});}}},"🗑️ 삭제"):"",
     sv
   );
   ov.append(sh);document.body.append(ov);nameEl.focus();

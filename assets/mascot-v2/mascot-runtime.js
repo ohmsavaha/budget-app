@@ -4,6 +4,7 @@ const REDUCED_MOTION = window.matchMedia("(prefers-reduced-motion: reduce)");
 const ENABLED_KEY = "mascot_v2_enabled";
 
 const PHASE_ACTIONS = Object.freeze({
+  phase2l: new Set(["group_budget_review"]),
   phase2k: new Set([
     "fixed_plan_saved", "fixed_plan_updated", "fixed_archived",
     "fixed_reactivated", "shared_fixed_saved", "expense_excluded",
@@ -61,6 +62,7 @@ const PHASE_ACTIONS = Object.freeze({
 
 const AMBIENT_BY_TAB = Object.freeze({
   home: [
+    { character: "group", action: "group_budget_review", message: "세 마리가 이번 달 가계부를 펼쳐 함께 살펴봐요." },
     { character: "mayo", action: "face_groom", message: "마요가 잠깐 세수를 하며 쉬고 있어요." },
     { character: "huchu", action: "head_tilt", message: "후추가 이번 달 기록을 궁금하게 바라봐요." },
     { character: "jjajang", action: "encourage", message: "짜장이 오늘 기록도 잘하고 있다고 응원해요." },
@@ -73,6 +75,7 @@ const AMBIENT_BY_TAB = Object.freeze({
     { character: "group", action: "group_shopping_plan", message: "세 마리가 장바구니 계획을 함께 살펴봐요." },
   ],
   shared: [
+    { character: "group", action: "group_budget_review", message: "세 마리가 함께 쓴 기록과 남은 계획을 맞춰봐요." },
     { character: "group", action: "group_cuddle", message: "세 마리가 공용통장 기록을 함께 지키고 있어요." },
     { character: "mayo", action: "card_peek", message: "마요가 공용 내역 카드 뒤에서 살펴봐요." },
   ],
@@ -100,6 +103,7 @@ const AMBIENT_BY_TAB = Object.freeze({
     { character: "mayo", action: "investment_diversify", message: "마요가 자산이 한곳에 몰리지 않았는지 살펴봐요." },
   ],
   yearly: [
+    { character: "group", action: "group_budget_review", message: "세 마리가 한 해의 기록을 펼쳐 함께 돌아봐요." },
     { character: "group", action: "group_cuddle", message: "세 마리가 올해 쌓아온 기록을 함께 보고 있어요." },
     { character: "jjajang", action: "encourage", message: "짜장이 꾸준히 이어온 한 해를 응원해요." },
     { character: "jjajang", action: "annual_review", message: "짜장이 열두 달 기록을 차분히 돌아봐요." },
@@ -112,7 +116,7 @@ const AMBIENT_BY_TAB = Object.freeze({
 });
 
 const IDLE_BY_TAB = Object.freeze({
-  home: { character: "mayo", action: "breathe", message: "마요가 이번 달 가계부를 차분히 살펴보고 있어요." },
+  home: { character: "group", action: "group_budget_review", message: "후추·마요·짜장이 이번 달 기록과 다음 계획을 함께 보고 있어요." },
   spend: { character: "huchu", action: "ear_twitch", message: "후추가 새 지출과 예산 변화를 놓치지 않고 있어요." },
   shared: { character: "mayo", action: "tail_sway", message: "마요가 공용통장과 공동정산을 함께 확인하고 있어요." },
   assets: { character: "jjajang", action: "breathe", message: "짜장이 자산과 저축 목표를 든든하게 지키고 있어요." },
@@ -124,6 +128,7 @@ const IDLE_BY_TAB = Object.freeze({
 });
 
 const PREFERRED_CHARACTER = Object.freeze({
+  group_budget_review: "group",
   fixed_plan_saved: "huchu",
   fixed_plan_updated: "mayo",
   fixed_archived: "huchu",
@@ -243,6 +248,7 @@ const PREFERRED_CHARACTER = Object.freeze({
 });
 
 const ACTION_COPY = Object.freeze({
+  group_budget_review: ["세 마리 가계부 회의", "후추·마요·짜장이 기록과 다음 계획을 함께 살펴봐요.", "neutral"],
   fixed_plan_saved: ["고정비 계획 저장", "새 고정비의 금액과 납부일을 계획에 넣었어요.", "good"],
   fixed_plan_updated: ["고정비 계획 수정", "바뀐 금액과 결제 정보를 최신 상태로 맞췄어요.", "good"],
   fixed_archived: ["고정비 보관", "지금은 쓰지 않는 고정비를 나중에 다시 찾을 수 있게 보관했어요.", "neutral"],
@@ -439,7 +445,7 @@ function phaseFor(action) {
 }
 
 function animatedName(phase, character, action) {
-  const suffix = ["phase2a", "phase2b", "phase2c", "phase2f", "phase2g", "phase2h", "phase2i", "phase2k"].includes(phase) ? "_512_v01.webp" : "_v01.webp";
+  const suffix = ["phase2a", "phase2b", "phase2c", "phase2f", "phase2g", "phase2h", "phase2i", "phase2k", "phase2l"].includes(phase) ? "_512_v01.webp" : "_v01.webp";
   return `${character}_${action}${suffix}`;
 }
 
@@ -512,9 +518,10 @@ function renderIdle() {
   const idle = IDLE_BY_TAB[tab] || IDLE_BY_TAB.home;
   stage.dataset.state = "idle";
   stage.dataset.tone = "neutral";
+  stage.dataset.actor = idle.character;
   stage.querySelector(".budget-mascot-eyebrow").textContent = "후추 · 마요 · 짜장";
   stage.querySelector(".budget-mascot-message").textContent = idle.message;
-  setImage(stage, { phase: "phase2a", ...idle });
+  setImage(stage, { phase: phaseFor(idle.action) || "phase2a", ...idle });
   scheduleAmbient();
   return true;
 }
@@ -558,6 +565,7 @@ function play({ action, character, duration = 2600, message, title, tone } = {})
   stage.hidden = false;
   stage.dataset.state = "reacting";
   stage.dataset.tone = tone || copy[2] || "good";
+  stage.dataset.actor = chosen;
   stage.querySelector(".budget-mascot-eyebrow").textContent = title || copy[0];
   stage.querySelector(".budget-mascot-message").textContent = message || copy[1];
   setImage(stage, { phase, character: chosen, action });

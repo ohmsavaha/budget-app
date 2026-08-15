@@ -75,10 +75,11 @@ function makeBatch(result) {
   await assert.rejects(() => fn(query, ["a", "b"]), expected);
 }
 
-for (const marker of ["[품목삭제실패]", "[가격삭제실패]", "[거래삭제실패]", "[더치페이삭제실패]"]) {
+for (const marker of ["[품목삭제실패]", "[가격삭제실패]", "[거래삭제실패]", "[더치페이삭제실패]", "[장바구니삭제실패]", "[고정비삭제실패]", "[투자종목삭제실패]"]) {
   assert.ok(app.includes(marker), `삭제 실패 복구 누락: ${marker}`);
 }
 assert.ok((app.match(/deleteRowsChecked\(/g)||[]).length >= 3, "일괄 삭제 검증 연결 누락");
 assert.ok((app.match(/deleteRowChecked\("transactions"/g)||[]).length >= 3, "거래 단건 삭제 검증 연결 누락");
+for (const table of ["shopping_items", "fixed_costs", "investment_holdings", "loans"]) assert.ok(app.includes(`deleteRowChecked("${table}"`), `${table} 삭제 결과 확인 누락`);
 
-console.log(JSON.stringify({ status: "passed", scenarios: 6, guardedFlows: 8, version: "v153" }));
+console.log(JSON.stringify({ status: "passed", scenarios: 6, guardedFlows: 12, version: "v154" }));
