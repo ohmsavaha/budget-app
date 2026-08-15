@@ -1,0 +1,81 @@
+{
+  "pack": "humajja-mascot-v2-phase2m",
+  "version": "1.0.0",
+  "purpose": "가계부 핵심 상태를 담당하는 후추·마요·짜장 개별 반응 팩",
+  "canvas": {
+    "source": [1024, 1024],
+    "runtime": [512, 512],
+    "fallback": [128, 128]
+  },
+  "animation_count": 6,
+  "solo_action_count": 6,
+  "group_action_count": 0,
+  "animations": [
+    {
+      "id": "huchu_budget_warning",
+      "actor": "huchu",
+      "display_name": "후추",
+      "action": "budget_warning",
+      "action_label": "예산 지킴이",
+      "durations_ms": [150, 170, 210, 300, 210, 170],
+      "total_duration_ms": 1210,
+      "loop": true,
+      "anchor": { "x": 0.5, "y": 0.95 }
+    },
+    {
+      "id": "mayo_budget_exceeded",
+      "actor": "mayo",
+      "display_name": "마요",
+      "action": "budget_exceeded",
+      "action_label": "예산 회복 안내",
+      "durations_ms": [150, 170, 210, 300, 210, 170],
+      "total_duration_ms": 1210,
+      "loop": true,
+      "anchor": { "x": 0.5, "y": 0.95 }
+    },
+    {
+      "id": "jjajang_goal_achieved",
+      "actor": "jjajang",
+      "display_name": "짜장",
+      "action": "goal_achieved",
+      "action_label": "저축 목표 달성",
+      "durations_ms": [150, 170, 210, 300, 210, 170],
+      "total_duration_ms": 1210,
+      "loop": true,
+      "anchor": { "x": 0.5, "y": 0.95 }
+    },
+    {
+      "id": "huchu_search_no_results",
+      "actor": "huchu",
+      "display_name": "후추",
+      "action": "search_no_results",
+      "action_label": "검색 결과 살피기",
+      "durations_ms": [150, 170, 210, 300, 210, 170],
+      "total_duration_ms": 1210,
+      "loop": true,
+      "anchor": { "x": 0.5, "y": 0.95 }
+    },
+    {
+      "id": "mayo_history_empty",
+      "actor": "mayo",
+      "display_name": "마요",
+      "action": "history_empty",
+      "action_label": "첫 기록 안내",
+      "durations_ms": [150, 170, 210, 300, 210, 170],
+      "total_duration_ms": 1210,
+      "loop": true,
+      "anchor": { "x": 0.5, "y": 0.95 }
+    },
+    {
+      "id": "mayo_retry_calm",
+      "actor": "mayo",
+      "display_name": "마요",
+      "action": "retry_calm",
+      "action_label": "기록 보호·재시도",
+      "durations_ms": [150, 170, 210, 300, 210, 170],
+      "total_duration_ms": 1210,
+      "loop": true,
+      "anchor": { "x": 0.5, "y": 0.95 }
+    }
+  ]
+}

@@ -423,6 +423,19 @@ const mascotEmptyState=(text)=>{
     mascotEvent(action,{character:action==="search_no_results"?"huchu":"mayo",duration:2600});
   },180);
 };
+let mascotBudgetTimer=0,mascotBudgetAt=0,mascotBudgetKey="";
+const mascotBudgetState=(used,isCurrent)=>{
+  if(!isCurrent||S.budget<=0||document.body.dataset.budgetTab!=="home")return;
+  const action=used>=1?"budget_exceeded":used>=.8?"budget_warning":"";
+  if(!action)return;
+  const key=`${S.curYm}:${action}`,now=Date.now();
+  if(key===mascotBudgetKey&&now-mascotBudgetAt<90000)return;
+  clearTimeout(mascotBudgetTimer);
+  mascotBudgetTimer=setTimeout(()=>{
+    mascotBudgetAt=Date.now();mascotBudgetKey=key;
+    mascotEvent(action,{character:action==="budget_exceeded"?"mayo":"huchu",duration:3600});
+  },520);
+};
 
 const C={brand:"#1E6E52",soft:"#E7F1EB",over:"#C2553D",warn:"#C98A2B",ink:"#28251F",sub:"#8C857A",faint:"#B7B0A4",line:"#ECE7DD",bg:"#F6F4EF",w:"#fff"};
 const CATS=[
@@ -1072,7 +1085,7 @@ function renderDash(){
     h("div",{class:"app-header",style:{display:"flex",alignItems:"center",justifyContent:"space-between",marginBottom:"16px"}},
       h("div",{style:{display:"flex",alignItems:"center",gap:"9px"}},
         h("span",{style:{fontSize:"21px"}},SN[Number(S.curYm.split("-")[1])]||"📒"),
-        h("div",{},h("div",{style:{fontSize:"11.5px",color:C.sub}},"🐾 나의 가계부 · v154"),h("div",{style:{fontSize:"16.5px",fontWeight:"800",letterSpacing:"-.01em",cursor:"pointer",display:"flex",alignItems:"center",gap:"4px"},onclick:()=>showMonthPicker()},yml(S.curYm),h("span",{style:{fontSize:"10px",color:C.faint}},"▾")))
+        h("div",{},h("div",{style:{fontSize:"11.5px",color:C.sub}},"🐾 나의 가계부 · v155"),h("div",{style:{fontSize:"16.5px",fontWeight:"800",letterSpacing:"-.01em",cursor:"pointer",display:"flex",alignItems:"center",gap:"4px"},onclick:()=>showMonthPicker()},yml(S.curYm),h("span",{style:{fontSize:"10px",color:C.faint}},"▾")))
       ),
       h("div",{class:"app-month-nav",style:{display:"flex",alignItems:"center",gap:"4px",background:C.w,border:`1px solid ${C.line}`,borderRadius:"999px",padding:"3px 4px"}},prevBtn,todayBtn,nextBtn)
     ),
@@ -1435,6 +1448,7 @@ function buildBudgetStatus(){
   const now=new Date(),dom=now.getDate(),dim=new Date(now.getFullYear(),now.getMonth()+1,0).getDate();
   const dl=isCur?dim-dom:null;
   const used=S.budget>0?budgetSpend/S.budget:0;
+  mascotBudgetState(used,isCur);
   const gc=used>=1?C.over:used>=0.8?C.warn:C.brand;
   const rem=S.budget-budgetSpend;
   const bdBtn=h("button",{class:"num",style:{fontSize:"15.5px",fontWeight:"700",color:C.ink,borderBottom:`1px dashed ${C.faint}`,cursor:"pointer"},onclick:async()=>{const v=prompt("이번 달 예산을 입력하세요 (원):",S.budget);if(v===null)return;const nextBudget=Math.max(0,Number(v)||0);const{error}=await sb.from("monthly_budgets").upsert({user_id:S.session.user.id,year_month:S.curYm,personal_budget:nextBudget},{onConflict:"user_id,year_month"});if(error){toast("예산 저장 실패: "+error.message,false);return;}S.budget=nextBudget;homeReload();mascotEvent("budget_set",{character:"huchu"});}},W(S.budget));

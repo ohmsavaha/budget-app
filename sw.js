@@ -1,5 +1,5 @@
 // 나의 가계부 서비스워커 — 오프라인 캐시 + 푸시 알림
-const CACHE = "budget-v154";
+const CACHE = "budget-v155";
 const CORE = [
   "./",
   "./index.html",
@@ -9,6 +9,18 @@ const CORE = [
   "./assets/mascot-v2/mascot-runtime.js",
   "./assets/mascot-v2/phase2l/webp/group_group_budget_review_512_v01.webp",
   "./assets/mascot-v2/phase2l/static/group_group_budget_review_frame_01_v01.png",
+  "./assets/mascot-v2/phase2m/webp/huchu_budget_warning_512_v01.webp",
+  "./assets/mascot-v2/phase2m/webp/mayo_budget_exceeded_512_v01.webp",
+  "./assets/mascot-v2/phase2m/webp/jjajang_goal_achieved_512_v01.webp",
+  "./assets/mascot-v2/phase2m/webp/huchu_search_no_results_512_v01.webp",
+  "./assets/mascot-v2/phase2m/webp/mayo_history_empty_512_v01.webp",
+  "./assets/mascot-v2/phase2m/webp/mayo_retry_calm_512_v01.webp",
+  "./assets/mascot-v2/phase2m/static/huchu_budget_warning_frame_01_v01.png",
+  "./assets/mascot-v2/phase2m/static/mayo_budget_exceeded_frame_01_v01.png",
+  "./assets/mascot-v2/phase2m/static/jjajang_goal_achieved_frame_01_v01.png",
+  "./assets/mascot-v2/phase2m/static/huchu_search_no_results_frame_01_v01.png",
+  "./assets/mascot-v2/phase2m/static/mayo_history_empty_frame_01_v01.png",
+  "./assets/mascot-v2/phase2m/static/mayo_retry_calm_frame_01_v01.png",
 ];
 // 캐시 대상: 우리 파일 + 코드/차트 CDN. Supabase 데이터 API는 절대 캐시하지 않음 (가계부 데이터는 항상 최신이어야 함)
 const CACHEABLE_ORIGINS = [self.location.origin, "https://esm.sh", "https://cdnjs.cloudflare.com"];

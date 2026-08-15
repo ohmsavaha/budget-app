@@ -114,6 +114,21 @@ if (!image.getAttribute("src")?.includes("phase2l/webp/group_group_budget_review
 }
 await new Promise((resolve) => setTimeout(resolve, 15));
 
+for (const [action, character] of [
+  ["budget_warning", "huchu"],
+  ["budget_exceeded", "mayo"],
+  ["goal_achieved", "jjajang"],
+  ["search_no_results", "huchu"],
+  ["history_empty", "mayo"],
+  ["retry_calm", "mayo"],
+]) {
+  window.BudgetMascot.play({ action, character, duration: 10 });
+  if (!image.getAttribute("src")?.includes(`phase2m/webp/${character}_${action}_512`)) {
+    throw new Error(`Phase 2M 동작 실패: ${character}_${action}`);
+  }
+  await new Promise((resolve) => setTimeout(resolve, 15));
+}
+
 window.BudgetMascot.play({ action: "lowest_price", character: "jjajang", duration: 10 });
 if (!image.getAttribute("src")?.includes("phase2e/webp/jjajang_lowest_price")) {
   throw new Error("Phase 2J 기존 최저가 동작 재연결 실패");
@@ -173,6 +188,11 @@ window.BudgetMascot.play({ action: "portfolio_repaired", character: "jjajang", d
 if (!image.getAttribute("src")?.includes("phase2k/static/jjajang_portfolio_repaired_frame_01")) {
   throw new Error("Phase 2K 모션 감소 정적 대체 실패");
 }
+await new Promise((resolve) => setTimeout(resolve, 15));
+window.BudgetMascot.play({ action: "retry_calm", character: "mayo", duration: 10 });
+if (!image.getAttribute("src")?.includes("phase2m/static/mayo_retry_calm_frame_01")) {
+  throw new Error("Phase 2M 모션 감소 정적 대체 실패");
+}
 window.BudgetMascot.play({ action: "refund", character: "jjajang", duration: 10 });
 if (!image.getAttribute("src")?.endsWith(".png")) throw new Error("모션 감소 정적 대체 실패");
 
@@ -190,5 +210,6 @@ console.log(JSON.stringify({
   phase2j: "budget_set + lowest_price + emergency_fund + debt_payoff + joint_settlement",
   phase2k: "fixed_plan_saved + group_goal_map + portfolio_repaired",
   phase2l: "group_budget_review",
+  phase2m: "budget + goal + empty + retry states",
   toggle: "passed",
 }));

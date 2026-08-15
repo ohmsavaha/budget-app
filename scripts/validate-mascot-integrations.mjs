@@ -59,12 +59,18 @@ const requiredAppEvents = [
   "group_fixed_plan",
   "group_goal_map",
 ];
-const requiredRuntimeActions = [
+const requiredRuntimeActions = [...new Set([
   ...requiredAppEvents,
   "annual_review",
   "group_household_inventory",
   "group_budget_review",
-];
+  "budget_warning",
+  "budget_exceeded",
+  "goal_achieved",
+  "search_no_results",
+  "history_empty",
+  "retry_calm",
+])];
 const failures = [];
 
 for (const action of requiredAppEvents) {
@@ -129,13 +135,18 @@ if (!app.includes("async function deleteRowChecked(") || !app.includes('.delete(
 if (!app.includes("async function deleteRowsChecked(") || !app.includes("partial.deletedIds=deletedIds")) failures.push("일괄 삭제 부분 성공 확인 헬퍼 누락");
 for (const marker of ["[품목삭제실패]", "[가격삭제실패]", "[거래삭제실패]", "[더치페이삭제실패]"]) if (!app.includes(marker)) failures.push(`삭제 실패 복구 누락: ${marker}`);
 for (const table of ["shopping_items", "fixed_costs", "investment_holdings", "loans"]) if (!app.includes(`deleteRowChecked("${table}"`)) failures.push(`${table} 삭제 결과 확인 누락`);
-if (!app.includes("나의 가계부 · v154")) failures.push("앱 버전 v154 표기 누락");
-if (!worker.includes('const CACHE = "budget-v154"')) failures.push("서비스 워커 v154 캐시 누락");
+if (!app.includes("나의 가계부 · v155")) failures.push("앱 버전 v155 표기 누락");
+if (!worker.includes('const CACHE = "budget-v155"')) failures.push("서비스 워커 v155 캐시 누락");
 if (!runtime.includes('"phase2h"')) failures.push("Phase 2H 애니메이션 파일명 규칙 누락");
 if (!runtime.includes('"phase2i"')) failures.push("Phase 2I 애니메이션 파일명 규칙 누락");
 if (!runtime.includes('"phase2k"')) failures.push("Phase 2K 애니메이션 파일명 규칙 누락");
 if (!runtime.includes('"phase2l"')) failures.push("Phase 2L 애니메이션 파일명 규칙 누락");
+if (!runtime.includes('"phase2m"')) failures.push("Phase 2M 애니메이션 파일명 규칙 누락");
 if (!worker.includes("group_group_budget_review_512_v01.webp")) failures.push("Phase 2L 홈 애니메이션 오프라인 캐시 누락");
+for (const asset of ["huchu_budget_warning", "mayo_budget_exceeded", "jjajang_goal_achieved", "huchu_search_no_results", "mayo_history_empty", "mayo_retry_calm"]) {
+  if (!worker.includes(`${asset}_512_v01.webp`)) failures.push(`Phase 2M 오프라인 캐시 누락: ${asset}`);
+}
+if (!app.includes("mascotBudgetState(used,isCur)")) failures.push("홈 예산 상태 마스코트 자동 연결 누락");
 
 if (failures.length) {
   console.error(failures.join("\n"));
@@ -145,6 +156,6 @@ if (failures.length) {
     status: "passed",
     appEvents: requiredAppEvents.length,
     runtimeActions: requiredRuntimeActions.length,
-    version: "v154",
+    version: "v155",
   }));
 }

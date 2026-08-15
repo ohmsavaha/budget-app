@@ -4,6 +4,10 @@ const REDUCED_MOTION = window.matchMedia("(prefers-reduced-motion: reduce)");
 const ENABLED_KEY = "mascot_v2_enabled";
 
 const PHASE_ACTIONS = Object.freeze({
+  phase2m: new Set([
+    "budget_warning", "budget_exceeded", "goal_achieved",
+    "search_no_results", "history_empty", "retry_calm",
+  ]),
   phase2l: new Set(["group_budget_review"]),
   phase2k: new Set([
     "fixed_plan_saved", "fixed_plan_updated", "fixed_archived",
@@ -222,7 +226,7 @@ const PREFERRED_CHARACTER = Object.freeze({
   subscription_payment: "huchu",
   card_bill_worry: "huchu",
   budget_set: "huchu",
-  budget_exceeded: "huchu",
+  budget_exceeded: "mayo",
   no_spend_day: "jjajang",
   impulse_stop: "jjajang",
   investment_up: "mayo",
@@ -338,7 +342,7 @@ const ACTION_COPY = Object.freeze({
   joint_settlement: ["공동정산 완료", "받을 돈과 계좌 잔액까지 정리됐어요.", "good"],
   fixed_cost: ["고정비 납부 확인", "이번 달 고정비 하나를 깔끔하게 체크했어요.", "good"],
   budget_warning: ["예산 확인", "예산을 넘기기 전에 남은 금액을 확인해봐요.", "warn"],
-  budget_exceeded: ["예산 초과 확인", "괜찮아요. 남은 기간의 지출 계획부터 다시 잡아봐요.", "warn"],
+  budget_exceeded: ["예산 회복 계획", "괜찮아요. 마요와 남은 기간의 지출 계획부터 다시 잡아봐요.", "warn"],
   savings_mode: ["절약모드 시작", "작은 절약도 모이면 분명한 변화가 돼요.", "good"],
   surplus: ["이번 달 흑자", "남은 돈을 지켜낸 걸 짜장이 크게 축하해요!", "good"],
   deficit_support: ["이번 달 점검", "자책하지 말고 큰 지출부터 하나씩 정리해봐요.", "warn"],
@@ -445,7 +449,7 @@ function phaseFor(action) {
 }
 
 function animatedName(phase, character, action) {
-  const suffix = ["phase2a", "phase2b", "phase2c", "phase2f", "phase2g", "phase2h", "phase2i", "phase2k", "phase2l"].includes(phase) ? "_512_v01.webp" : "_v01.webp";
+  const suffix = ["phase2a", "phase2b", "phase2c", "phase2f", "phase2g", "phase2h", "phase2i", "phase2k", "phase2l", "phase2m"].includes(phase) ? "_512_v01.webp" : "_v01.webp";
   return `${character}_${action}${suffix}`;
 }
 
@@ -519,6 +523,7 @@ function renderIdle() {
   stage.dataset.state = "idle";
   stage.dataset.tone = "neutral";
   stage.dataset.actor = idle.character;
+  stage.dataset.action = idle.action;
   stage.querySelector(".budget-mascot-eyebrow").textContent = "후추 · 마요 · 짜장";
   stage.querySelector(".budget-mascot-message").textContent = idle.message;
   setImage(stage, { phase: phaseFor(idle.action) || "phase2a", ...idle });
@@ -566,6 +571,7 @@ function play({ action, character, duration = 2600, message, title, tone } = {})
   stage.dataset.state = "reacting";
   stage.dataset.tone = tone || copy[2] || "good";
   stage.dataset.actor = chosen;
+  stage.dataset.action = action;
   stage.querySelector(".budget-mascot-eyebrow").textContent = title || copy[0];
   stage.querySelector(".budget-mascot-message").textContent = message || copy[1];
   setImage(stage, { phase, character: chosen, action });

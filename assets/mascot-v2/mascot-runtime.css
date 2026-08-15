@@ -157,6 +157,31 @@
   --mascot-stage-line: #d4e9dc;
 }
 
+.budget-mascot-stage[data-action="budget_warning"],
+.budget-mascot-stage[data-action="budget_exceeded"] {
+  --mascot-stage-bg:
+    radial-gradient(circle at 88% 18%, rgba(239, 166, 63, .24), transparent 36%),
+    linear-gradient(135deg, #fff 0%, #fff9ef 58%, #fff3e4 100%);
+  --mascot-stage-line: #ecd7b8;
+}
+
+.budget-mascot-stage[data-action="goal_achieved"] {
+  --mascot-stage-bg:
+    radial-gradient(circle at 88% 18%, rgba(236, 183, 57, .24), transparent 34%),
+    radial-gradient(circle at 10% 105%, rgba(30, 110, 82, .13), transparent 38%),
+    linear-gradient(135deg, #fff 0%, #f4fbf6 100%);
+  --mascot-stage-line: #cfe5d6;
+}
+
+.budget-mascot-stage[data-action="search_no_results"],
+.budget-mascot-stage[data-action="history_empty"],
+.budget-mascot-stage[data-action="retry_calm"] {
+  --mascot-stage-bg:
+    radial-gradient(circle at 88% 18%, rgba(91, 137, 126, .14), transparent 34%),
+    linear-gradient(135deg, #fff 0%, #f5faf9 100%);
+  --mascot-stage-line: #d8e7e2;
+}
+
 .budget-mascot-toggle {
   position: absolute;
   top: 8px;
