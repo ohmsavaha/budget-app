@@ -1056,7 +1056,7 @@ function renderDash(){
     h("div",{class:"app-header",style:{display:"flex",alignItems:"center",justifyContent:"space-between",marginBottom:"16px"}},
       h("div",{style:{display:"flex",alignItems:"center",gap:"9px"}},
         h("span",{style:{fontSize:"21px"}},SN[Number(S.curYm.split("-")[1])]||"📒"),
-        h("div",{},h("div",{style:{fontSize:"11.5px",color:C.sub}},"🐾 나의 가계부 · v147"),h("div",{style:{fontSize:"16.5px",fontWeight:"800",letterSpacing:"-.01em",cursor:"pointer",display:"flex",alignItems:"center",gap:"4px"},onclick:()=>showMonthPicker()},yml(S.curYm),h("span",{style:{fontSize:"10px",color:C.faint}},"▾")))
+        h("div",{},h("div",{style:{fontSize:"11.5px",color:C.sub}},"🐾 나의 가계부 · v148"),h("div",{style:{fontSize:"16.5px",fontWeight:"800",letterSpacing:"-.01em",cursor:"pointer",display:"flex",alignItems:"center",gap:"4px"},onclick:()=>showMonthPicker()},yml(S.curYm),h("span",{style:{fontSize:"10px",color:C.faint}},"▾")))
       ),
       h("div",{class:"app-month-nav",style:{display:"flex",alignItems:"center",gap:"4px",background:C.w,border:`1px solid ${C.line}`,borderRadius:"999px",padding:"3px 4px"}},prevBtn,todayBtn,nextBtn)
     ),
@@ -3756,8 +3756,15 @@ function showBillCapture(){
         saveBtn.onclick=async()=>{
           const a=Number(amtEl.value);if(!a)return;
           saveBtn.disabled=true;saveBtn.textContent="저장 중…";
-          await sb.from("transactions").insert({user_id:S.session.user.id,date:dateEl.value,account:"개인",type:"카드대금",amount:a,category:"금융/이체",merchant:cardEl.value.trim()||"카드대금",memo:"실제 청구액 (스크린샷)"});
-          ov.remove();await loadMonth();const ct=document.getElementById("ct");if(ct){ct.innerHTML="";buildHome().forEach(n=>ct.append(n));}
+          try{
+            const{error}=await sb.from("transactions").insert({user_id:S.session.user.id,date:dateEl.value,account:"개인",type:"카드대금",amount:a,category:"금융/이체",merchant:cardEl.value.trim()||"카드대금",memo:"실제 청구액 (스크린샷)"});
+            if(error)throw error;
+          }catch(e){
+            dlog("[카드대금저장실패:AI]",e);toast("카드대금 저장에 실패했어요. 다시 시도해주세요.",false);mascotEvent("retry_calm",{character:"mayo"});
+            saveBtn.disabled=false;saveBtn.textContent="실제 카드대금 저장";return;
+          }
+          ov.remove();mascotEvent("card_bill_review",{character:"huchu"});
+          try{await loadMonth();const ct=document.getElementById("ct");if(ct){ct.innerHTML="";buildHome().forEach(n=>ct.append(n));}}catch(e){dlog("[카드대금화면갱신실패]",e);}
         };
         resultEl.append(
           h("div",{style:{background:C.soft,borderRadius:"12px",padding:"12px 14px",marginBottom:"12px",fontSize:"13px",color:C.brand,fontWeight:"700"}},"✅ AI 추출 완료 — 확인 후 저장해주세요"),
@@ -3809,8 +3816,15 @@ function showBillCapture(){
       if(isFx)a=Math.round(a*Number(fxEl.value||1380));
       saveBtn.disabled=true;saveBtn.textContent="저장 중…";
       const memo=isFx?`실제 청구액 ($${Number(amtEl.value).toFixed(2)}, @${fxEl.value})`:"실제 청구액";
-      await sb.from("transactions").insert({user_id:S.session.user.id,date:dateEl.value,account:"개인",type:"카드대금",amount:a,category:"금융/이체",merchant:cardEl.value.trim()||"카드대금",memo});
-      ov.remove();await loadMonth();const ct=document.getElementById("ct");if(ct){ct.innerHTML="";buildHome().forEach(n=>ct.append(n));}
+      try{
+        const{error}=await sb.from("transactions").insert({user_id:S.session.user.id,date:dateEl.value,account:"개인",type:"카드대금",amount:a,category:"금융/이체",merchant:cardEl.value.trim()||"카드대금",memo});
+        if(error)throw error;
+      }catch(e){
+        dlog("[카드대금저장실패:직접]",e);toast("카드대금 저장에 실패했어요. 다시 시도해주세요.",false);mascotEvent("retry_calm",{character:"mayo"});
+        saveBtn.disabled=false;saveBtn.textContent="저장";return;
+      }
+      ov.remove();mascotEvent("card_bill_review",{character:"huchu"});
+      try{await loadMonth();const ct=document.getElementById("ct");if(ct){ct.innerHTML="";buildHome().forEach(n=>ct.append(n));}}catch(e){dlog("[카드대금화면갱신실패]",e);}
     };
     wrap.append(h("div",{style:{fontSize:"13px",fontWeight:"700",marginBottom:"10px",color:C.sub}},"직접 입력"),lbl("카드사"),cardEl,lbl("통화"),currRow,lbl("금액"),amtEl,fxRow,previewEl,h("div",{style:{marginBottom:"10px"}}),lbl("청구일"),dateEl,saveBtn);
     resultEl.append(wrap);

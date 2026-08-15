@@ -106,8 +106,12 @@ const productEditor = app.slice(app.indexOf("function showProductEdit("), app.in
 if (!productEditor.includes("sv.disabled=true") || !productEditor.includes("finally") || !productEditor.includes("sv.disabled=false")) failures.push("품목 저장 중복 클릭·실패 복구 누락");
 const priceRecorder = app.slice(app.indexOf("function showProductDetail("), app.indexOf("function buildDbTab("));
 if (!priceRecorder.includes("addB.disabled=true") || !priceRecorder.includes("finally") || !priceRecorder.includes("addB.disabled=false")) failures.push("가격 기록 중복 클릭·실패 복구 누락");
-if (!app.includes("나의 가계부 · v147")) failures.push("앱 버전 v147 표기 누락");
-if (!worker.includes('const CACHE = "budget-v147"')) failures.push("서비스 워커 v147 캐시 누락");
+const cardBillCapture = app.slice(app.indexOf("function showBillCapture("), app.indexOf("// ── 설정"));
+if ((cardBillCapture.match(/\[카드대금저장실패:/g)||[]).length!==2) failures.push("카드대금 AI·직접 저장 실패 처리 누락");
+if ((cardBillCapture.match(/saveBtn\.disabled=false/g)||[]).length<2) failures.push("카드대금 저장 실패 후 버튼 복구 누락");
+if ((cardBillCapture.match(/mascotEvent\("card_bill_review"/g)||[]).length<2) failures.push("카드대금 저장 성공 반응 누락");
+if (!app.includes("나의 가계부 · v148")) failures.push("앱 버전 v148 표기 누락");
+if (!worker.includes('const CACHE = "budget-v148"')) failures.push("서비스 워커 v148 캐시 누락");
 if (!runtime.includes('"phase2h"')) failures.push("Phase 2H 애니메이션 파일명 규칙 누락");
 if (!runtime.includes('"phase2i"')) failures.push("Phase 2I 애니메이션 파일명 규칙 누락");
 if (!runtime.includes('"phase2k"')) failures.push("Phase 2K 애니메이션 파일명 규칙 누락");
@@ -120,6 +124,6 @@ if (failures.length) {
     status: "passed",
     appEvents: requiredAppEvents.length,
     runtimeActions: requiredRuntimeActions.length,
-    version: "v147",
+    version: "v148",
   }));
 }
