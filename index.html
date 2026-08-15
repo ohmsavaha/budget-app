@@ -1056,7 +1056,7 @@ function renderDash(){
     h("div",{class:"app-header",style:{display:"flex",alignItems:"center",justifyContent:"space-between",marginBottom:"16px"}},
       h("div",{style:{display:"flex",alignItems:"center",gap:"9px"}},
         h("span",{style:{fontSize:"21px"}},SN[Number(S.curYm.split("-")[1])]||"📒"),
-        h("div",{},h("div",{style:{fontSize:"11.5px",color:C.sub}},"🐾 나의 가계부 · v146"),h("div",{style:{fontSize:"16.5px",fontWeight:"800",letterSpacing:"-.01em",cursor:"pointer",display:"flex",alignItems:"center",gap:"4px"},onclick:()=>showMonthPicker()},yml(S.curYm),h("span",{style:{fontSize:"10px",color:C.faint}},"▾")))
+        h("div",{},h("div",{style:{fontSize:"11.5px",color:C.sub}},"🐾 나의 가계부 · v147"),h("div",{style:{fontSize:"16.5px",fontWeight:"800",letterSpacing:"-.01em",cursor:"pointer",display:"flex",alignItems:"center",gap:"4px"},onclick:()=>showMonthPicker()},yml(S.curYm),h("span",{style:{fontSize:"10px",color:C.faint}},"▾")))
       ),
       h("div",{class:"app-month-nav",style:{display:"flex",alignItems:"center",gap:"4px",background:C.w,border:`1px solid ${C.line}`,borderRadius:"999px",padding:"3px 4px"}},prevBtn,todayBtn,nextBtn)
     ),
@@ -1968,10 +1968,17 @@ function showProductEdit(p,onDone){
   const ntEl=h("input",{value:p?.note||"",placeholder:"특징 메모 (예: 30롤, 3겹)",style:inp});
   const sv=h("button",{style:{width:"100%",fontSize:"14px",fontWeight:"800",padding:"13px",borderRadius:"12px",border:"none",background:C.brand,color:"#fff",cursor:"pointer"},onclick:async()=>{
     const nm=nmEl.value.trim();if(!nm){nmEl.focus();return;}
-    const row={user_id:S.session.user.id,name:nm,aliases:alEl.value.trim()||null,category:ctEl.value.trim()||null,note:ntEl.value.trim()||null};
-    const{error}=p?await sb.from("products").update(row).eq("id",p.id):await sb.from("products").insert(row);
-    if(error){toast("저장 실패: "+error.message,false);return;}
-    await loadDbProducts(true);ov.remove();toast(p?"✏️ 수정했어요":"🗃️ 품목 등록!");if(!p)mascotEvent("product_register",{character:"mayo"});if(onDone)onDone();
+    sv.disabled=true;sv.textContent=p?"수정 중…":"등록 중…";
+    try{
+      const row={user_id:S.session.user.id,name:nm,aliases:alEl.value.trim()||null,category:ctEl.value.trim()||null,note:ntEl.value.trim()||null};
+      const{error}=p?await sb.from("products").update(row).eq("id",p.id):await sb.from("products").insert(row);
+      if(error){toast("저장 실패: "+error.message,false);return;}
+      await loadDbProducts(true);ov.remove();toast(p?"✏️ 수정했어요":"🗃️ 품목 등록!");if(!p)mascotEvent("product_register",{character:"mayo"});if(onDone)onDone();
+    }catch(e){
+      dlog("[품목저장실패]",e);toast("품목 저장에 실패했어요. 다시 시도해주세요.",false);mascotEvent("retry_calm",{character:"mayo"});
+    }finally{
+      if(sv.isConnected){sv.disabled=false;sv.textContent=p?"수정 저장":"품목 등록";}
+    }
   }},p?"수정 저장":"품목 등록");
   const del=p?h("button",{style:{width:"100%",marginTop:"7px",fontSize:"12px",color:C.over,background:"transparent",border:"none",cursor:"pointer",padding:"8px"},onclick:async()=>{
     if(!confirm(`'${p.name}' 품목과 가격 기록을 모두 삭제할까요?`))return;
@@ -2015,13 +2022,20 @@ function showProductDetail(pid){
     const urlEl=h("input",{placeholder:"🔗 링크 (선택 — 인터넷이면 붙여넣기)",style:{width:"100%",border:`1px solid ${C.line}`,borderRadius:"10px",padding:"10px 11px",fontSize:"12.5px",marginTop:"7px"}});
     const addB=h("button",{style:{flexShrink:"0",fontSize:"13px",fontWeight:"800",padding:"10px 14px",borderRadius:"10px",border:"none",background:C.brand,color:"#fff",cursor:"pointer"},onclick:async()=>{
       const pr=Number(prEl.value)||0;if(!pr){prEl.focus();return;}
-      const previousPrices=dbPricesOf(pid).map(r=>Number(r.price)||0).filter(Boolean);
-      const previousLowest=previousPrices.length?Math.min(...previousPrices):null;
-      const{error}=await sb.from("price_records").insert({user_id:S.session.user.id,product_id:pid,source:srcEl.value.trim()||null,price:pr,url:urlEl.value.trim()||null,date:td()});
-      if(error){toast("저장 실패: "+error.message,false);return;}
-      await loadDbProducts(true);redraw();toast("💰 가격 기록 추가!");
-      const priceAction=previousLowest!=null&&pr<previousLowest?"lowest_price":dbPricesOf(pid).length>=2?"price_compare":"price_record";
-      mascotEvent(priceAction,{character:priceAction==="price_record"?"huchu":"jjajang"});
+      addB.disabled=true;addB.textContent="저장 중…";
+      try{
+        const previousPrices=dbPricesOf(pid).map(r=>Number(r.price)||0).filter(Boolean);
+        const previousLowest=previousPrices.length?Math.min(...previousPrices):null;
+        const{error}=await sb.from("price_records").insert({user_id:S.session.user.id,product_id:pid,source:srcEl.value.trim()||null,price:pr,url:urlEl.value.trim()||null,date:td()});
+        if(error){toast("저장 실패: "+error.message,false);return;}
+        await loadDbProducts(true);redraw();toast("💰 가격 기록 추가!");
+        const priceAction=previousLowest!=null&&pr<previousLowest?"lowest_price":dbPricesOf(pid).length>=2?"price_compare":"price_record";
+        mascotEvent(priceAction,{character:priceAction==="price_record"?"huchu":"jjajang"});
+      }catch(e){
+        dlog("[가격기록실패]",e);toast("가격 기록 저장에 실패했어요. 다시 시도해주세요.",false);mascotEvent("retry_calm",{character:"mayo"});
+      }finally{
+        if(addB.isConnected){addB.disabled=false;addB.textContent="추가";}
+      }
     }},"추가");
     body.append(h("div",{class:"db-price-form",style:{marginTop:"14px"}},
       h("div",{style:{fontSize:"12px",fontWeight:"800",color:C.sub,marginBottom:"7px"}},"➕ 가격 기록 추가"),

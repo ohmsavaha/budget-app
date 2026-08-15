@@ -102,8 +102,12 @@ const investmentRefresh = app.slice(app.indexOf("refreshBtn.onclick=async()=>"),
 if (!investmentRefresh.includes("[시세갱신실패]") || !investmentRefresh.includes("finally") || !investmentRefresh.includes("refreshBtn.disabled=false")) failures.push("투자 시세 갱신 실패 복구 누락");
 const investmentRepair = app.slice(app.indexOf("if(hasBad){"), app.indexOf("const diagBtn=", app.indexOf("if(hasBad){")));
 if (!investmentRepair.includes("[평가액정리실패]") || !investmentRepair.includes("finally") || !investmentRepair.includes("fixBtn.disabled=false")) failures.push("투자 평가액 정리 실패 복구 누락");
-if (!app.includes("나의 가계부 · v146")) failures.push("앱 버전 v146 표기 누락");
-if (!worker.includes('const CACHE = "budget-v146"')) failures.push("서비스 워커 v146 캐시 누락");
+const productEditor = app.slice(app.indexOf("function showProductEdit("), app.indexOf("function showProductDetail("));
+if (!productEditor.includes("sv.disabled=true") || !productEditor.includes("finally") || !productEditor.includes("sv.disabled=false")) failures.push("품목 저장 중복 클릭·실패 복구 누락");
+const priceRecorder = app.slice(app.indexOf("function showProductDetail("), app.indexOf("function buildDbTab("));
+if (!priceRecorder.includes("addB.disabled=true") || !priceRecorder.includes("finally") || !priceRecorder.includes("addB.disabled=false")) failures.push("가격 기록 중복 클릭·실패 복구 누락");
+if (!app.includes("나의 가계부 · v147")) failures.push("앱 버전 v147 표기 누락");
+if (!worker.includes('const CACHE = "budget-v147"')) failures.push("서비스 워커 v147 캐시 누락");
 if (!runtime.includes('"phase2h"')) failures.push("Phase 2H 애니메이션 파일명 규칙 누락");
 if (!runtime.includes('"phase2i"')) failures.push("Phase 2I 애니메이션 파일명 규칙 누락");
 if (!runtime.includes('"phase2k"')) failures.push("Phase 2K 애니메이션 파일명 규칙 누락");
@@ -116,6 +120,6 @@ if (failures.length) {
     status: "passed",
     appEvents: requiredAppEvents.length,
     runtimeActions: requiredRuntimeActions.length,
-    version: "v146",
+    version: "v147",
   }));
 }
