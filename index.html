@@ -1056,7 +1056,7 @@ function renderDash(){
     h("div",{class:"app-header",style:{display:"flex",alignItems:"center",justifyContent:"space-between",marginBottom:"16px"}},
       h("div",{style:{display:"flex",alignItems:"center",gap:"9px"}},
         h("span",{style:{fontSize:"21px"}},SN[Number(S.curYm.split("-")[1])]||"📒"),
-        h("div",{},h("div",{style:{fontSize:"11.5px",color:C.sub}},"🐾 나의 가계부 · v145"),h("div",{style:{fontSize:"16.5px",fontWeight:"800",letterSpacing:"-.01em",cursor:"pointer",display:"flex",alignItems:"center",gap:"4px"},onclick:()=>showMonthPicker()},yml(S.curYm),h("span",{style:{fontSize:"10px",color:C.faint}},"▾")))
+        h("div",{},h("div",{style:{fontSize:"11.5px",color:C.sub}},"🐾 나의 가계부 · v146"),h("div",{style:{fontSize:"16.5px",fontWeight:"800",letterSpacing:"-.01em",cursor:"pointer",display:"flex",alignItems:"center",gap:"4px"},onclick:()=>showMonthPicker()},yml(S.curYm),h("span",{style:{fontSize:"10px",color:C.faint}},"▾")))
       ),
       h("div",{class:"app-month-nav",style:{display:"flex",alignItems:"center",gap:"4px",background:C.w,border:`1px solid ${C.line}`,borderRadius:"999px",padding:"3px 4px"}},prevBtn,todayBtn,nextBtn)
     ),
@@ -5795,6 +5795,7 @@ function buildInvest(){
       const syms=latest.map(x=>x.ticker).filter(Boolean);
       if(!syms.length){alert("종목에 심볼(ticker)이 없어요. 저장할 때 심볼을 입력해주세요.");return;}
       refreshBtn.textContent="💹 환율·시세 받아오는 중…";refreshBtn.disabled=true;
+      try{
       // (A) 실시간 환율 먼저 적용 (없으면 저장값/기본값)
       let fx=Number(latest[0]?.fx_rate)||Number(lt?.exchange_rate)||1380;
       try{const fxr=await fetchFxRate();if(fxr?.price)fx=fxr.price;}catch{}
@@ -5860,6 +5861,14 @@ function buildInvest(){
       let msg=`💱 환율 ${Math.round(fx).toLocaleString()}원 실시간 적용 ✅\n📊 평가액·수익률을 종목 합계로 다시 맞췄어요.`;
       if(skipped.length)msg+=`\n\n⚠️ 아래 ${skipped.length}개는 현재가를 못 받아 예전 값 그대로예요. 증권사 앱 보고 직접 입력해주세요:\n· ${skipped.join("\n· ")}`;
       alert(msg);
+      }catch(e){
+        dlog("[시세갱신실패]",e);
+        toast("시세 갱신에 실패했어요. 잠시 후 다시 시도해주세요.",false);
+        mascotEvent("retry_calm",{character:"mayo",duration:3600});
+      }finally{
+        refreshBtn.disabled=false;
+        if(refreshBtn.isConnected)refreshBtn.textContent="↻ 현재가 갱신 다시 시도";
+      }
     };
     const manageBtn=h("button",{class:"invest-manage-btn",style:{width:"100%",marginBottom:"10px",fontSize:"13px",fontWeight:"700",padding:"10px",borderRadius:"10px",border:`1px solid ${C.line}`,background:C.w,color:C.sub,cursor:"pointer"},onclick:()=>showHoldingManage(latestDate)},"✏️ 종목 직접 추가·삭제");
     // 이상값 감지 → 정리 버튼 노출
@@ -5869,6 +5878,7 @@ function buildInvest(){
       fixBtn=h("button",{style:{width:"100%",marginBottom:"10px",fontSize:"13px",fontWeight:"800",padding:"11px",borderRadius:"10px",border:`1px solid ${C.over}`,background:"#FEF2EE",color:C.over,cursor:"pointer"},onclick:async()=>{
         if(!confirm("평가액이 비정상으로 큰 종목이 있어요.\n현재가·환율 기준으로 전 종목 평가액을 다시 계산해 고칠까요?"))return;
         fixBtn.textContent="🔧 정리 중…";fixBtn.disabled=true;
+        try{
         let fx=Number(latest[0]?.fx_rate)||1380;try{const fxr=await fetchFxRate();if(fxr?.price)fx=fxr.price;}catch{}
         const syms=latest.map(x=>x.ticker).filter(Boolean);
         const quotes=syms.length?await fetchQuotes(syms):{};
@@ -5901,6 +5911,14 @@ function buildInvest(){
         const ct=document.getElementById("ct");if(ct){ct.innerHTML="";buildInvest().forEach(n=>ct.append(n));}
         if(fixed>0)mascotEvent("portfolio_repaired",{character:"jjajang"});
         alert(`✅ ${fixed}개 종목 평가액을 현재가·환율 기준으로 정리했어요.`);
+        }catch(e){
+          dlog("[평가액정리실패]",e);
+          toast("평가액 정리에 실패했어요. 잠시 후 다시 시도해주세요.",false);
+          mascotEvent("retry_calm",{character:"mayo",duration:3600});
+        }finally{
+          fixBtn.disabled=false;
+          if(fixBtn.isConnected)fixBtn.textContent="↻ 평가액 정리 다시 시도";
+        }
       }},"⚠️ 평가액 이상값 정리하기");
     }
     const diagBtn=h("button",{style:{width:"100%",marginBottom:"10px",fontSize:"12px",fontWeight:"700",padding:"9px",borderRadius:"10px",border:`1px dashed ${C.faint}`,background:C.w,color:C.faint,cursor:"pointer"},onclick:()=>{

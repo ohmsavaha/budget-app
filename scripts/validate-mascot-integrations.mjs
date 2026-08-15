@@ -98,8 +98,12 @@ const dbView = app.slice(app.indexOf("function buildDbTab()"), app.indexOf("func
 for (const className of ["db-dashboard", "db-hero", "db-summary-grid", "db-main-card", "db-toolbar", "db-category-rail", "db-product-list", "db-product-row", "db-price-status"]) {
   if (!dbView.includes(className)) failures.push(`품목 DB 화면 계층 클래스 누락: ${className}`);
 }
-if (!app.includes("나의 가계부 · v145")) failures.push("앱 버전 v145 표기 누락");
-if (!worker.includes('const CACHE = "budget-v145"')) failures.push("서비스 워커 v145 캐시 누락");
+const investmentRefresh = app.slice(app.indexOf("refreshBtn.onclick=async()=>"), app.indexOf("const manageBtn=", app.indexOf("refreshBtn.onclick=async()=>")));
+if (!investmentRefresh.includes("[시세갱신실패]") || !investmentRefresh.includes("finally") || !investmentRefresh.includes("refreshBtn.disabled=false")) failures.push("투자 시세 갱신 실패 복구 누락");
+const investmentRepair = app.slice(app.indexOf("if(hasBad){"), app.indexOf("const diagBtn=", app.indexOf("if(hasBad){")));
+if (!investmentRepair.includes("[평가액정리실패]") || !investmentRepair.includes("finally") || !investmentRepair.includes("fixBtn.disabled=false")) failures.push("투자 평가액 정리 실패 복구 누락");
+if (!app.includes("나의 가계부 · v146")) failures.push("앱 버전 v146 표기 누락");
+if (!worker.includes('const CACHE = "budget-v146"')) failures.push("서비스 워커 v146 캐시 누락");
 if (!runtime.includes('"phase2h"')) failures.push("Phase 2H 애니메이션 파일명 규칙 누락");
 if (!runtime.includes('"phase2i"')) failures.push("Phase 2I 애니메이션 파일명 규칙 누락");
 if (!runtime.includes('"phase2k"')) failures.push("Phase 2K 애니메이션 파일명 규칙 누락");
@@ -112,6 +116,6 @@ if (failures.length) {
     status: "passed",
     appEvents: requiredAppEvents.length,
     runtimeActions: requiredRuntimeActions.length,
-    version: "v145",
+    version: "v146",
   }));
 }
