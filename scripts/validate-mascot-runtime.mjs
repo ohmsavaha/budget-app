@@ -38,7 +38,8 @@ function inspectAnimatedWebP(path) {
 
 function pngHasAlpha(path) {
   const buffer = readFileSync(path);
-  return buffer.subarray(1, 4).toString() === "PNG" && [4, 6].includes(buffer[25]);
+  if (buffer.subarray(1, 4).toString() !== "PNG") return false;
+  return [4, 6].includes(buffer[25]) || buffer.includes(Buffer.from("tRNS"));
 }
 
 for (const phase of phases) {
