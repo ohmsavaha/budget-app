@@ -118,8 +118,14 @@ const transactionAdd = app.slice(app.indexOf("function showAdd("), app.indexOf("
 if (!transactionAdd.includes("transaction_id:transactionId") || !transactionAdd.includes("splitError") || !transactionAdd.includes("rollbackError")) failures.push("일반 거래 더치페이 저장의 연결·실패 되돌리기 누락");
 const settlementMatch = app.slice(app.indexOf("function buildRecent()"), app.indexOf("// ── 🍚 식비 분석"));
 if (!settlementMatch.includes("splitRollbackError") || !settlementMatch.includes("transactionRollbackError") || !settlementMatch.includes("btn.disabled=true")) failures.push("정산 자동 연결의 중복 클릭 차단·실패 되돌리기 누락");
-if (!app.includes("나의 가계부 · v150")) failures.push("앱 버전 v150 표기 누락");
-if (!worker.includes('const CACHE = "budget-v150"')) failures.push("서비스 워커 v150 캐시 누락");
+const accountEditor = app.slice(app.indexOf("function showAccountEdit("), app.indexOf("// ── 저축 추가/수정"));
+const savingEditor = app.slice(app.indexOf("function showSavingEdit("), app.indexOf("function showLoanEdit("));
+const loanEditor = app.slice(app.indexOf("function showLoanEdit("), app.indexOf("// ── 더치페이 추가"));
+for (const [name,editor] of [["계좌",accountEditor],["저축",savingEditor],["대출",loanEditor]]) {
+  if (!editor.includes('mascotEvent("retry_calm"') || !editor.includes('btn.textContent="삭제 중…"') || !editor.includes('alert("삭제 실패: "')) failures.push(`${name} 저장·삭제 네트워크 예외 복구 누락`);
+}
+if (!app.includes("나의 가계부 · v151")) failures.push("앱 버전 v151 표기 누락");
+if (!worker.includes('const CACHE = "budget-v151"')) failures.push("서비스 워커 v151 캐시 누락");
 if (!runtime.includes('"phase2h"')) failures.push("Phase 2H 애니메이션 파일명 규칙 누락");
 if (!runtime.includes('"phase2i"')) failures.push("Phase 2I 애니메이션 파일명 규칙 누락");
 if (!runtime.includes('"phase2k"')) failures.push("Phase 2K 애니메이션 파일명 규칙 누락");
@@ -132,6 +138,6 @@ if (failures.length) {
     status: "passed",
     appEvents: requiredAppEvents.length,
     runtimeActions: requiredRuntimeActions.length,
-    version: "v150",
+    version: "v151",
   }));
 }
