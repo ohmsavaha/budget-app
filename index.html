@@ -1056,7 +1056,7 @@ function renderDash(){
     h("div",{class:"app-header",style:{display:"flex",alignItems:"center",justifyContent:"space-between",marginBottom:"16px"}},
       h("div",{style:{display:"flex",alignItems:"center",gap:"9px"}},
         h("span",{style:{fontSize:"21px"}},SN[Number(S.curYm.split("-")[1])]||"📒"),
-        h("div",{},h("div",{style:{fontSize:"11.5px",color:C.sub}},"🐾 나의 가계부 · v149"),h("div",{style:{fontSize:"16.5px",fontWeight:"800",letterSpacing:"-.01em",cursor:"pointer",display:"flex",alignItems:"center",gap:"4px"},onclick:()=>showMonthPicker()},yml(S.curYm),h("span",{style:{fontSize:"10px",color:C.faint}},"▾")))
+        h("div",{},h("div",{style:{fontSize:"11.5px",color:C.sub}},"🐾 나의 가계부 · v150"),h("div",{style:{fontSize:"16.5px",fontWeight:"800",letterSpacing:"-.01em",cursor:"pointer",display:"flex",alignItems:"center",gap:"4px"},onclick:()=>showMonthPicker()},yml(S.curYm),h("span",{style:{fontSize:"10px",color:C.faint}},"▾")))
       ),
       h("div",{class:"app-month-nav",style:{display:"flex",alignItems:"center",gap:"4px",background:C.w,border:`1px solid ${C.line}`,borderRadius:"999px",padding:"3px 4px"}},prevBtn,todayBtn,nextBtn)
     ),
@@ -2236,12 +2236,21 @@ function buildRecent(){
     if(t.type==="수입"&&!isInternalTransfer(t)){
       const amt=Number(t.amount)||0;
       const mch=(S.pendingSplits||[]).find(d=>!d.received&&Math.abs(Number(d.to_receive)-amt)<=Math.max(1000,amt*0.02));
-      if(mch){recSec.append(h("button",{style:{width:"100%",textAlign:"left",fontSize:"11.5px",fontWeight:"700",color:"#3B5BA5",background:"#F0F4FF",border:"none",borderRadius:"9px",padding:"9px 12px",margin:"2px 0 8px",cursor:"pointer"},onclick:async()=>{
+      if(mch){recSec.append(h("button",{style:{width:"100%",textAlign:"left",fontSize:"11.5px",fontWeight:"700",color:"#3B5BA5",background:"#F0F4FF",border:"none",borderRadius:"9px",padding:"9px 12px",margin:"2px 0 8px",cursor:"pointer"},onclick:async e=>{
         if(!confirm(`'${mch.place||"나눠내기"}' 받을 돈 ${W(mch.to_receive)}의 정산 입금으로 연결할까요?\n이 입금은 '정산환급'으로 바뀌어 소비에서 차감돼요.`))return;
-        const{error:splitError}=await sb.from("dutch_splits").update({received:true}).eq("id",mch.id);
-        if(splitError){toast("정산 연결 실패: "+splitError.message,false);return;}
-        const{error:transactionError}=await sb.from("transactions").update({type:"정산환급",memo:(((t.memo||"")+" #정산").trim())}).eq("id",t.id);
-        if(transactionError){toast("정산 연결 실패: "+transactionError.message,false);return;}
+        const btn=e.currentTarget;btn.disabled=true;
+        try{
+          const{error:splitError}=await sb.from("dutch_splits").update({received:true}).eq("id",mch.id).select("id").single();
+          if(splitError)throw splitError;
+          const{error:transactionError}=await sb.from("transactions").update({type:"정산환급",memo:(((t.memo||"")+" #정산").trim())}).eq("id",t.id).select("id").single();
+          if(transactionError)throw transactionError;
+        }catch(error){
+          const rollbackErrors=[];
+          try{const{error:splitRollbackError}=await sb.from("dutch_splits").update({received:false}).eq("id",mch.id);if(splitRollbackError)rollbackErrors.push(splitRollbackError);}catch(rollbackError){rollbackErrors.push(rollbackError);}
+          try{const{error:transactionRollbackError}=await sb.from("transactions").update({type:t.type,memo:t.memo||null}).eq("id",t.id);if(transactionRollbackError)rollbackErrors.push(transactionRollbackError);}catch(rollbackError){rollbackErrors.push(rollbackError);}
+          toast(rollbackErrors.length?"정산이 일부만 반영됐어요. 입금과 받을 돈 상태를 확인해주세요.":"정산 연결에 실패해 원래 상태로 되돌렸어요.",false);
+          btn.disabled=false;mascotEvent("retry_calm",{character:"mayo"});return;
+        }
         await loadMonth();homeReload();toast("🔗 정산 연결 완료 — 소비에서 차감됐어요!");
         mascotEvent("joint_settlement",{character:"mayo"});
       }},`💡 '${mch.place||"나눠내기"}' 받을 돈 ${W(mch.to_receive)} 정산 입금인가요? — 탭해서 연결`));}
@@ -6071,10 +6080,23 @@ function showAdd(preset){
     } else if(n>1){const gid=uid(),per=Math.round(a/n);for(let i=0;i<n;i++){const base=ym(dt.value);const d=shYm(base,i)+"-"+dt.value.slice(8);rows.push({user_id:S.session.user.id,household_id:hid,date:d,account:selAcc,type:typ.value,amount:per,category:selCat,merchant:mer.value.trim()||null,memo:mo.value.trim()||null,payment_method:pm,installment_group_id:gid,installment_no:i+1,installment_total:n});}}
     else rows.push({user_id:S.session.user.id,household_id:hid,date:dt.value,account:selAcc,type:typ.value,amount:a,category:selCat,merchant:mer.value.trim()||null,memo:mo.value.trim()||null,payment_method:pm});
     if(dutchOn&&n===1){
-      const{data:ins,error}=await sb.from("transactions").insert(rows[0]).select().single();
-      if(error){alert("저장 실패: "+error.message);sv.disabled=false;sv.textContent="저장하기";return;}
-      const nn=Math.max(2,Number(dutchNEl.value)||2),my=Math.round(a/nn),recv=Math.max(0,a-my);
-      await sb.from("dutch_splits").insert({user_id:S.session.user.id,household_id:hid,date:dt.value,place:mer.value.trim()||"더치페이",total:a,my_share:my,to_receive:recv,is_shared:selAcc==="공용",received:false,transaction_id:ins.id});
+      let transactionId=null;
+      try{
+        const{data:ins,error:transactionError}=await sb.from("transactions").insert(rows[0]).select("id").single();
+        if(transactionError)throw transactionError;
+        transactionId=ins?.id;
+        if(!transactionId)throw new Error("지출 기록 번호를 확인하지 못했어요.");
+        const nn=Math.max(2,Number(dutchNEl.value)||2),my=Math.round(a/nn),recv=Math.max(0,a-my);
+        const{error:splitError}=await sb.from("dutch_splits").insert({user_id:S.session.user.id,household_id:hid,date:dt.value,place:mer.value.trim()||"더치페이",total:a,my_share:my,to_receive:recv,is_shared:selAcc==="공용",received:false,transaction_id:transactionId});
+        if(splitError)throw splitError;
+      }catch(error){
+        let rollbackError=null;
+        if(transactionId){try{({error:rollbackError}=await sb.from("transactions").delete().eq("id",transactionId));}catch(rollbackException){rollbackError=rollbackException;}}
+        alert(rollbackError
+          ? `저장이 일부만 반영됐어요. 거래 내역에서 '${mer.value.trim()||"더치페이"}' 중복 여부를 확인해주세요.\n${error?.message||error}`
+          : `저장하지 못해 원래 상태로 되돌렸어요. 다시 시도해주세요.\n${error?.message||error}`);
+        sv.disabled=false;sv.textContent="다시 저장하기";mascotEvent("retry_calm",{character:"mayo"});return;
+      }
     }else{
       const{error}=await sb.from("transactions").insert(rows);
       if(error){alert("저장 실패: "+error.message);sv.disabled=false;sv.textContent="저장하기";return;}

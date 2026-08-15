@@ -114,8 +114,12 @@ const dutchAdd = app.slice(app.indexOf("function showDutchAdd()"), app.indexOf("
 if (!dutchAdd.includes("transaction_id:transactionId") || !dutchAdd.includes('.from("transactions").delete().eq("id",transactionId)')) failures.push("나눠내기 생성의 거래 연결·실패 되돌리기 누락");
 const dutchReceive = app.slice(app.indexOf("function showDutchReceive("), app.indexOf('if("serviceWorker"'));
 if (!dutchReceive.includes("previousBalance") || !dutchReceive.includes("rollbackErrors") || !dutchReceive.includes('.from("transactions").delete().eq("id",transactionId)')) failures.push("나눠내기 받음 처리의 단계별 되돌리기 누락");
-if (!app.includes("나의 가계부 · v149")) failures.push("앱 버전 v149 표기 누락");
-if (!worker.includes('const CACHE = "budget-v149"')) failures.push("서비스 워커 v149 캐시 누락");
+const transactionAdd = app.slice(app.indexOf("function showAdd("), app.indexOf("function showHoldingsCalc("));
+if (!transactionAdd.includes("transaction_id:transactionId") || !transactionAdd.includes("splitError") || !transactionAdd.includes("rollbackError")) failures.push("일반 거래 더치페이 저장의 연결·실패 되돌리기 누락");
+const settlementMatch = app.slice(app.indexOf("function buildRecent()"), app.indexOf("// ── 🍚 식비 분석"));
+if (!settlementMatch.includes("splitRollbackError") || !settlementMatch.includes("transactionRollbackError") || !settlementMatch.includes("btn.disabled=true")) failures.push("정산 자동 연결의 중복 클릭 차단·실패 되돌리기 누락");
+if (!app.includes("나의 가계부 · v150")) failures.push("앱 버전 v150 표기 누락");
+if (!worker.includes('const CACHE = "budget-v150"')) failures.push("서비스 워커 v150 캐시 누락");
 if (!runtime.includes('"phase2h"')) failures.push("Phase 2H 애니메이션 파일명 규칙 누락");
 if (!runtime.includes('"phase2i"')) failures.push("Phase 2I 애니메이션 파일명 규칙 누락");
 if (!runtime.includes('"phase2k"')) failures.push("Phase 2K 애니메이션 파일명 규칙 누락");
@@ -128,6 +132,6 @@ if (failures.length) {
     status: "passed",
     appEvents: requiredAppEvents.length,
     runtimeActions: requiredRuntimeActions.length,
-    version: "v149",
+    version: "v150",
   }));
 }
