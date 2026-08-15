@@ -64,6 +64,7 @@ const requiredRuntimeActions = [...new Set([
   "annual_review",
   "group_household_inventory",
   "group_budget_review",
+  "budget_calm",
   "budget_warning",
   "budget_exceeded",
   "goal_achieved",
@@ -143,7 +144,7 @@ if (!runtime.includes('"phase2k"')) failures.push("Phase 2K 애니메이션 파�
 if (!runtime.includes('"phase2l"')) failures.push("Phase 2L 애니메이션 파일명 규칙 누락");
 if (!runtime.includes('"phase2m"')) failures.push("Phase 2M 애니메이션 파일명 규칙 누락");
 if (!worker.includes("group_group_budget_review_512_v01.webp")) failures.push("Phase 2L 홈 애니메이션 오프라인 캐시 누락");
-for (const asset of ["huchu_budget_warning", "mayo_budget_exceeded", "jjajang_goal_achieved", "huchu_search_no_results", "mayo_history_empty", "mayo_retry_calm"]) {
+for (const asset of ["mayo_budget_calm", "huchu_budget_warning", "mayo_budget_exceeded", "jjajang_goal_achieved", "huchu_search_no_results", "mayo_history_empty", "mayo_retry_calm"]) {
   if (!worker.includes(`${asset}_512_v01.webp`)) failures.push(`Phase 2M 오프라인 캐시 누락: ${asset}`);
 }
 if (!app.includes("mascotBudgetState(used,isCur)")) failures.push("홈 예산 상태 마스코트 자동 연결 누락");

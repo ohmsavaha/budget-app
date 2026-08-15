@@ -5,7 +5,7 @@ const ENABLED_KEY = "mascot_v2_enabled";
 
 const PHASE_ACTIONS = Object.freeze({
   phase2m: new Set([
-    "budget_warning", "budget_exceeded", "goal_achieved",
+    "budget_calm", "budget_warning", "budget_exceeded", "goal_achieved",
     "search_no_results", "history_empty", "retry_calm",
   ]),
   phase2l: new Set(["group_budget_review"]),
@@ -132,6 +132,7 @@ const IDLE_BY_TAB = Object.freeze({
 });
 
 const PREFERRED_CHARACTER = Object.freeze({
+  budget_calm: "mayo",
   group_budget_review: "group",
   fixed_plan_saved: "huchu",
   fixed_plan_updated: "mayo",
@@ -252,6 +253,7 @@ const PREFERRED_CHARACTER = Object.freeze({
 });
 
 const ACTION_COPY = Object.freeze({
+  budget_calm: ["예산에 여유가 있어요", "마요가 지금 속도라면 예산을 편안하게 지킬 수 있다고 알려줘요.", "good"],
   group_budget_review: ["세 마리 가계부 회의", "후추·마요·짜장이 기록과 다음 계획을 함께 살펴봐요.", "neutral"],
   fixed_plan_saved: ["고정비 계획 저장", "새 고정비의 금액과 납부일을 계획에 넣었어요.", "good"],
   fixed_plan_updated: ["고정비 계획 수정", "바뀐 금액과 결제 정보를 최신 상태로 맞췄어요.", "good"],
@@ -365,6 +367,7 @@ const ACTION_COPY = Object.freeze({
 });
 
 const PRIORITY = Object.freeze({
+  budget_calm: 2,
   fixed_plan_saved: 4,
   fixed_plan_updated: 4,
   fixed_archived: 3,

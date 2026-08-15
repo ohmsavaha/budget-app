@@ -115,6 +115,7 @@ if (!image.getAttribute("src")?.includes("phase2l/webp/group_group_budget_review
 await new Promise((resolve) => setTimeout(resolve, 15));
 
 for (const [action, character] of [
+  ["budget_calm", "mayo"],
   ["budget_warning", "huchu"],
   ["budget_exceeded", "mayo"],
   ["goal_achieved", "jjajang"],

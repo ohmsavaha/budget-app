@@ -173,6 +173,13 @@
   --mascot-stage-line: #cfe5d6;
 }
 
+.budget-mascot-stage[data-action="budget_calm"] {
+  --mascot-stage-bg:
+    radial-gradient(circle at 88% 18%, rgba(78, 148, 108, .18), transparent 34%),
+    linear-gradient(135deg, #fff 0%, #f1faf4 100%);
+  --mascot-stage-line: #cfe5d6;
+}
+
 .budget-mascot-stage[data-action="search_no_results"],
 .budget-mascot-stage[data-action="history_empty"],
 .budget-mascot-stage[data-action="retry_calm"] {

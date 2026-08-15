@@ -7,10 +7,21 @@
     "runtime": [512, 512],
     "fallback": [128, 128]
   },
-  "animation_count": 6,
-  "solo_action_count": 6,
+  "animation_count": 7,
+  "solo_action_count": 7,
   "group_action_count": 0,
   "animations": [
+    {
+      "id": "mayo_budget_calm",
+      "actor": "mayo",
+      "display_name": "마요",
+      "action": "budget_calm",
+      "action_label": "예산 여유",
+      "durations_ms": [150, 170, 210, 300, 210, 170],
+      "total_duration_ms": 1210,
+      "loop": true,
+      "anchor": { "x": 0.5, "y": 0.95 }
+    },
     {
       "id": "huchu_budget_warning",
       "actor": "huchu",

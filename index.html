@@ -426,14 +426,13 @@ const mascotEmptyState=(text)=>{
 let mascotBudgetTimer=0,mascotBudgetAt=0,mascotBudgetKey="";
 const mascotBudgetState=(used,isCurrent)=>{
   if(!isCurrent||S.budget<=0||document.body.dataset.budgetTab!=="home")return;
-  const action=used>=1?"budget_exceeded":used>=.8?"budget_warning":"";
-  if(!action)return;
+  const action=used>=1?"budget_exceeded":used>=.8?"budget_warning":"budget_calm";
   const key=`${S.curYm}:${action}`,now=Date.now();
   if(key===mascotBudgetKey&&now-mascotBudgetAt<90000)return;
   clearTimeout(mascotBudgetTimer);
   mascotBudgetTimer=setTimeout(()=>{
     mascotBudgetAt=Date.now();mascotBudgetKey=key;
-    mascotEvent(action,{character:action==="budget_exceeded"?"mayo":"huchu",duration:3600});
+    mascotEvent(action,{character:action==="budget_warning"?"huchu":"mayo",duration:3600});
   },520);
 };
 
