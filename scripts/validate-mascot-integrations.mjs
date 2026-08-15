@@ -124,8 +124,10 @@ const loanEditor = app.slice(app.indexOf("function showLoanEdit("), app.indexOf(
 for (const [name,editor] of [["계좌",accountEditor],["저축",savingEditor],["대출",loanEditor]]) {
   if (!editor.includes('mascotEvent("retry_calm"') || !editor.includes('btn.textContent="삭제 중…"') || !editor.includes('alert("삭제 실패: "')) failures.push(`${name} 저장·삭제 네트워크 예외 복구 누락`);
 }
-if (!app.includes("나의 가계부 · v151")) failures.push("앱 버전 v151 표기 누락");
-if (!worker.includes('const CACHE = "budget-v151"')) failures.push("서비스 워커 v151 캐시 누락");
+if (!app.includes("async function deleteRowChecked(") || !app.includes('.delete().eq("id",id).select("id").single()')) failures.push("삭제 결과 확인 공통 헬퍼 누락");
+for (const marker of ["[품목삭제실패]", "[가격삭제실패]", "[거래삭제실패]", "[더치페이삭제실패]"]) if (!app.includes(marker)) failures.push(`삭제 실패 복구 누락: ${marker}`);
+if (!app.includes("나의 가계부 · v152")) failures.push("앱 버전 v152 표기 누락");
+if (!worker.includes('const CACHE = "budget-v152"')) failures.push("서비스 워커 v152 캐시 누락");
 if (!runtime.includes('"phase2h"')) failures.push("Phase 2H 애니메이션 파일명 규칙 누락");
 if (!runtime.includes('"phase2i"')) failures.push("Phase 2I 애니메이션 파일명 규칙 누락");
 if (!runtime.includes('"phase2k"')) failures.push("Phase 2K 애니메이션 파일명 규칙 누락");
@@ -138,6 +140,6 @@ if (failures.length) {
     status: "passed",
     appEvents: requiredAppEvents.length,
     runtimeActions: requiredRuntimeActions.length,
-    version: "v151",
+    version: "v152",
   }));
 }

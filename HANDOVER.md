@@ -330,7 +330,7 @@ Anthropic Messages API 직접 호출(`anthropic-dangerous-direct-browser-access`
 
 ---
 
-## 16. 🎨 디자인 업그레이드 진행 상태 (v151)
+## 16. 🎨 디자인 업그레이드 진행 상태 (v152)
 
 ### 브랜치·배포 경계
 
@@ -463,26 +463,34 @@ Anthropic Messages API 직접 호출(`anthropic-dangerous-direct-browser-access`
 - 계좌 잔액, 저축 목표·만기 확장값, 대출 원금·잔액과 순자산 계산은 변경하지 않았다.
 - 앱 표기와 서비스워커 캐시를 v151로 함께 올렸다.
 
+### v152 적용 내용 — 핵심 삭제 결과 확인
+
+- 품목·가격 기록·더치페이 기록·거래 수정창 삭제는 Supabase 삭제 응답에서 실제 삭제된 `id`를 확인한 경우에만 모달을 닫거나 목록을 다시 그린다.
+- RLS·세션·네트워크 문제로 삭제된 행이 없거나 오류가 발생하면 현재 화면을 유지하고 버튼을 다시 활성화해 같은 자리에서 재시도할 수 있다.
+- `scripts/validate-delete-safety.mjs`를 추가해 성공·오류·삭제 행 없음 3가지 응답과 네 화면의 실패 복구 연결을 사용자 데이터 없이 검증한다.
+- 앱 표기와 서비스워커 캐시를 v152로 함께 올렸다.
+
 ### v136 검증 명령
 
 ```bash
 node scripts/validate-mascot-runtime.mjs
 node scripts/validate-mascot-integrations.mjs
 node scripts/validate-design-hierarchy.mjs
+node scripts/validate-delete-safety.mjs
 DOM_TEST_NODE_MODULES="<linkedom node_modules 경로>" node scripts/smoke-mascot-runtime-dom.mjs
 ```
 
 ### 현재 상태·다음 순서
 
 - **현재 목표**: 9개 탭 디자인 업그레이드 후속으로 회계 규칙을 유지하면서 저장 실패·재시도 경험을 화면 단위로 보강한다.
-- **기준 버전·원격 PR HEAD**: 로컬·원격 작업 브랜치 v151. `main`은 변경하지 않는다. 정확한 HEAD는 재개 시 `git rev-parse origin/feat/phase3-mascot-v2-integration`으로 확인한다.
-- **완료**: Phase 2J~2M 복원, Phase 2K 44개 애니메이션/44개 정적 대체, v136 전역 셸, v137 홈, v138 지출, v139 공용, v140 자산, v141 고정비, v142 투자, v143 월간, v144 연간, v145 품목 DB, 9개 탭 회귀 검사, v146 투자 실패 복구, v147 품목·가격 저장 안정성, v148 실제 카드대금 저장 복구, v149 나눠내기 생성·받음 처리 정합성, v150 일반 거래 더치페이·자동 정산 연결 복구, v151 자산 저장·삭제 재시도.
-- **진행 중**: 없음. v151 검증 후 삭제 실패가 성공처럼 보이는 나머지 화면을 점검한다.
+- **기준 버전·원격 PR HEAD**: 로컬·원격 작업 브랜치 v152. `main`은 변경하지 않는다. 정확한 HEAD는 재개 시 `git rev-parse origin/feat/phase3-mascot-v2-integration`으로 확인한다.
+- **완료**: Phase 2J~2M 복원, Phase 2K 44개 애니메이션/44개 정적 대체, v136 전역 셸, v137 홈, v138 지출, v139 공용, v140 자산, v141 고정비, v142 투자, v143 월간, v144 연간, v145 품목 DB, 9개 탭 회귀 검사, v146 투자 실패 복구, v147 품목·가격 저장 안정성, v148 실제 카드대금 저장 복구, v149 나눠내기 생성·받음 처리 정합성, v150 일반 거래 더치페이·자동 정산 연결 복구, v151 자산 저장·삭제 재시도, v152 핵심 삭제 결과 확인.
+- **진행 중**: 없음. v152 검증 후 중복 거래 정리·카드대금 확정 취소 같은 일괄 삭제 흐름을 점검한다.
 - **검증 완료**: 모듈 문법, `validate-mascot-integrations`(51 이벤트/53 동작), `validate-mascot-runtime`(695개 참조 파일), `validate-design-hierarchy`(9개 탭·9개 빌더·핵심 계층·전역 함수 중복), DOM·reduced-motion 스모크 검사, `git diff --check`.
-- **다음 우선순위**: 품목·가격·더치페이 목록 삭제와 거래 수정 삭제의 성공 확인·재시도 동작을 점검한다.
+- **다음 우선순위**: 중복 거래 정리·가져오기 정리·카드대금 확정 취소처럼 여러 거래를 삭제하는 흐름의 부분 실패와 재시도를 점검한다.
 - **차단 사유**: 없음. 작업공간 정리로 이전 로컬 전용 커밋은 사라졌으므로 원격 작업 브랜치를 기준으로 재개했다.
 - 회계 규칙(§6), 저장 데이터의 열·값, 실제 거래 이벤트는 변경하지 않는다. 실패 확인·중복 클릭 차단·재시도만 보강한다.
 
 ---
 
-_문의: 원저자 정근. 이 문서는 v151 작업 브랜치 기준이며, 큰 변경 시 갱신 필요._
+_문의: 원저자 정근. 이 문서는 v152 작업 브랜치 기준이며, 큰 변경 시 갱신 필요._
