@@ -1,0 +1,48 @@
+# 후추·마요·짜장 아기 고양이 육성 팩 v1
+
+가계부의 기존 성묘 마스코트와 분리된 다마고치형 육성 기능 기반입니다. 현재 운영 화면에는 자동 노출하지 않으며, 나중에 전용 탭을 붙일 때 이 폴더만 연결하면 됩니다.
+
+## 포함 범위
+
+- 캐릭터 3마리: 후추, 마요, 짜장
+- 아기 상태 7종: `idle`, `eat`, `sleep`, `play`, `groom`, `sick`, `love`
+- 상태마다 1024px 투명 PNG 원화, 512px 6프레임 WebP, 128px 정적 PNG
+- 포만감·에너지·기분·청결·건강·친밀도 시간 경과
+- 밥·잠·놀이·빗질·돌봄·쓰다듬기 행동과 개별 쿨다운
+- 성장 XP, 아기→성묘 전환, 돌봄 연속일, 오프라인 진행(최대 24시간)
+- 사망 없음, 다시 키우기 확인 토큰, 세대 기록
+- 모션 감소 환경의 정적 이미지 전환
+
+## 파일 규칙
+
+```text
+source/{character}_baby_{state}_master_v01.png
+webp/{character}_baby_{state}_512_v01.webp
+static/{character}_baby_{state}_frame_01_v01.png
+```
+
+`character`는 `huchu`, `mayo`, `jjajang`이고 `state`는 위 7개 상태입니다. 합성 시트가 아니므로 모든 이미지를 독립적으로 사용할 수 있습니다.
+
+## 나중에 화면에 연결하는 최소 코드
+
+```html
+<link rel="stylesheet" href="./assets/pet-v1/pet-nursery.css">
+<script src="./assets/pet-v1/pet-nursery.js"></script>
+<script src="./assets/pet-v1/pet-nursery-view.js"></script>
+<div id="pet-room"></div>
+<script>
+  const nursery = BudgetPetNurseryUI.mount(
+    document.querySelector("#pet-room"),
+    { character: "huchu" },
+  );
+</script>
+```
+
+## 안전 규칙
+
+- 고양이 무대는 `.pet-nursery__safe-stage` 안에만 둡니다.
+- 금액, 차트, 거래행, 입력 버튼 위에 고양이를 절대 겹치지 않습니다.
+- 정보 → 조작 → 장식 순서를 유지합니다.
+- 다시 키우기는 `getResetToken(character)`로 확인 문자열을 받은 뒤에만 실행합니다.
+- 육성 수치는 실제 가계부 금액이나 Supabase 회계 데이터와 연결하지 않습니다.
+- 돌봄을 쉬어도 캐릭터가 사라지거나 죽지 않습니다.

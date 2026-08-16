@@ -1,0 +1,96 @@
+{
+  "pack": "humajja-pet-v1-kitten-core",
+  "version": "1.0.0",
+  "purpose": "후추·마요·짜장을 아기 때부터 다시 돌보는 다마고치형 육성 기능의 핵심 자산과 상태 규칙",
+  "principles": {
+    "no_death": true,
+    "offline_decay_cap_hours": 24,
+    "reset_requires_confirmation": true,
+    "ui_priority": ["information", "controls", "pet_decoration"],
+    "safe_region_only": true
+  },
+  "canvas": {
+    "source": [1024, 1024],
+    "runtime": [512, 512],
+    "fallback": [128, 128]
+  },
+  "animation": {
+    "frame_count": 6,
+    "durations_ms": [150, 170, 210, 300, 210, 170],
+    "total_duration_ms": 1210,
+    "loop": true,
+    "anchor": { "x": 0.5, "y": 0.95 }
+  },
+  "path_templates": {
+    "source": "./assets/pet-v1/source/{id}_master_v01.png",
+    "webp": "./assets/pet-v1/webp/{id}_512_v01.webp",
+    "fallback": "./assets/pet-v1/static/{id}_frame_01_v01.png"
+  },
+  "characters": [
+    {
+      "id": "huchu",
+      "display_name": "후추",
+      "identity": "검정·흰색 턱시도, 노란 눈, 흰 이마선·주둥이·가슴·발"
+    },
+    {
+      "id": "mayo",
+      "display_name": "마요",
+      "identity": "흰색 중심, 회색 태비 머리·등·줄무늬 꼬리, 초록 눈"
+    },
+    {
+      "id": "jjajang",
+      "display_name": "짜장",
+      "identity": "검정·주황 토터셸/삼색, 흰 가슴·발, 초록빛 노란 눈"
+    }
+  ],
+  "lifecycle": [
+    {
+      "id": "kitten",
+      "label": "아기 고양이",
+      "min_xp": 0,
+      "max_xp": 1199,
+      "asset_pack": "pet-v1"
+    },
+    {
+      "id": "adult",
+      "label": "다 자란 고양이",
+      "min_xp": 1200,
+      "max_xp": null,
+      "asset_pack": "mascot-v2"
+    }
+  ],
+  "needs": ["fullness", "energy", "happiness", "cleanliness", "health", "affection"],
+  "actions": [
+    { "id": "idle", "label": "함께 있기", "visual": "idle", "cooldown_minutes": 0 },
+    { "id": "feed", "label": "밥 주기", "visual": "eat", "cooldown_minutes": 30 },
+    { "id": "sleep", "label": "재우기", "visual": "sleep", "cooldown_minutes": 60 },
+    { "id": "play", "label": "놀아주기", "visual": "play", "cooldown_minutes": 20 },
+    { "id": "clean", "label": "빗질하기", "visual": "groom", "cooldown_minutes": 20 },
+    { "id": "care", "label": "돌봐주기", "visual": "sick", "cooldown_minutes": 60 },
+    { "id": "pet", "label": "쓰다듬기", "visual": "love", "cooldown_minutes": 5 }
+  ],
+  "animation_count": 21,
+  "animations": [
+    { "id": "huchu_baby_idle", "actor": "huchu", "state": "idle" },
+    { "id": "huchu_baby_eat", "actor": "huchu", "state": "eat" },
+    { "id": "huchu_baby_sleep", "actor": "huchu", "state": "sleep" },
+    { "id": "huchu_baby_play", "actor": "huchu", "state": "play" },
+    { "id": "huchu_baby_groom", "actor": "huchu", "state": "groom" },
+    { "id": "huchu_baby_sick", "actor": "huchu", "state": "sick" },
+    { "id": "huchu_baby_love", "actor": "huchu", "state": "love" },
+    { "id": "mayo_baby_idle", "actor": "mayo", "state": "idle" },
+    { "id": "mayo_baby_eat", "actor": "mayo", "state": "eat" },
+    { "id": "mayo_baby_sleep", "actor": "mayo", "state": "sleep" },
+    { "id": "mayo_baby_play", "actor": "mayo", "state": "play" },
+    { "id": "mayo_baby_groom", "actor": "mayo", "state": "groom" },
+    { "id": "mayo_baby_sick", "actor": "mayo", "state": "sick" },
+    { "id": "mayo_baby_love", "actor": "mayo", "state": "love" },
+    { "id": "jjajang_baby_idle", "actor": "jjajang", "state": "idle" },
+    { "id": "jjajang_baby_eat", "actor": "jjajang", "state": "eat" },
+    { "id": "jjajang_baby_sleep", "actor": "jjajang", "state": "sleep" },
+    { "id": "jjajang_baby_play", "actor": "jjajang", "state": "play" },
+    { "id": "jjajang_baby_groom", "actor": "jjajang", "state": "groom" },
+    { "id": "jjajang_baby_sick", "actor": "jjajang", "state": "sick" },
+    { "id": "jjajang_baby_love", "actor": "jjajang", "state": "love" }
+  ]
+}
