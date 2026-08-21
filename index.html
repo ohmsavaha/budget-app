@@ -1100,8 +1100,8 @@ function renderDash(){
       h("div",{style:{display:"flex",alignItems:"center",gap:"9px"}},
         h("span",{style:{fontSize:"21px"}},isPetTab?"🐾":(SN[Number(S.curYm.split("-")[1])]||"📒")),
         isPetTab
-          ?h("div",{},h("div",{style:{fontSize:"11.5px",color:C.sub}},"🐾 나의 가계부 · v161"),h("div",{style:{fontSize:"16.5px",fontWeight:"800",letterSpacing:"-.01em"}},"고양이 육성방"))
-          :h("div",{},h("div",{style:{fontSize:"11.5px",color:C.sub}},"🐾 나의 가계부 · v161"),h("div",{style:{fontSize:"16.5px",fontWeight:"800",letterSpacing:"-.01em",cursor:"pointer",display:"flex",alignItems:"center",gap:"4px"},onclick:()=>showMonthPicker()},yml(S.curYm),h("span",{style:{fontSize:"10px",color:C.faint}},"▾")))
+          ?h("div",{},h("div",{style:{fontSize:"11.5px",color:C.sub}},"🐾 나의 가계부 · v162"),h("div",{style:{fontSize:"16.5px",fontWeight:"800",letterSpacing:"-.01em"}},"고양이 육성방"))
+          :h("div",{},h("div",{style:{fontSize:"11.5px",color:C.sub}},"🐾 나의 가계부 · v162"),h("div",{style:{fontSize:"16.5px",fontWeight:"800",letterSpacing:"-.01em",cursor:"pointer",display:"flex",alignItems:"center",gap:"4px"},onclick:()=>showMonthPicker()},yml(S.curYm),h("span",{style:{fontSize:"10px",color:C.faint}},"▾")))
       ),
       isPetTab
         ?h("div",{class:"pet-header-save","aria-label":"육성 데이터 저장 위치"},"이 기기에 안전 저장")
@@ -6204,6 +6204,36 @@ function mascotExpenseAction(category,account,payment){
   if(account==="공용")return "shared_expense_logged";
   return EXPENSE_MASCOT_BY_CATEGORY[category]||(payment==="현금"?"cash_payment":"card_payment");
 }
+function mascotShiftDate(value,days){
+  const parts=String(value||"").split("-").map(Number);
+  if(parts.length!==3||parts.some(v=>!Number.isFinite(v)))return "";
+  const date=new Date(Date.UTC(parts[0],parts[1]-1,parts[2]+days));
+  return date.toISOString().slice(0,10);
+}
+function mascotContextualExpenseAction({category,account,payment,amount,date,merchant}){
+  const base=mascotExpenseAction(category,account,payment);
+  if(account!=="개인")return base;
+  const isPersonalSpend=t=>t&&t.account!=="공용"&&kindOf(t.type)==="spend"&&!isExcludedSpend(t)&&!isInternalTransfer(t);
+  const monthRecords=(S.txns||[]).filter(isPersonalSpend);
+  const history=[...monthRecords,...(S.prevTxns||[]).filter(isPersonalSpend)];
+  const sameBudgetMonth=ym(date)===S.curYm&&S.budget>0;
+  if(sameBudgetMonth){
+    const before=Math.max(0,calcStatsFor(S.txns||[]).pNet-personalFixedExp(S.txns||[]));
+    const after=before+Math.max(0,Number(amount)||0),beforeRatio=before/S.budget,afterRatio=after/S.budget;
+    if(afterRatio>=1)return "budget_exceeded";
+    if(afterRatio>=.8)return "budget_warning";
+    if(([.25,.5].some(point=>beforeRatio<point&&afterRatio>=point)))return "budget_checkpoint_logged";
+  }
+  const largeLimit=S.budget>0?Math.max(100000,S.budget*.12):150000;
+  if(Number(amount)>=largeLimit)return "large_expense_logged";
+  const dates=new Set(monthRecords.map(t=>t.date));
+  if(dates.has(mascotShiftDate(date,-1))&&dates.has(mascotShiftDate(date,-2)))return "record_streak_logged";
+  if(!dates.has(date))return "day_first_logged";
+  if(!monthRecords.some(t=>t.category===category))return "category_first_logged";
+  const place=String(merchant||"").trim().toLocaleLowerCase("ko-KR");
+  if(place&&history.filter(t=>String(t.merchant||"").trim().toLocaleLowerCase("ko-KR")===place).length>=2)return "familiar_place_logged";
+  return base;
+}
 function showAdd(preset){
   const ov=h("div",{style:{position:"fixed",inset:"0",background:"rgba(40,37,31,.42)",display:"flex",alignItems:"center",justifyContent:"center",padding:"16px",zIndex:"50"}});
   const sh=h("div",{style:{width:"100%",maxWidth:"520px",background:C.w,borderRadius:"20px",padding:"18px 20px 26px",maxHeight:"88vh",overflowY:"auto"}});
@@ -6303,8 +6333,9 @@ function showAdd(preset){
       typ.value==="이체"?"transfer_complete":
       typ.value==="투자"?"amount_entry":
       typ.value==="카드대금"?"card_payment":
-      mascotExpenseAction(selCat,selAcc,selPay);
+      mascotContextualExpenseAction({category:selCat,account:selAcc,payment:selPay,amount:a,date:dt.value,merchant:mer.value});
     ov.remove();await loadMonth();const ct=document.getElementById("ct");if(ct){ct.innerHTML="";buildHome().forEach(n=>ct.append(n));}
+    clearTimeout(mascotBudgetTimer);
     mascotEvent(mascotAction);
   };
   // ⚡ 자주 쓰는 (최근 빈도) + 사용처 자동완성

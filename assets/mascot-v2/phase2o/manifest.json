@@ -1,0 +1,17 @@
+{
+  "pack": "humajja-mascot-v2-phase2o",
+  "version": "1.0.0",
+  "purpose": "개인 일반지출 저장을 날짜·분류·사용처·금액·예산·연속기록 맥락으로 구분하는 반응 팩",
+  "canvas": {"source":[1024,1024],"runtime":[512,512],"fallback":[128,128]},
+  "animation_count": 6,
+  "solo_action_count": 6,
+  "group_action_count": 0,
+  "animations": [
+    {"id":"mayo_day_first_logged","actor":"mayo","display_name":"마요","action":"day_first_logged","action_label":"오늘 첫 기록","durations_ms":[150,170,210,300,210,170],"total_duration_ms":1210,"loop":true,"anchor":{"x":0.5,"y":0.95}},
+    {"id":"jjajang_category_first_logged","actor":"jjajang","display_name":"짜장","action":"category_first_logged","action_label":"이달 첫 분류","durations_ms":[150,170,210,300,210,170],"total_duration_ms":1210,"loop":true,"anchor":{"x":0.5,"y":0.95}},
+    {"id":"huchu_familiar_place_logged","actor":"huchu","display_name":"후추","action":"familiar_place_logged","action_label":"익숙한 사용처","durations_ms":[150,170,210,300,210,170],"total_duration_ms":1210,"loop":true,"anchor":{"x":0.5,"y":0.95}},
+    {"id":"huchu_large_expense_logged","actor":"huchu","display_name":"후추","action":"large_expense_logged","action_label":"큰 지출 확인","durations_ms":[150,170,210,300,210,170],"total_duration_ms":1210,"loop":true,"anchor":{"x":0.5,"y":0.95}},
+    {"id":"mayo_budget_checkpoint_logged","actor":"mayo","display_name":"마요","action":"budget_checkpoint_logged","action_label":"예산 체크포인트","durations_ms":[150,170,210,300,210,170],"total_duration_ms":1210,"loop":true,"anchor":{"x":0.5,"y":0.95}},
+    {"id":"jjajang_record_streak_logged","actor":"jjajang","display_name":"짜장","action":"record_streak_logged","action_label":"3일 연속 기록","durations_ms":[150,170,210,300,210,170],"total_duration_ms":1210,"loop":true,"anchor":{"x":0.5,"y":0.95}}
+  ]
+}

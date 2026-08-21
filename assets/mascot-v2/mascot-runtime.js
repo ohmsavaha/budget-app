@@ -4,6 +4,10 @@ const REDUCED_MOTION = window.matchMedia("(prefers-reduced-motion: reduce)");
 const ENABLED_KEY = "mascot_v2_enabled";
 
 const PHASE_ACTIONS = Object.freeze({
+  phase2o: new Set([
+    "day_first_logged", "category_first_logged", "familiar_place_logged",
+    "large_expense_logged", "budget_checkpoint_logged", "record_streak_logged",
+  ]),
   phase2n: new Set([
     "grocery_logged", "meal_logged", "cat_care_logged", "transport_logged",
     "home_bill_logged", "health_logged", "relationship_logged", "learning_logged",
@@ -137,6 +141,12 @@ const IDLE_BY_TAB = Object.freeze({
 });
 
 const PREFERRED_CHARACTER = Object.freeze({
+  day_first_logged: "mayo",
+  category_first_logged: "jjajang",
+  familiar_place_logged: "huchu",
+  large_expense_logged: "huchu",
+  budget_checkpoint_logged: "mayo",
+  record_streak_logged: "jjajang",
   grocery_logged: "huchu",
   meal_logged: "mayo",
   cat_care_logged: "jjajang",
@@ -268,6 +278,12 @@ const PREFERRED_CHARACTER = Object.freeze({
 });
 
 const ACTION_COPY = Object.freeze({
+  day_first_logged: ["오늘의 첫 기록", "마요가 오늘 지출 기록의 첫 장을 차분히 열었어요.", "good"],
+  category_first_logged: ["이달의 새 분류 기록", "짜장이 이번 달 처음 나온 분류를 보기 좋게 나눠뒀어요.", "good"],
+  familiar_place_logged: ["익숙한 사용처 기록", "후추가 자주 찾는 사용처를 알아보고 빠짐없이 남겼어요.", "good"],
+  large_expense_logged: ["큰 지출 확인 완료", "후추가 금액과 내용을 차분히 다시 살펴보고 기록했어요.", "neutral"],
+  budget_checkpoint_logged: ["예산 체크포인트", "마요가 예산 25%·50% 지점을 계획 안에서 확인했어요.", "good"],
+  record_streak_logged: ["3일 연속 기록", "짜장이 사흘 동안 이어진 꾸준한 기록을 기쁘게 확인했어요.", "good"],
   grocery_logged: ["장보기 기록 완료", "후추가 장보기 금액을 생활 기록에 또렷하게 남겼어요.", "good"],
   meal_logged: ["식비 기록 완료", "마요가 식사와 간식 지출을 빠짐없이 정리했어요.", "good"],
   cat_care_logged: ["고양이 돌봄 기록 완료", "짜장이 함께 지낸 돌봄 비용을 소중히 기록했어요.", "good"],
@@ -392,6 +408,12 @@ const ACTION_COPY = Object.freeze({
 });
 
 const PRIORITY = Object.freeze({
+  day_first_logged: 3,
+  category_first_logged: 3,
+  familiar_place_logged: 3,
+  large_expense_logged: 4,
+  budget_checkpoint_logged: 4,
+  record_streak_logged: 4,
   grocery_logged: 3,
   meal_logged: 3,
   cat_care_logged: 3,
@@ -487,7 +509,7 @@ function phaseFor(action) {
 }
 
 function animatedName(phase, character, action) {
-  const suffix = ["phase2a", "phase2b", "phase2c", "phase2f", "phase2g", "phase2h", "phase2i", "phase2k", "phase2l", "phase2m", "phase2n"].includes(phase) ? "_512_v01.webp" : "_v01.webp";
+  const suffix = ["phase2a", "phase2b", "phase2c", "phase2f", "phase2g", "phase2h", "phase2i", "phase2k", "phase2l", "phase2m", "phase2n", "phase2o"].includes(phase) ? "_512_v01.webp" : "_v01.webp";
   return `${character}_${action}${suffix}`;
 }
 

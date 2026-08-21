@@ -7,6 +7,12 @@ const runtime = readFileSync(join(repoRoot, "assets/mascot-v2/mascot-runtime.js"
 const worker = readFileSync(join(repoRoot, "sw.js"), "utf8");
 
 const requiredAppEvents = [
+  "day_first_logged",
+  "category_first_logged",
+  "familiar_place_logged",
+  "large_expense_logged",
+  "budget_checkpoint_logged",
+  "record_streak_logged",
   "grocery_logged",
   "meal_logged",
   "cat_care_logged",
@@ -135,11 +141,17 @@ if (!dutchReceive.includes("previousBalance") || !dutchReceive.includes("rollbac
 const transactionAdd = app.slice(app.indexOf("function showAdd("), app.indexOf("function showHoldingsCalc("));
 if (!transactionAdd.includes("transaction_id:transactionId") || !transactionAdd.includes("splitError") || !transactionAdd.includes("rollbackError")) failures.push("일반 거래 더치페이 저장의 연결·실패 되돌리기 누락");
 if (!app.includes("const EXPENSE_MASCOT_BY_CATEGORY") || !app.includes("function mascotExpenseAction(category,account,payment)")) failures.push("카테고리별 지출 반응 매핑 누락");
-if (!transactionAdd.includes("mascotExpenseAction(selCat,selAcc,selPay)")) failures.push("일반 지출 저장의 카테고리 반응 연결 누락");
+if (!app.includes("return EXPENSE_MASCOT_BY_CATEGORY[category]")) failures.push("일반 지출 저장의 카테고리 기본 반응 연결 누락");
 if (!app.includes('if(account==="공용")return "shared_expense_logged"')) failures.push("공용 지출 그룹 반응 우선순위 누락");
 for (const preserved of ["split_bill","refund","installment_plan","shared_deposit","income_received","savings_progress","transfer_complete","amount_entry","card_payment"]) {
-  if (transactionAdd.indexOf(`?"${preserved}"`) > transactionAdd.indexOf("mascotExpenseAction(selCat,selAcc,selPay)")) failures.push(`금융 의미 반응 우선순위 오류: ${preserved}`);
+  if (transactionAdd.indexOf(`?"${preserved}"`) > transactionAdd.indexOf("mascotContextualExpenseAction({category:selCat")) failures.push(`금융 의미 반응 우선순위 오류: ${preserved}`);
 }
+if (!app.includes("function mascotContextualExpenseAction({category,account,payment,amount,date,merchant})")) failures.push("Phase 2O 지출 맥락 판정기 누락");
+for (const marker of ["afterRatio>=1","afterRatio>=.8","[.25,.5]","largeLimit","mascotShiftDate(date,-1)","mascotShiftDate(date,-2)","history.filter"]) {
+  if (!app.includes(marker)) failures.push(`Phase 2O 맥락 규칙 누락: ${marker}`);
+}
+if (!transactionAdd.includes("mascotContextualExpenseAction({category:selCat,account:selAcc,payment:selPay,amount:a,date:dt.value,merchant:mer.value})")) failures.push("일반 지출 저장의 Phase 2O 판정 연결 누락");
+if (!transactionAdd.includes("clearTimeout(mascotBudgetTimer)")) failures.push("저장 직후 맥락 반응을 덮는 예산 타이머 차단 누락");
 const settlementMatch = app.slice(app.indexOf("function buildRecent()"), app.indexOf("// ── 🍚 식비 분석"));
 if (!settlementMatch.includes("splitRollbackError") || !settlementMatch.includes("transactionRollbackError") || !settlementMatch.includes("btn.disabled=true")) failures.push("정산 자동 연결의 중복 클릭 차단·실패 되돌리기 누락");
 const accountEditor = app.slice(app.indexOf("function showAccountEdit("), app.indexOf("// ── 저축 추가/수정"));
@@ -152,20 +164,24 @@ if (!app.includes("async function deleteRowChecked(") || !app.includes('.delete(
 if (!app.includes("async function deleteRowsChecked(") || !app.includes("partial.deletedIds=deletedIds")) failures.push("일괄 삭제 부분 성공 확인 헬퍼 누락");
 for (const marker of ["[품목삭제실패]", "[가격삭제실패]", "[거래삭제실패]", "[더치페이삭제실패]"]) if (!app.includes(marker)) failures.push(`삭제 실패 복구 누락: ${marker}`);
 for (const table of ["shopping_items", "fixed_costs", "investment_holdings", "loans"]) if (!app.includes(`deleteRowChecked("${table}"`)) failures.push(`${table} 삭제 결과 확인 누락`);
-if (!app.includes("나의 가계부 · v161")) failures.push("앱 버전 v161 표기 누락");
-if (!worker.includes('const CACHE = "budget-v161"')) failures.push("서비스 워커 v161 캐시 누락");
+if (!app.includes("나의 가계부 · v162")) failures.push("앱 버전 v162 표기 누락");
+if (!worker.includes('const CACHE = "budget-v162"')) failures.push("서비스 워커 v162 캐시 누락");
 if (!runtime.includes('"phase2h"')) failures.push("Phase 2H 애니메이션 파일명 규칙 누락");
 if (!runtime.includes('"phase2i"')) failures.push("Phase 2I 애니메이션 파일명 규칙 누락");
 if (!runtime.includes('"phase2k"')) failures.push("Phase 2K 애니메이션 파일명 규칙 누락");
 if (!runtime.includes('"phase2l"')) failures.push("Phase 2L 애니메이션 파일명 규칙 누락");
 if (!runtime.includes('"phase2m"')) failures.push("Phase 2M 애니메이션 파일명 규칙 누락");
 if (!runtime.includes('"phase2n"')) failures.push("Phase 2N 애니메이션 파일명 규칙 누락");
+if (!runtime.includes('"phase2o"')) failures.push("Phase 2O 애니메이션 파일명 규칙 누락");
 if (!worker.includes("group_group_budget_review_512_v01.webp")) failures.push("Phase 2L 홈 애니메이션 오프라인 캐시 누락");
 for (const asset of ["mayo_budget_calm", "huchu_budget_warning", "mayo_budget_exceeded", "jjajang_goal_achieved", "huchu_search_no_results", "mayo_history_empty", "mayo_retry_calm"]) {
   if (!worker.includes(`${asset}_512_v01.webp`)) failures.push(`Phase 2M 오프라인 캐시 누락: ${asset}`);
 }
 for (const asset of ["huchu_grocery_logged", "mayo_meal_logged", "jjajang_cat_care_logged", "huchu_transport_logged", "huchu_home_bill_logged", "mayo_health_logged", "mayo_relationship_logged", "jjajang_learning_logged", "jjajang_shopping_logged", "group_shared_expense_logged"]) {
   if (!worker.includes(`${asset}_512_v01.webp`) || !worker.includes(`${asset}_frame_01_v01.png`)) failures.push(`Phase 2N 오프라인 캐시 누락: ${asset}`);
+}
+for (const asset of ["mayo_day_first_logged", "jjajang_category_first_logged", "huchu_familiar_place_logged", "huchu_large_expense_logged", "mayo_budget_checkpoint_logged", "jjajang_record_streak_logged"]) {
+  if (!worker.includes(`${asset}_512_v01.webp`) || !worker.includes(`${asset}_frame_01_v01.png`)) failures.push(`Phase 2O 오프라인 캐시 누락: ${asset}`);
 }
 if (!app.includes("mascotBudgetState(used,isCur)")) failures.push("홈 예산 상태 마스코트 자동 연결 누락");
 if (!app.includes('["pets","🐾 육성"]')) failures.push("고양이 육성방 탭 누락");
@@ -183,6 +199,6 @@ if (failures.length) {
     status: "passed",
     appEvents: requiredAppEvents.length,
     runtimeActions: requiredRuntimeActions.length,
-    version: "v161",
+    version: "v162",
   }));
 }

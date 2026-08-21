@@ -1,5 +1,5 @@
 // 나의 가계부 서비스워커 — 오프라인 캐시 + 푸시 알림
-const CACHE = "budget-v161";
+const CACHE = "budget-v162";
 const PET_CHARACTERS = ["huchu", "mayo", "jjajang"];
 const PET_STATES = ["idle", "eat", "sleep", "play", "groom", "sick", "love"];
 const PET_RUNTIME_ASSETS = PET_CHARACTERS.flatMap((character) => PET_STATES.flatMap((state) => [
@@ -60,6 +60,18 @@ const CORE = [
   "./assets/mascot-v2/phase2n/static/jjajang_learning_logged_frame_01_v01.png",
   "./assets/mascot-v2/phase2n/static/jjajang_shopping_logged_frame_01_v01.png",
   "./assets/mascot-v2/phase2n/static/group_shared_expense_logged_frame_01_v01.png",
+  "./assets/mascot-v2/phase2o/webp/mayo_day_first_logged_512_v01.webp",
+  "./assets/mascot-v2/phase2o/webp/jjajang_category_first_logged_512_v01.webp",
+  "./assets/mascot-v2/phase2o/webp/huchu_familiar_place_logged_512_v01.webp",
+  "./assets/mascot-v2/phase2o/webp/huchu_large_expense_logged_512_v01.webp",
+  "./assets/mascot-v2/phase2o/webp/mayo_budget_checkpoint_logged_512_v01.webp",
+  "./assets/mascot-v2/phase2o/webp/jjajang_record_streak_logged_512_v01.webp",
+  "./assets/mascot-v2/phase2o/static/mayo_day_first_logged_frame_01_v01.png",
+  "./assets/mascot-v2/phase2o/static/jjajang_category_first_logged_frame_01_v01.png",
+  "./assets/mascot-v2/phase2o/static/huchu_familiar_place_logged_frame_01_v01.png",
+  "./assets/mascot-v2/phase2o/static/huchu_large_expense_logged_frame_01_v01.png",
+  "./assets/mascot-v2/phase2o/static/mayo_budget_checkpoint_logged_frame_01_v01.png",
+  "./assets/mascot-v2/phase2o/static/jjajang_record_streak_logged_frame_01_v01.png",
   ...PET_RUNTIME_ASSETS,
   ...PET_ADULT_HANDOFF_ASSETS,
 ];

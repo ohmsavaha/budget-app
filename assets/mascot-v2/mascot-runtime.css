@@ -217,6 +217,30 @@
   --mascot-stage-line: #d4e3e7;
 }
 
+.budget-mascot-stage[data-action="day_first_logged"],
+.budget-mascot-stage[data-action="budget_checkpoint_logged"],
+.budget-mascot-stage[data-action="record_streak_logged"] {
+  --mascot-stage-bg:
+    radial-gradient(circle at 88% 18%, rgba(226, 183, 72, .20), transparent 35%),
+    linear-gradient(135deg, #fff 0%, #f2faf4 100%);
+  --mascot-stage-line: #d3e6d8;
+}
+
+.budget-mascot-stage[data-action="category_first_logged"],
+.budget-mascot-stage[data-action="familiar_place_logged"] {
+  --mascot-stage-bg:
+    radial-gradient(circle at 88% 18%, rgba(73, 132, 116, .15), transparent 35%),
+    linear-gradient(135deg, #fff 0%, #f3f9f7 100%);
+  --mascot-stage-line: #d5e5df;
+}
+
+.budget-mascot-stage[data-action="large_expense_logged"] {
+  --mascot-stage-bg:
+    radial-gradient(circle at 88% 18%, rgba(191, 144, 74, .16), transparent 35%),
+    linear-gradient(135deg, #fff 0%, #faf7f0 100%);
+  --mascot-stage-line: #e6ddca;
+}
+
 .budget-mascot-toggle {
   position: absolute;
   top: 8px;

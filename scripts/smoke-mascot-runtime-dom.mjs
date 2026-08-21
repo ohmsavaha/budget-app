@@ -131,6 +131,21 @@ for (const [action, character] of [
 }
 
 for (const [action, character] of [
+  ["day_first_logged", "mayo"],
+  ["category_first_logged", "jjajang"],
+  ["familiar_place_logged", "huchu"],
+  ["large_expense_logged", "huchu"],
+  ["budget_checkpoint_logged", "mayo"],
+  ["record_streak_logged", "jjajang"],
+]) {
+  window.BudgetMascot.play({ action, character, duration: 10 });
+  if (!image.getAttribute("src")?.includes(`phase2o/webp/${character}_${action}_512`)) {
+    throw new Error(`Phase 2O 동작 실패: ${character}_${action}`);
+  }
+  await new Promise((resolve) => setTimeout(resolve, 15));
+}
+
+for (const [action, character] of [
   ["grocery_logged", "huchu"],
   ["meal_logged", "mayo"],
   ["cat_care_logged", "jjajang"],
@@ -219,6 +234,11 @@ if (!image.getAttribute("src")?.includes("phase2n/static/group_shared_expense_lo
   throw new Error("Phase 2N 모션 감소 정적 대체 실패");
 }
 await new Promise((resolve) => setTimeout(resolve, 15));
+window.BudgetMascot.play({ action: "record_streak_logged", character: "jjajang", duration: 10 });
+if (!image.getAttribute("src")?.includes("phase2o/static/jjajang_record_streak_logged_frame_01")) {
+  throw new Error("Phase 2O 모션 감소 정적 대체 실패");
+}
+await new Promise((resolve) => setTimeout(resolve, 15));
 window.BudgetMascot.play({ action: "refund", character: "jjajang", duration: 10 });
 if (!image.getAttribute("src")?.endsWith(".png")) throw new Error("모션 감소 정적 대체 실패");
 
@@ -238,5 +258,6 @@ console.log(JSON.stringify({
   phase2l: "group_budget_review",
   phase2m: "budget + goal + empty + retry states",
   phase2n: "10 category-aware expense reactions",
+  phase2o: "6 context-aware expense reactions",
   toggle: "passed",
 }));
