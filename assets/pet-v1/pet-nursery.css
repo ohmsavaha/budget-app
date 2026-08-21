@@ -859,6 +859,197 @@
   font-weight: 720;
 }
 
+.pet-generation-archive {
+  display: grid;
+  gap: 13px;
+  padding: clamp(16px, 4vw, 21px);
+  border: 1px solid rgba(126, 103, 76, 0.14);
+  border-radius: 22px;
+  background: linear-gradient(145deg, rgba(255, 255, 255, 0.97), rgba(255, 249, 240, 0.93));
+  box-shadow: 0 9px 26px rgba(73, 62, 48, 0.05);
+}
+
+.pet-generation-archive__header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.pet-generation-archive__title {
+  margin: 0;
+  color: #443d34;
+  font-size: 17px;
+  letter-spacing: -0.02em;
+}
+
+.pet-generation-archive__progress {
+  flex: 0 0 auto;
+  padding: 6px 9px;
+  border-radius: 999px;
+  color: #776650;
+  background: #fbefdc;
+  font-size: 10.5px;
+  font-weight: 850;
+}
+
+.pet-generation-archive__intro {
+  margin: 0;
+  color: #807970;
+  font-size: 11.5px;
+  line-height: 1.65;
+}
+
+.pet-generation-archive__summary {
+  padding: 10px 12px;
+  border-radius: 13px;
+  color: #675d50;
+  background: #fff8ed;
+  font-size: 11px;
+  font-weight: 760;
+  line-height: 1.55;
+}
+
+.pet-generation-archive__list {
+  display: grid;
+  gap: 9px;
+}
+
+.pet-generation-archive__empty {
+  display: grid;
+  grid-template-columns: 38px minmax(0, 1fr);
+  gap: 10px;
+  align-items: center;
+  padding: 13px;
+  border: 1px dashed #ded5c7;
+  border-radius: 15px;
+  color: #847b70;
+  background: rgba(255, 255, 255, 0.72);
+}
+
+.pet-generation-archive__empty-icon {
+  display: grid;
+  place-items: center;
+  width: 38px;
+  height: 38px;
+  border-radius: 12px;
+  background: #fbf1e4;
+  font-size: 20px;
+}
+
+.pet-generation-archive__empty-copy {
+  font-size: 11.5px;
+  line-height: 1.6;
+}
+
+.pet-generation-memory {
+  display: grid;
+  grid-template-columns: 76px minmax(0, 1fr);
+  gap: 12px;
+  align-items: center;
+  padding: 11px;
+  border: 1px solid #ebe4d9;
+  border-radius: 16px;
+  background: #fff;
+}
+
+.pet-generation-memory__visual {
+  display: grid;
+  place-items: center;
+  width: 76px;
+  height: 76px;
+  overflow: hidden;
+  border-radius: 15px;
+  background: linear-gradient(150deg, #fff8ee, #f0f5ef);
+}
+
+.pet-generation-memory__image {
+  width: 70px;
+  height: 70px;
+  object-fit: contain;
+}
+
+.pet-generation-memory__copy {
+  display: grid;
+  gap: 6px;
+  min-width: 0;
+}
+
+.pet-generation-memory__title-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.pet-generation-memory__title {
+  margin: 0;
+  color: #4f493f;
+  font-size: 13px;
+}
+
+.pet-generation-memory__stage {
+  flex: 0 0 auto;
+  padding: 4px 7px;
+  border-radius: 999px;
+  color: #627466;
+  background: #edf4ee;
+  font-size: 9px;
+  font-weight: 800;
+}
+
+.pet-generation-memory__dates {
+  margin: 0;
+  color: #989087;
+  font-size: 9.5px;
+}
+
+.pet-generation-memory__stats {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 5px;
+}
+
+.pet-generation-memory__stat {
+  padding: 4px 6px;
+  border-radius: 8px;
+  color: #756c61;
+  background: #f8f5f0;
+  font-size: 9px;
+  font-weight: 760;
+}
+
+.pet-generation-memory__room {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  color: #8b8175;
+  font-size: 9.5px;
+}
+
+.pet-generation-memory__room-label {
+  font-weight: 760;
+}
+
+.pet-generation-memory__room-icons {
+  letter-spacing: 0.08em;
+}
+
+.pet-generation-archive__toggle {
+  min-height: 38px;
+  border: 1px solid #e4dbcf;
+  border-radius: 12px;
+  color: #766856;
+  background: #fffaf2;
+  font-size: 11px;
+  font-weight: 800;
+}
+
+.pet-generation-archive__toggle[hidden] {
+  display: none;
+}
+
 .pet-nursery[data-pet-status="sick"] {
   --pet-sage-soft: #f6f1e9;
   background:
@@ -921,6 +1112,20 @@
 
   .pet-nursery__actions {
     grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .pet-generation-memory {
+    grid-template-columns: 64px minmax(0, 1fr);
+  }
+
+  .pet-generation-memory__visual {
+    width: 64px;
+    height: 64px;
+  }
+
+  .pet-generation-memory__image {
+    width: 58px;
+    height: 58px;
   }
 }
 

@@ -1,7 +1,7 @@
 (function petNurseryBootstrap() {
   "use strict";
 
-  const VERSION = 3;
+  const VERSION = 4;
   const STORAGE_KEY = "humajja_pet_nursery_v1";
   const ROOT = "./assets/pet-v1";
   const CHARACTERS = Object.freeze(["huchu", "mayo", "jjajang"]);
@@ -13,6 +13,7 @@
   const ADULT_XP = 1200;
   const GAME_DAILY_LIMIT = 3;
   const DAILY_MISSION_ACTIONS = Object.freeze(["feed", "play", "pet"]);
+  const MEMORY_VISUALS = Object.freeze(["idle", "eat", "sleep", "play", "groom", "sick", "love"]);
   const MILESTONES = Object.freeze([
     Object.freeze({ xp: 0, label: "처음 만난 날", visual: "idle" }),
     Object.freeze({ xp: 120, label: "첫 식사", visual: "eat" }),
@@ -133,6 +134,41 @@
     return room;
   }
 
+  function normalizeIso(value, fallback) {
+    const parsed = Date.parse(value);
+    return Number.isFinite(parsed) ? new Date(parsed).toISOString() : toIso(fallback);
+  }
+
+  function normalizeGenerationMemories(input, character, now = Date.now()) {
+    const memories = Array.isArray(input) ? input : [];
+    const unique = new Map();
+    memories.forEach((entry) => {
+      if (!entry || typeof entry !== "object") return;
+      const generation = Math.max(1, Math.floor(Number(entry.generation) || 1));
+      const bornAt = normalizeIso(entry.bornAt, now);
+      const completedAt = normalizeIso(entry.completedAt, now);
+      const finalXp = Math.max(0, Number(entry.finalXp) || 0);
+      const finalStage = finalXp >= ADULT_XP || entry.finalStage === "adult" ? "adult" : "kitten";
+      const finalVisual = MEMORY_VISUALS.includes(entry.finalVisual) ? entry.finalVisual : "idle";
+      const memory = {
+        id: `${character}-generation-${generation}-${bornAt}`,
+        character,
+        displayName: DISPLAY_NAMES[character],
+        generation,
+        bornAt,
+        completedAt,
+        finalXp,
+        finalStage,
+        finalVisual,
+        careStreak: Math.max(0, Math.floor(Number(entry.careStreak) || 0)),
+        milestonesUnlocked: Math.min(MILESTONES.length, Math.max(1, Math.floor(Number(entry.milestonesUnlocked) || 1))),
+        room: normalizeRoom(entry.room, finalXp),
+      };
+      unique.set(memory.id, memory);
+    });
+    return [...unique.values()].sort((a, b) => a.generation - b.generation || Date.parse(a.completedAt) - Date.parse(b.completedAt));
+  }
+
   function createInitialState(character, options = {}) {
     assertCharacter(character);
     const now = Number(options.now) || Date.now();
@@ -170,6 +206,7 @@
         completed: [],
       },
       room: defaultRoom(),
+      generationMemories: normalizeGenerationMemories(options.generationMemories, character, now),
       history: [],
     };
   }
@@ -199,6 +236,7 @@
     state.games.pawHuntPlays = Math.min(GAME_DAILY_LIMIT, Math.max(0, Number(state.games.pawHuntPlays) || 0));
     state.games.pawHuntWins = Math.min(state.games.pawHuntPlays, Math.max(0, Number(state.games.pawHuntWins) || 0));
     state.room = normalizeRoom(input.room, state.xp);
+    state.generationMemories = normalizeGenerationMemories(input.generationMemories, state.character, now);
     state.history = Array.isArray(input.history) ? input.history.slice(-30) : [];
     const today = dateKey(now);
     const legacyCompleted = state.history
@@ -413,6 +451,46 @@
     };
   }
 
+  function createGenerationMemory(input, now = Date.now()) {
+    const state = normalizeState(input, now);
+    return normalizeGenerationMemories([{
+      generation: state.generation,
+      bornAt: state.bornAt,
+      completedAt: toIso(now),
+      finalXp: state.xp,
+      finalStage: state.stage,
+      finalVisual: state.currentVisual,
+      careStreak: state.careStreak,
+      milestonesUnlocked: getMilestones(state).filter((milestone) => milestone.unlocked).length,
+      room: state.room,
+    }], state.character, now)[0];
+  }
+
+  function getGenerationMemories(input) {
+    const state = normalizeState(input);
+    return clone(state.generationMemories).sort((a, b) => b.generation - a.generation || Date.parse(b.completedAt) - Date.parse(a.completedAt));
+  }
+
+  function getGenerationMemorySummary(input) {
+    const memories = getGenerationMemories(input);
+    return {
+      total: memories.length,
+      adultCount: memories.filter((memory) => memory.finalStage === "adult").length,
+      highestXp: memories.reduce((highest, memory) => Math.max(highest, memory.finalXp), 0),
+      latestGeneration: memories[0]?.generation ?? null,
+    };
+  }
+
+  function resolveGenerationMemoryAsset(input) {
+    const character = input?.character;
+    assertCharacter(character);
+    if (input.finalStage === "adult") {
+      return `./assets/mascot-v2/phase2a/static/${character}_breathe_frame_01_v01.png`;
+    }
+    const visual = MEMORY_VISUALS.includes(input.finalVisual) ? input.finalVisual : "idle";
+    return `${ROOT}/static/${character}_baby_${visual}_frame_01_v01.png`;
+  }
+
   function getResetToken(character) {
     assertCharacter(character);
     return `${DISPLAY_NAMES[character]} 다시 키우기`;
@@ -426,6 +504,7 @@
     const next = createInitialState(current.character, {
       now,
       generation: current.generation + 1,
+      generationMemories: [...current.generationMemories, createGenerationMemory(current, now)],
     });
     next.history.push({ action: "rebirth", at: toIso(now), fromGeneration: current.generation });
     return next;
@@ -479,6 +558,7 @@
     MILESTONES,
     ROOM_SLOT_ORDER,
     ROOM_CATALOG,
+    MEMORY_VISUALS,
     createInitialState,
     normalizeState,
     tick,
@@ -492,6 +572,10 @@
     getRoomSummary,
     setRoomItem,
     resolveAsset,
+    createGenerationMemory,
+    getGenerationMemories,
+    getGenerationMemorySummary,
+    resolveGenerationMemoryAsset,
     getResetToken,
     resetToKitten,
     loadAll,

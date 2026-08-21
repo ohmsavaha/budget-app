@@ -1,6 +1,6 @@
 # 후추·마요·짜장 아기 고양이 육성 팩 v1
 
-가계부의 기존 성묘 마스코트와 분리된 다마고치형 육성 기능입니다. v157부터 앱의 `🐾 육성` 탭에 연결됐고, v158에서 일일 돌봄·성장 앨범·발바닥 찾기 놀이, v159에서 고양이별 방 꾸미기와 XP 장난감 해금이 추가됐습니다. 육성 상태는 회계 데이터와 분리해 현재 기기의 `localStorage`에만 저장합니다.
+가계부의 기존 성묘 마스코트와 분리된 다마고치형 육성 기능입니다. v157부터 앱의 `🐾 육성` 탭에 연결됐고, v158에서 일일 돌봄·성장 앨범·발바닥 찾기 놀이, v159에서 고양이별 방 꾸미기와 XP 장난감 해금, v160에서 세대별 추억 보관함이 추가됐습니다. 육성 상태는 회계 데이터와 분리해 현재 기기의 `localStorage`에만 저장합니다.
 
 ## 포함 범위
 
@@ -16,6 +16,8 @@
 - 하루 3회 발바닥 찾기 놀이와 성공·실패별 성장 보상
 - 배경·러그·침대·스크래처·장난감 5개 방 슬롯과 XP 단계별 해금
 - 방 선택은 고양이별로 저장하며 실제 화폐·지출·Supabase와 연결하지 않음
+- 새 세대 시작 전 현재 세대의 기간·최종 XP·성장 단계·돌봄·추억·마지막 방을 자동 보관
+- 후추·마요·짜장의 세대 보관함은 서로 분리되며 과거 세대는 이후 성장 상태 변화의 영향을 받지 않음
 - 모션 감소 환경의 정적 이미지 전환
 
 ## 파일 규칙
@@ -36,9 +38,11 @@ static/{character}_baby_{state}_frame_01_v01.png
 <script src="./assets/pet-v1/pet-nursery-view.js"></script>
 <script src="./assets/pet-v1/pet-nursery-extras.js"></script>
 <script src="./assets/pet-v1/pet-nursery-room.js"></script>
+<script src="./assets/pet-v1/pet-nursery-memories.js"></script>
 <div id="pet-room"></div>
 <div id="pet-extras"></div>
 <div id="pet-room-customizer"></div>
+<div id="pet-generation-memories"></div>
 <script>
   const nursery = BudgetPetNurseryUI.mount(
     document.querySelector("#pet-room"),
@@ -52,6 +56,10 @@ static/{character}_baby_{state}_frame_01_v01.png
     document.querySelector("#pet-room-customizer"),
     { character: "huchu", sceneRoot: nursery.root },
   );
+  const memories = BudgetPetNurseryMemories.mount(
+    document.querySelector("#pet-generation-memories"),
+    { character: "huchu" },
+  );
 </script>
 ```
 
@@ -60,7 +68,7 @@ static/{character}_baby_{state}_frame_01_v01.png
 - 고양이 무대는 `.pet-nursery__safe-stage` 안에만 둡니다.
 - 금액, 차트, 거래행, 입력 버튼 위에 고양이를 절대 겹치지 않습니다.
 - 정보 → 조작 → 장식 순서를 유지합니다.
-- 다시 키우기는 `getResetToken(character)`로 확인 문자열을 받은 뒤에만 실행합니다.
+- 새 세대 시작은 `getResetToken(character)`로 확인 문자열을 받은 뒤에만 실행하며 현재 세대 요약을 먼저 보관합니다.
 - 육성 수치는 실제 가계부 금액이나 Supabase 회계 데이터와 연결하지 않습니다.
 - 방 꾸미기와 장난감은 XP로만 열리며 실제 결제나 소비 기록을 만들지 않습니다.
 - 돌봄을 쉬어도 캐릭터가 사라지거나 죽지 않습니다.
