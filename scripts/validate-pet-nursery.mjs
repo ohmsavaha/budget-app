@@ -64,7 +64,7 @@ if (!existsSync(manifestPath)) {
   fail("pet-v1 manifest missing");
 } else {
   const manifest = JSON.parse(readFileSync(manifestPath, "utf8"));
-  if (manifest.version !== "1.1.0" || manifest.state_schema_version !== 2) fail("manifest v1.1/schema v2 metadata missing");
+  if (manifest.version !== "1.2.0" || manifest.state_schema_version !== 3) fail("manifest v1.2/schema v3 metadata missing");
   if (manifest.animation_count !== 21) fail("manifest animation_count must be 21");
   if (manifest.animations?.length !== 21) fail("manifest must list 21 animations");
   if (!manifest.principles?.no_death) fail("no-death care rule missing");
@@ -72,6 +72,8 @@ if (!existsSync(manifestPath)) {
   if (manifest.principles?.offline_decay_cap_hours !== 24) fail("offline decay cap must be 24 hours");
   if (manifest.features?.paw_hunt_daily_limit !== 3) fail("paw hunt manifest daily limit must be 3");
   if (manifest.features?.growth_album_milestones_xp?.length !== 6) fail("growth album manifest milestones must be 6");
+  if (manifest.features?.room_customization?.slots?.length !== 5) fail("room customization manifest slots must be 5");
+  if (manifest.features?.room_customization?.uses_real_money !== false) fail("room customization must not use real money");
   if (new Set((manifest.animations || []).map((item) => item.id)).size !== 21) fail("animation IDs must be unique");
 }
 
@@ -132,8 +134,9 @@ for (const character of characters) {
 const runtimePath = join(root, "pet-nursery.js");
 const viewPath = join(root, "pet-nursery-view.js");
 const extrasPath = join(root, "pet-nursery-extras.js");
+const roomPath = join(root, "pet-nursery-room.js");
 const cssPath = join(root, "pet-nursery.css");
-for (const path of [runtimePath, viewPath, extrasPath, cssPath, join(root, "README.md")]) {
+for (const path of [runtimePath, viewPath, extrasPath, roomPath, cssPath, join(root, "README.md")]) {
   checkedFiles += 1;
   if (!existsSync(path)) fail(`support file missing: ${path}`);
   else totalBytes += statSync(path).size;
@@ -154,10 +157,10 @@ if (existsSync(runtimePath)) {
   } else {
     const now = Date.UTC(2026, 7, 16, 0, 0, 0);
     const initial = api.createInitialState("huchu", { now });
-    if (api.VERSION !== 2 || initial.schemaVersion !== 2) fail("pet schema v2 migration missing");
+    if (api.VERSION !== 3 || initial.schemaVersion !== 3) fail("pet schema v3 migration missing");
     if (initial.stage !== "kitten" || initial.generation !== 1) fail("initial kitten state invalid");
     const migrated = api.normalizeState({ character: "mayo", needs: { fullness: 50 } }, now);
-    if (migrated.needs.fullness !== 50 || migrated.needs.energy !== 86 || migrated.games.pawHuntPlays !== 0) fail("legacy pet state migration invalid");
+    if (migrated.needs.fullness !== 50 || migrated.needs.energy !== 86 || migrated.games.pawHuntPlays !== 0 || migrated.room.toy !== "yarn" || migrated.dailyCare.completed.length !== 0) fail("legacy pet state migration invalid");
     const afterOffline = api.tick(initial, now + 48 * 3600000);
     if (Math.round(afterOffline.needs.energy) !== 14) fail("24-hour offline decay cap invalid");
     const fed = api.applyAction(initial, "feed", now);
@@ -168,6 +171,9 @@ if (existsSync(runtimePath)) {
     const petted = api.applyAction(played.state, "pet", now + 2000);
     const daily = api.getDailyCare(petted.state, now + 2000);
     if (!daily.complete || daily.completedCount !== 3) fail("daily care mission summary invalid");
+    let decoratedDaily = petted.state;
+    for (let index = 0; index < 35; index += 1) decoratedDaily = api.setRoomItem(decoratedDaily, "toy", "yarn", now + 2100 + index).state;
+    if (!api.getDailyCare(decoratedDaily, now + 2200).complete) fail("room history must not erase daily care progress");
     let gameState = api.createInitialState("jjajang", { now });
     const game1 = api.playPawHunt(gameState, true, now + 3000);
     const game2 = api.playPawHunt(game1.state, false, now + 4000);
@@ -182,6 +188,14 @@ if (existsSync(runtimePath)) {
     if (adult.stage !== "adult" || api.resolveAsset(adult).handoff !== "mascot-v2") fail("adult handoff invalid");
     if (api.getMilestones(initial).filter((item) => item.unlocked).length !== 1) fail("initial growth album lock state invalid");
     if (api.getMilestones(adult).filter((item) => item.unlocked).length !== 6) fail("adult growth album unlock state invalid");
+    const initialRoom = api.getRoomSummary(initial);
+    if (initialRoom.unlockedCount !== 5 || initialRoom.totalCount !== 23 || initialRoom.nextUnlockXp !== 120) fail("initial room unlock summary invalid");
+    const roomReady = api.normalizeState({ ...initial, xp: 300 }, now);
+    const decorated = api.setRoomItem(roomReady, "toy", "feather", now);
+    if (!decorated.ok || decorated.state.room.toy !== "feather") fail("unlocked room item selection invalid");
+    const lockedRoom = api.setRoomItem(initial, "toy", "trophy", now);
+    if (lockedRoom.ok || lockedRoom.reason !== "locked" || lockedRoom.requiredXp !== 1200) fail("locked room item guard invalid");
+    if (api.getRoomSummary(adult).unlockedCount !== 23) fail("adult room rewards must all be unlocked");
     let rejected = false;
     try { api.resetToKitten(adult, "wrong", now); } catch (_error) { rejected = true; }
     if (!rejected) fail("unguarded reset was accepted");
@@ -209,6 +223,14 @@ if (existsSync(extrasPath)) {
   if (extras.includes("innerHTML")) fail("nursery extras must not inject HTML strings");
 }
 
+if (existsSync(roomPath)) {
+  const room = readFileSync(roomPath, "utf8");
+  for (const marker of ["BudgetPetNurseryRoom", "getRoomCatalog", "getRoomSummary", "setRoomItem", "petnurserychange"]) {
+    if (!room.includes(marker)) fail(`nursery room marker missing: ${marker}`);
+  }
+  if (room.includes("innerHTML")) fail("nursery room must not inject HTML strings");
+}
+
 if (existsSync(cssPath)) {
   const css = readFileSync(cssPath, "utf8");
   for (const marker of [".pet-nursery__safe-stage", ".pet-nursery__actions", "prefers-reduced-motion"]) {
@@ -222,18 +244,21 @@ for (const marker of [
   'src="./assets/pet-v1/pet-nursery.js"',
   'src="./assets/pet-v1/pet-nursery-view.js"',
   'src="./assets/pet-v1/pet-nursery-extras.js"',
+  'src="./assets/pet-v1/pet-nursery-room.js"',
   '["pets","🐾 육성"]',
   "function buildPetRoom(",
   "function showPetResetDialog(",
   "가계부 데이터와 분리 저장",
   "ACTIVE_PET_EXTRAS",
+  "ACTIVE_PET_ROOM",
 ]) {
   if (!app.includes(marker)) fail(`app nursery integration missing: ${marker}`);
 }
 if (!worker.includes("PET_RUNTIME_ASSETS")) fail("pet runtime offline asset expansion missing");
 if (!worker.includes("PET_ADULT_HANDOFF_ASSETS")) fail("adult mascot handoff offline assets missing");
 if (!worker.includes("pet-nursery-extras.js")) fail("pet extras offline support missing");
-if (!worker.includes('const CACHE = "budget-v158"')) fail("pet integration cache version missing");
+if (!worker.includes("pet-nursery-room.js")) fail("pet room offline support missing");
+if (!worker.includes('const CACHE = "budget-v159"')) fail("pet integration cache version missing");
 
 if (failures.length) {
   console.error(failures.join("\n"));
@@ -245,7 +270,7 @@ if (failures.length) {
     statesPerCharacter: states.length,
     animations: characters.length * states.length,
     adultHandoffAssets: characters.length * 2,
-    extras: ["daily-care", "growth-album", "paw-hunt"],
+    extras: ["daily-care", "growth-album", "paw-hunt", "room-customization", "xp-toy-unlocks"],
     checkedFiles,
     totalBytes,
     offlineDecayCapHours: 24,

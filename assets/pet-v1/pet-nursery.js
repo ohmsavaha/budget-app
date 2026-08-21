@@ -1,7 +1,7 @@
 (function petNurseryBootstrap() {
   "use strict";
 
-  const VERSION = 2;
+  const VERSION = 3;
   const STORAGE_KEY = "humajja_pet_nursery_v1";
   const ROOT = "./assets/pet-v1";
   const CHARACTERS = Object.freeze(["huchu", "mayo", "jjajang"]);
@@ -21,6 +21,42 @@
     Object.freeze({ xp: 900, label: "의젓한 고양이", visual: "groom" }),
     Object.freeze({ xp: ADULT_XP, label: "함께 자란 날", visual: "adult" }),
   ]);
+  const ROOM_SLOT_ORDER = Object.freeze(["theme", "rug", "bed", "scratcher", "toy"]);
+  const ROOM_CATALOG = Object.freeze({
+    theme: Object.freeze([
+      Object.freeze({ id: "cream", label: "포근한 크림방", icon: "🏡", minXp: 0 }),
+      Object.freeze({ id: "mint", label: "민트 정원방", icon: "🌿", minXp: 300 }),
+      Object.freeze({ id: "sunset", label: "노을빛 방", icon: "🌇", minXp: 600 }),
+      Object.freeze({ id: "night", label: "별빛 밤방", icon: "🌙", minXp: 900 }),
+      Object.freeze({ id: "celebration", label: "성장 축하방", icon: "✨", minXp: ADULT_XP }),
+    ]),
+    rug: Object.freeze([
+      Object.freeze({ id: "cloud", label: "구름 러그", icon: "☁️", minXp: 0 }),
+      Object.freeze({ id: "paw", label: "발바닥 러그", icon: "🐾", minXp: 120 }),
+      Object.freeze({ id: "meadow", label: "초원 러그", icon: "🌼", minXp: 600 }),
+      Object.freeze({ id: "constellation", label: "별자리 러그", icon: "⭐", minXp: 900 }),
+    ]),
+    bed: Object.freeze([
+      Object.freeze({ id: "cushion", label: "폭신 방석", icon: "🛏️", minXp: 0 }),
+      Object.freeze({ id: "basket", label: "라탄 바구니", icon: "🧺", minXp: 300 }),
+      Object.freeze({ id: "tent", label: "아늑한 텐트", icon: "⛺", minXp: 600 }),
+      Object.freeze({ id: "crown", label: "성장 왕관 침대", icon: "👑", minXp: ADULT_XP }),
+    ]),
+    scratcher: Object.freeze([
+      Object.freeze({ id: "cardboard", label: "골판지 스크래처", icon: "📦", minXp: 0 }),
+      Object.freeze({ id: "post", label: "기둥 스크래처", icon: "🪵", minXp: 120 }),
+      Object.freeze({ id: "tree", label: "캣타워", icon: "🌳", minXp: 600 }),
+      Object.freeze({ id: "palace", label: "성장 캣타워", icon: "🏰", minXp: ADULT_XP }),
+    ]),
+    toy: Object.freeze([
+      Object.freeze({ id: "yarn", label: "실뭉치", icon: "🧶", minXp: 0 }),
+      Object.freeze({ id: "mouse", label: "쥐돌이", icon: "🐭", minXp: 120 }),
+      Object.freeze({ id: "feather", label: "깃털 낚싯대", icon: "🪶", minXp: 300 }),
+      Object.freeze({ id: "tunnel", label: "숨숨 터널", icon: "🌀", minXp: 600 }),
+      Object.freeze({ id: "fish", label: "물고기 인형", icon: "🐟", minXp: 900 }),
+      Object.freeze({ id: "trophy", label: "성장 기념 장난감", icon: "🏆", minXp: ADULT_XP }),
+    ]),
+  });
 
   const ACTIONS = Object.freeze({
     feed: {
@@ -84,6 +120,19 @@
     return Number(xp) >= ADULT_XP ? "adult" : "kitten";
   }
 
+  function defaultRoom() {
+    return Object.fromEntries(ROOM_SLOT_ORDER.map((slot) => [slot, ROOM_CATALOG[slot][0].id]));
+  }
+
+  function normalizeRoom(input, xp) {
+    const room = defaultRoom();
+    ROOM_SLOT_ORDER.forEach((slot) => {
+      const candidate = ROOM_CATALOG[slot].find((item) => item.id === input?.[slot]);
+      if (candidate && candidate.minXp <= xp) room[slot] = candidate.id;
+    });
+    return room;
+  }
+
   function createInitialState(character, options = {}) {
     assertCharacter(character);
     const now = Number(options.now) || Date.now();
@@ -116,6 +165,11 @@
         pawHuntPlays: 0,
         pawHuntWins: 0,
       },
+      dailyCare: {
+        date: dateKey(now),
+        completed: [],
+      },
+      room: defaultRoom(),
       history: [],
     };
   }
@@ -144,7 +198,20 @@
     }
     state.games.pawHuntPlays = Math.min(GAME_DAILY_LIMIT, Math.max(0, Number(state.games.pawHuntPlays) || 0));
     state.games.pawHuntWins = Math.min(state.games.pawHuntPlays, Math.max(0, Number(state.games.pawHuntWins) || 0));
+    state.room = normalizeRoom(input.room, state.xp);
     state.history = Array.isArray(input.history) ? input.history.slice(-30) : [];
+    const today = dateKey(now);
+    const legacyCompleted = state.history
+      .filter((entry) => Number.isFinite(Date.parse(entry.at)) && dateKey(Date.parse(entry.at)) === today)
+      .map((entry) => entry.action);
+    const dailyCompleted = input.dailyCare?.date === today
+      ? input.dailyCare.completed
+      : input.dailyCare ? [] : legacyCompleted;
+    state.dailyCare = {
+      date: today,
+      completed: [...new Set((Array.isArray(dailyCompleted) ? dailyCompleted : [])
+        .filter((action) => DAILY_MISSION_ACTIONS.includes(action)))],
+    };
     return state;
   }
 
@@ -210,6 +277,9 @@
     state.visualUntil = toIso(now + (actionId === "sleep" ? 9000 : 4200));
     state.cooldowns[actionId] = toIso(now + action.cooldownMinutes * 60000);
     updateStreak(state, now);
+    if (DAILY_MISSION_ACTIONS.includes(actionId) && !state.dailyCare.completed.includes(actionId)) {
+      state.dailyCare.completed.push(actionId);
+    }
     state.history.push({ action: actionId, at: toIso(now), xp: action.xp });
     state.history = state.history.slice(-30);
     return { ok: true, state, gainedXp: action.xp };
@@ -229,9 +299,7 @@
   function getDailyCare(input, now = Date.now()) {
     const state = normalizeState(input, now);
     const today = dateKey(now);
-    const completed = new Set(state.history
-      .filter((entry) => Number.isFinite(Date.parse(entry.at)) && dateKey(Date.parse(entry.at)) === today)
-      .map((entry) => entry.action));
+    const completed = new Set(state.dailyCare.completed);
     const missions = DAILY_MISSION_ACTIONS.map((action) => ({ action, completed: completed.has(action) }));
     return {
       date: today,
@@ -279,6 +347,46 @@
       gainedXp,
       remaining: GAME_DAILY_LIMIT - state.games.pawHuntPlays,
     };
+  }
+
+  function getRoomCatalog(input) {
+    const state = normalizeState(input);
+    return ROOM_SLOT_ORDER.map((slot) => ({
+      slot,
+      selected: state.room[slot],
+      items: ROOM_CATALOG[slot].map((item) => ({
+        ...item,
+        unlocked: state.xp >= item.minXp,
+        selected: state.room[slot] === item.id,
+      })),
+    }));
+  }
+
+  function getRoomSummary(input) {
+    const state = normalizeState(input);
+    const catalog = getRoomCatalog(state);
+    const allItems = catalog.flatMap((entry) => entry.items);
+    const locked = allItems.filter((item) => !item.unlocked).sort((a, b) => a.minXp - b.minXp);
+    return {
+      room: clone(state.room),
+      unlockedCount: allItems.length - locked.length,
+      totalCount: allItems.length,
+      nextUnlockXp: locked[0]?.minXp ?? null,
+    };
+  }
+
+  function setRoomItem(input, slot, itemId, now = Date.now()) {
+    if (!ROOM_SLOT_ORDER.includes(slot)) throw new Error(`Unknown room slot: ${slot}`);
+    const state = tick(input, now);
+    const item = ROOM_CATALOG[slot].find((candidate) => candidate.id === itemId);
+    if (!item) throw new Error(`Unknown room item: ${itemId}`);
+    if (state.xp < item.minXp) {
+      return { ok: false, reason: "locked", requiredXp: item.minXp, state };
+    }
+    state.room[slot] = item.id;
+    state.history.push({ action: "room_customize", slot, item: item.id, at: toIso(now) });
+    state.history = state.history.slice(-30);
+    return { ok: true, state, slot, item };
   }
 
   function resolveAsset(input, options = {}) {
@@ -369,6 +477,8 @@
     GAME_DAILY_LIMIT,
     DAILY_MISSION_ACTIONS,
     MILESTONES,
+    ROOM_SLOT_ORDER,
+    ROOM_CATALOG,
     createInitialState,
     normalizeState,
     tick,
@@ -378,6 +488,9 @@
     getDailyCare,
     getMilestones,
     playPawHunt,
+    getRoomCatalog,
+    getRoomSummary,
+    setRoomItem,
     resolveAsset,
     getResetToken,
     resetToKitten,
