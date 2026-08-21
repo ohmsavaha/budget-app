@@ -1,0 +1,25 @@
+{
+  "pack": "humajja-mascot-v2-phase2n",
+  "version": "1.0.0",
+  "purpose": "일반 지출 저장을 카테고리별로 구분해 반응하는 후추·마요·짜장 기록 팩",
+  "canvas": {
+    "source": [1024, 1024],
+    "runtime": [512, 512],
+    "fallback": [128, 128]
+  },
+  "animation_count": 10,
+  "solo_action_count": 9,
+  "group_action_count": 1,
+  "animations": [
+    {"id":"huchu_grocery_logged","actor":"huchu","display_name":"후추","action":"grocery_logged","action_label":"장보기 기록","durations_ms":[150,170,210,300,210,170],"total_duration_ms":1210,"loop":true,"anchor":{"x":0.5,"y":0.95}},
+    {"id":"mayo_meal_logged","actor":"mayo","display_name":"마요","action":"meal_logged","action_label":"식비 기록","durations_ms":[150,170,210,300,210,170],"total_duration_ms":1210,"loop":true,"anchor":{"x":0.5,"y":0.95}},
+    {"id":"jjajang_cat_care_logged","actor":"jjajang","display_name":"짜장","action":"cat_care_logged","action_label":"고양이 돌봄 기록","durations_ms":[150,170,210,300,210,170],"total_duration_ms":1210,"loop":true,"anchor":{"x":0.5,"y":0.95}},
+    {"id":"huchu_transport_logged","actor":"huchu","display_name":"후추","action":"transport_logged","action_label":"교통비 기록","durations_ms":[150,170,210,300,210,170],"total_duration_ms":1210,"loop":true,"anchor":{"x":0.5,"y":0.95}},
+    {"id":"huchu_home_bill_logged","actor":"huchu","display_name":"후추","action":"home_bill_logged","action_label":"생활요금 기록","durations_ms":[150,170,210,300,210,170],"total_duration_ms":1210,"loop":true,"anchor":{"x":0.5,"y":0.95}},
+    {"id":"mayo_health_logged","actor":"mayo","display_name":"마요","action":"health_logged","action_label":"건강비 기록","durations_ms":[150,170,210,300,210,170],"total_duration_ms":1210,"loop":true,"anchor":{"x":0.5,"y":0.95}},
+    {"id":"mayo_relationship_logged","actor":"mayo","display_name":"마요","action":"relationship_logged","action_label":"가족·선물·데이트 기록","durations_ms":[150,170,210,300,210,170],"total_duration_ms":1210,"loop":true,"anchor":{"x":0.5,"y":0.95}},
+    {"id":"jjajang_learning_logged","actor":"jjajang","display_name":"짜장","action":"learning_logged","action_label":"공부·자격증 기록","durations_ms":[150,170,210,300,210,170],"total_duration_ms":1210,"loop":true,"anchor":{"x":0.5,"y":0.95}},
+    {"id":"jjajang_shopping_logged","actor":"jjajang","display_name":"짜장","action":"shopping_logged","action_label":"쇼핑·미용 기록","durations_ms":[150,170,210,300,210,170],"total_duration_ms":1210,"loop":true,"anchor":{"x":0.5,"y":0.95}},
+    {"id":"group_shared_expense_logged","actor":"group","display_name":"후추·마요·짜장","action":"shared_expense_logged","action_label":"공용 지출 기록","durations_ms":[150,170,210,300,210,170],"total_duration_ms":1210,"loop":true,"anchor":{"x":0.5,"y":0.95}}
+  ]
+}

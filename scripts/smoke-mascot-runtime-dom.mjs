@@ -130,6 +130,25 @@ for (const [action, character] of [
   await new Promise((resolve) => setTimeout(resolve, 15));
 }
 
+for (const [action, character] of [
+  ["grocery_logged", "huchu"],
+  ["meal_logged", "mayo"],
+  ["cat_care_logged", "jjajang"],
+  ["transport_logged", "huchu"],
+  ["home_bill_logged", "huchu"],
+  ["health_logged", "mayo"],
+  ["relationship_logged", "mayo"],
+  ["learning_logged", "jjajang"],
+  ["shopping_logged", "jjajang"],
+  ["shared_expense_logged", "group"],
+]) {
+  window.BudgetMascot.play({ action, character, duration: 10 });
+  if (!image.getAttribute("src")?.includes(`phase2n/webp/${character}_${action}_512`)) {
+    throw new Error(`Phase 2N 동작 실패: ${character}_${action}`);
+  }
+  await new Promise((resolve) => setTimeout(resolve, 15));
+}
+
 window.BudgetMascot.play({ action: "lowest_price", character: "jjajang", duration: 10 });
 if (!image.getAttribute("src")?.includes("phase2e/webp/jjajang_lowest_price")) {
   throw new Error("Phase 2J 기존 최저가 동작 재연결 실패");
@@ -194,6 +213,12 @@ window.BudgetMascot.play({ action: "retry_calm", character: "mayo", duration: 10
 if (!image.getAttribute("src")?.includes("phase2m/static/mayo_retry_calm_frame_01")) {
   throw new Error("Phase 2M 모션 감소 정적 대체 실패");
 }
+await new Promise((resolve) => setTimeout(resolve, 15));
+window.BudgetMascot.play({ action: "shared_expense_logged", character: "group", duration: 10 });
+if (!image.getAttribute("src")?.includes("phase2n/static/group_shared_expense_logged_frame_01")) {
+  throw new Error("Phase 2N 모션 감소 정적 대체 실패");
+}
+await new Promise((resolve) => setTimeout(resolve, 15));
 window.BudgetMascot.play({ action: "refund", character: "jjajang", duration: 10 });
 if (!image.getAttribute("src")?.endsWith(".png")) throw new Error("모션 감소 정적 대체 실패");
 
@@ -212,5 +237,6 @@ console.log(JSON.stringify({
   phase2k: "fixed_plan_saved + group_goal_map + portfolio_repaired",
   phase2l: "group_budget_review",
   phase2m: "budget + goal + empty + retry states",
+  phase2n: "10 category-aware expense reactions",
   toggle: "passed",
 }));

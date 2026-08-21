@@ -4,6 +4,11 @@ const REDUCED_MOTION = window.matchMedia("(prefers-reduced-motion: reduce)");
 const ENABLED_KEY = "mascot_v2_enabled";
 
 const PHASE_ACTIONS = Object.freeze({
+  phase2n: new Set([
+    "grocery_logged", "meal_logged", "cat_care_logged", "transport_logged",
+    "home_bill_logged", "health_logged", "relationship_logged", "learning_logged",
+    "shopping_logged", "shared_expense_logged",
+  ]),
   phase2m: new Set([
     "budget_calm", "budget_warning", "budget_exceeded", "goal_achieved",
     "search_no_results", "history_empty", "retry_calm",
@@ -132,6 +137,16 @@ const IDLE_BY_TAB = Object.freeze({
 });
 
 const PREFERRED_CHARACTER = Object.freeze({
+  grocery_logged: "huchu",
+  meal_logged: "mayo",
+  cat_care_logged: "jjajang",
+  transport_logged: "huchu",
+  home_bill_logged: "huchu",
+  health_logged: "mayo",
+  relationship_logged: "mayo",
+  learning_logged: "jjajang",
+  shopping_logged: "jjajang",
+  shared_expense_logged: "group",
   budget_calm: "mayo",
   group_budget_review: "group",
   fixed_plan_saved: "huchu",
@@ -253,6 +268,16 @@ const PREFERRED_CHARACTER = Object.freeze({
 });
 
 const ACTION_COPY = Object.freeze({
+  grocery_logged: ["장보기 기록 완료", "후추가 장보기 금액을 생활 기록에 또렷하게 남겼어요.", "good"],
+  meal_logged: ["식비 기록 완료", "마요가 식사와 간식 지출을 빠짐없이 정리했어요.", "good"],
+  cat_care_logged: ["고양이 돌봄 기록 완료", "짜장이 함께 지낸 돌봄 비용을 소중히 기록했어요.", "good"],
+  transport_logged: ["교통비 기록 완료", "후추가 이동에 쓴 금액을 정확하게 확인했어요.", "good"],
+  home_bill_logged: ["생활요금 기록 완료", "후추가 주거·통신·생활요금을 차분히 정리했어요.", "good"],
+  health_logged: ["건강비 기록 완료", "마요가 건강과 보험에 쓴 금액을 안전하게 남겼어요.", "good"],
+  relationship_logged: ["함께한 지출 기록 완료", "마요가 가족·선물·데이트의 지출을 따뜻하게 기록했어요.", "good"],
+  learning_logged: ["배움 비용 기록 완료", "짜장이 공부와 자격증을 위한 한 걸음을 기록했어요.", "good"],
+  shopping_logged: ["쇼핑 기록 완료", "짜장이 필요한 구매 금액을 기분 좋게 정리했어요.", "good"],
+  shared_expense_logged: ["공용 지출 기록 완료", "세 마리가 함께 쓴 생활비를 한곳에 맞춰 기록했어요.", "good"],
   budget_calm: ["예산에 여유가 있어요", "마요가 지금 속도라면 예산을 편안하게 지킬 수 있다고 알려줘요.", "good"],
   group_budget_review: ["세 마리 가계부 회의", "후추·마요·짜장이 기록과 다음 계획을 함께 살펴봐요.", "neutral"],
   fixed_plan_saved: ["고정비 계획 저장", "새 고정비의 금액과 납부일을 계획에 넣었어요.", "good"],
@@ -367,6 +392,16 @@ const ACTION_COPY = Object.freeze({
 });
 
 const PRIORITY = Object.freeze({
+  grocery_logged: 3,
+  meal_logged: 3,
+  cat_care_logged: 3,
+  transport_logged: 3,
+  home_bill_logged: 3,
+  health_logged: 3,
+  relationship_logged: 3,
+  learning_logged: 3,
+  shopping_logged: 3,
+  shared_expense_logged: 3,
   budget_calm: 2,
   fixed_plan_saved: 4,
   fixed_plan_updated: 4,
@@ -452,7 +487,7 @@ function phaseFor(action) {
 }
 
 function animatedName(phase, character, action) {
-  const suffix = ["phase2a", "phase2b", "phase2c", "phase2f", "phase2g", "phase2h", "phase2i", "phase2k", "phase2l", "phase2m"].includes(phase) ? "_512_v01.webp" : "_v01.webp";
+  const suffix = ["phase2a", "phase2b", "phase2c", "phase2f", "phase2g", "phase2h", "phase2i", "phase2k", "phase2l", "phase2m", "phase2n"].includes(phase) ? "_512_v01.webp" : "_v01.webp";
   return `${character}_${action}${suffix}`;
 }
 

@@ -49,8 +49,8 @@ for (const [tab, classes] of Object.entries(hierarchyByTab)) {
 
 if (!app.includes("@media (prefers-reduced-motion:reduce)")) failures.push("앱 셸 모션감소 규칙 누락");
 if (!app.includes('data-budget-mascot-stage')) failures.push("마스코트 전용 안전영역 누락");
-if (!app.includes("나의 가계부 · v160")) failures.push("앱 버전 v160 표기 누락");
-if (!worker.includes('const CACHE = "budget-v160"')) failures.push("서비스워커 v160 캐시 누락");
+if (!app.includes("나의 가계부 · v161")) failures.push("앱 버전 v161 표기 누락");
+if (!worker.includes('const CACHE = "budget-v161"')) failures.push("서비스워커 v161 캐시 누락");
 
 const globalFunctions = [...app.matchAll(/^function\s+([A-Za-z0-9_]+)\s*\(/gm)].map(match => match[1]);
 const duplicates = [...new Set(globalFunctions.filter((name, index) => globalFunctions.indexOf(name) !== index))];
@@ -62,7 +62,7 @@ if (failures.length) {
 } else {
   console.log(JSON.stringify({
     status: "passed",
-    version: "v160",
+    version: "v161",
     tabs: actualTabs.length,
     builders: requiredBuilders.length,
     hierarchyChecks: Object.values(hierarchyByTab).flat().length,

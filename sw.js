@@ -1,5 +1,5 @@
 // 나의 가계부 서비스워커 — 오프라인 캐시 + 푸시 알림
-const CACHE = "budget-v160";
+const CACHE = "budget-v161";
 const PET_CHARACTERS = ["huchu", "mayo", "jjajang"];
 const PET_STATES = ["idle", "eat", "sleep", "play", "groom", "sick", "love"];
 const PET_RUNTIME_ASSETS = PET_CHARACTERS.flatMap((character) => PET_STATES.flatMap((state) => [
@@ -40,6 +40,26 @@ const CORE = [
   "./assets/mascot-v2/phase2m/static/huchu_search_no_results_frame_01_v01.png",
   "./assets/mascot-v2/phase2m/static/mayo_history_empty_frame_01_v01.png",
   "./assets/mascot-v2/phase2m/static/mayo_retry_calm_frame_01_v01.png",
+  "./assets/mascot-v2/phase2n/webp/huchu_grocery_logged_512_v01.webp",
+  "./assets/mascot-v2/phase2n/webp/mayo_meal_logged_512_v01.webp",
+  "./assets/mascot-v2/phase2n/webp/jjajang_cat_care_logged_512_v01.webp",
+  "./assets/mascot-v2/phase2n/webp/huchu_transport_logged_512_v01.webp",
+  "./assets/mascot-v2/phase2n/webp/huchu_home_bill_logged_512_v01.webp",
+  "./assets/mascot-v2/phase2n/webp/mayo_health_logged_512_v01.webp",
+  "./assets/mascot-v2/phase2n/webp/mayo_relationship_logged_512_v01.webp",
+  "./assets/mascot-v2/phase2n/webp/jjajang_learning_logged_512_v01.webp",
+  "./assets/mascot-v2/phase2n/webp/jjajang_shopping_logged_512_v01.webp",
+  "./assets/mascot-v2/phase2n/webp/group_shared_expense_logged_512_v01.webp",
+  "./assets/mascot-v2/phase2n/static/huchu_grocery_logged_frame_01_v01.png",
+  "./assets/mascot-v2/phase2n/static/mayo_meal_logged_frame_01_v01.png",
+  "./assets/mascot-v2/phase2n/static/jjajang_cat_care_logged_frame_01_v01.png",
+  "./assets/mascot-v2/phase2n/static/huchu_transport_logged_frame_01_v01.png",
+  "./assets/mascot-v2/phase2n/static/huchu_home_bill_logged_frame_01_v01.png",
+  "./assets/mascot-v2/phase2n/static/mayo_health_logged_frame_01_v01.png",
+  "./assets/mascot-v2/phase2n/static/mayo_relationship_logged_frame_01_v01.png",
+  "./assets/mascot-v2/phase2n/static/jjajang_learning_logged_frame_01_v01.png",
+  "./assets/mascot-v2/phase2n/static/jjajang_shopping_logged_frame_01_v01.png",
+  "./assets/mascot-v2/phase2n/static/group_shared_expense_logged_frame_01_v01.png",
   ...PET_RUNTIME_ASSETS,
   ...PET_ADULT_HANDOFF_ASSETS,
 ];

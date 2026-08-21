@@ -189,6 +189,34 @@
   --mascot-stage-line: #d8e7e2;
 }
 
+.budget-mascot-stage[data-action="grocery_logged"],
+.budget-mascot-stage[data-action="cat_care_logged"],
+.budget-mascot-stage[data-action="learning_logged"] {
+  --mascot-stage-bg:
+    radial-gradient(circle at 88% 18%, rgba(228, 182, 76, .18), transparent 34%),
+    linear-gradient(135deg, #fff 0%, #f5faf2 100%);
+  --mascot-stage-line: #d8e6d3;
+}
+
+.budget-mascot-stage[data-action="meal_logged"],
+.budget-mascot-stage[data-action="relationship_logged"],
+.budget-mascot-stage[data-action="shopping_logged"] {
+  --mascot-stage-bg:
+    radial-gradient(circle at 88% 18%, rgba(226, 137, 112, .16), transparent 35%),
+    linear-gradient(135deg, #fff 0%, #fff6f2 100%);
+  --mascot-stage-line: #eedbd4;
+}
+
+.budget-mascot-stage[data-action="transport_logged"],
+.budget-mascot-stage[data-action="home_bill_logged"],
+.budget-mascot-stage[data-action="health_logged"],
+.budget-mascot-stage[data-action="shared_expense_logged"] {
+  --mascot-stage-bg:
+    radial-gradient(circle at 88% 18%, rgba(77, 133, 156, .15), transparent 35%),
+    linear-gradient(135deg, #fff 0%, #f1f8fa 100%);
+  --mascot-stage-line: #d4e3e7;
+}
+
 .budget-mascot-toggle {
   position: absolute;
   top: 8px;
