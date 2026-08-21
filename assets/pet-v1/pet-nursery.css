@@ -373,6 +373,242 @@
   font-weight: 800;
 }
 
+.pet-extras {
+  display: grid;
+  grid-template-columns: minmax(0, 0.9fr) minmax(0, 1.35fr);
+  gap: 14px;
+}
+
+.pet-extra-card {
+  min-width: 0;
+  padding: 17px;
+  border: 1px solid rgba(78, 101, 85, 0.14);
+  border-radius: 20px;
+  background: rgba(255, 255, 255, 0.86);
+  box-shadow: 0 8px 24px rgba(68, 83, 72, 0.05);
+}
+
+.pet-extra-card__head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.pet-extra-card__eyebrow {
+  margin: 0 0 4px;
+  color: #809084;
+  font-size: 9.5px;
+  font-weight: 850;
+  letter-spacing: 0.1em;
+}
+
+.pet-extra-card__title {
+  margin: 0;
+  color: #334039;
+  font-size: 15px;
+  line-height: 1.35;
+  letter-spacing: -0.02em;
+}
+
+.pet-daily__progress,
+.pet-game__count,
+.pet-album__progress {
+  flex: 0 0 auto;
+  padding: 6px 9px;
+  border-radius: 999px;
+  color: #5e7464;
+  background: #eef5ef;
+  font-size: 10.5px;
+  font-weight: 850;
+}
+
+.pet-daily__missions {
+  display: grid;
+  gap: 7px;
+  margin-top: 14px;
+}
+
+.pet-daily__mission {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 9px 10px;
+  border-radius: 11px;
+  color: #6c786f;
+  background: #f7faf7;
+  font-size: 11.5px;
+  font-weight: 720;
+}
+
+.pet-daily__mission[data-completed="true"] {
+  color: #4c6854;
+  background: #edf6ef;
+}
+
+.pet-daily__check {
+  display: grid;
+  place-items: center;
+  width: 20px;
+  height: 20px;
+  border-radius: 999px;
+  color: #78927f;
+  background: #fff;
+  font-size: 12px;
+  font-weight: 900;
+}
+
+.pet-daily__message,
+.pet-game__copy,
+.pet-game__result {
+  margin: 12px 0 0;
+  color: #7b857d;
+  font-size: 11px;
+  line-height: 1.6;
+}
+
+.pet-game {
+  background:
+    radial-gradient(circle at 92% 8%, rgba(237, 198, 146, 0.16), transparent 35%),
+    rgba(255, 255, 255, 0.88);
+}
+
+.pet-game__board {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 8px;
+  margin-top: 13px;
+}
+
+.pet-game__spot {
+  display: grid;
+  gap: 4px;
+  justify-items: center;
+  min-width: 0;
+  padding: 12px 5px 10px;
+  border: 1px solid rgba(128, 151, 134, 0.18);
+  border-radius: 14px;
+  color: #5f6d63;
+  background: #f8fbf8;
+  font: inherit;
+}
+
+.pet-game__spot:not(:disabled):hover,
+.pet-game__spot:not(:disabled):focus-visible {
+  border-color: rgba(238, 128, 111, 0.46);
+  background: #fff8f5;
+}
+
+.pet-game__spot:focus-visible,
+.pet-game__start:focus-visible {
+  outline: 3px solid rgba(238, 128, 111, 0.24);
+  outline-offset: 2px;
+}
+
+.pet-game__spot:disabled:not([data-revealed="true"]) {
+  opacity: 0.56;
+}
+
+.pet-game__spot-icon {
+  font-size: 25px;
+  line-height: 1;
+}
+
+.pet-game__spot-label {
+  overflow: hidden;
+  max-width: 100%;
+  font-size: 10px;
+  font-weight: 760;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.pet-game__result {
+  min-height: 18px;
+  color: #66756a;
+  font-weight: 720;
+}
+
+.pet-game__start {
+  width: 100%;
+  margin-top: 9px;
+  padding: 10px 12px;
+  border: 1px solid rgba(127, 157, 134, 0.32);
+  border-radius: 12px;
+  color: #486251;
+  background: #edf6ef;
+  font: inherit;
+  font-size: 11.5px;
+  font-weight: 850;
+}
+
+.pet-game__start:disabled {
+  cursor: not-allowed;
+  opacity: 0.54;
+}
+
+.pet-album {
+  grid-column: 1 / -1;
+}
+
+.pet-album__grid {
+  display: grid;
+  grid-template-columns: repeat(6, minmax(0, 1fr));
+  gap: 8px;
+  margin-top: 14px;
+}
+
+.pet-album__memory {
+  display: grid;
+  justify-items: center;
+  min-width: 0;
+  padding: 9px 6px 10px;
+  border: 1px solid rgba(78, 101, 85, 0.1);
+  border-radius: 13px;
+  background: #fafcf9;
+  text-align: center;
+}
+
+.pet-album__memory[data-unlocked="false"] {
+  color: #9ca49e;
+  background: #f5f6f4;
+}
+
+.pet-album__image {
+  display: block;
+  width: min(100%, 72px);
+  aspect-ratio: 1;
+  object-fit: contain;
+}
+
+.pet-album__memory[data-unlocked="false"] .pet-album__image {
+  filter: grayscale(1);
+  opacity: 0.2;
+}
+
+.pet-album__label {
+  overflow: hidden;
+  width: 100%;
+  margin-top: 5px;
+  color: #53645a;
+  font-size: 10px;
+  font-weight: 820;
+  line-height: 1.35;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.pet-album__memory[data-unlocked="false"] .pet-album__label {
+  color: #969e98;
+}
+
+.pet-album__xp {
+  margin-top: 2px;
+  color: #98a099;
+  font-size: 9px;
+  font-weight: 700;
+}
+
 .pet-nursery[data-pet-status="sick"] {
   --pet-sage-soft: #f6f1e9;
   background:
@@ -381,6 +617,18 @@
 }
 
 @media (max-width: 520px) {
+  .pet-extras {
+    grid-template-columns: 1fr;
+  }
+
+  .pet-album {
+    grid-column: auto;
+  }
+
+  .pet-album__grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+
   .pet-page__hero {
     grid-template-columns: 1fr;
   }

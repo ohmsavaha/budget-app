@@ -12,6 +12,7 @@
 <link rel="stylesheet" href="./assets/pet-v1/pet-nursery.css"/>
 <script src="./assets/pet-v1/pet-nursery.js"></script>
 <script src="./assets/pet-v1/pet-nursery-view.js"></script>
+<script src="./assets/pet-v1/pet-nursery-extras.js"></script>
 <meta name="apple-mobile-web-app-capable" content="yes"/>
 <meta name="apple-mobile-web-app-title" content="가계부"/>
 <style>
@@ -839,6 +840,7 @@ function h(tag,p={},...kids){
 
 const S={session:undefined,curYm:ym(td()),tab:"home",txns:[],budget:0,invRows:[],prevTxns:[],fixedCosts:[],yearTxns:[],nextTxns:[],sharedFixed:[],sharedTxns:[],householdId:null,accounts:[],savings:[],dutch:[],investTotal:0};
 let ACTIVE_PET_VIEW=null;
+let ACTIVE_PET_EXTRAS=null;
 const app=document.getElementById("app");
 const setApp=(...nodes)=>{app.innerHTML="";nodes.flat().filter(Boolean).forEach(n=>app.append(n));};
 
@@ -1063,6 +1065,7 @@ function showMonthPicker(){
 }
 function renderDash(){
   if(ACTIVE_PET_VIEW){ACTIVE_PET_VIEW.destroy();ACTIVE_PET_VIEW=null;}
+  if(ACTIVE_PET_EXTRAS){ACTIVE_PET_EXTRAS.destroy();ACTIVE_PET_EXTRAS=null;}
   exitReorder();
   document.body.dataset.budgetTab=S.tab;
   const isPetTab=S.tab==="pets";
@@ -1091,8 +1094,8 @@ function renderDash(){
       h("div",{style:{display:"flex",alignItems:"center",gap:"9px"}},
         h("span",{style:{fontSize:"21px"}},isPetTab?"🐾":(SN[Number(S.curYm.split("-")[1])]||"📒")),
         isPetTab
-          ?h("div",{},h("div",{style:{fontSize:"11.5px",color:C.sub}},"🐾 나의 가계부 · v157"),h("div",{style:{fontSize:"16.5px",fontWeight:"800",letterSpacing:"-.01em"}},"고양이 육성방"))
-          :h("div",{},h("div",{style:{fontSize:"11.5px",color:C.sub}},"🐾 나의 가계부 · v157"),h("div",{style:{fontSize:"16.5px",fontWeight:"800",letterSpacing:"-.01em",cursor:"pointer",display:"flex",alignItems:"center",gap:"4px"},onclick:()=>showMonthPicker()},yml(S.curYm),h("span",{style:{fontSize:"10px",color:C.faint}},"▾")))
+          ?h("div",{},h("div",{style:{fontSize:"11.5px",color:C.sub}},"🐾 나의 가계부 · v158"),h("div",{style:{fontSize:"16.5px",fontWeight:"800",letterSpacing:"-.01em"}},"고양이 육성방"))
+          :h("div",{},h("div",{style:{fontSize:"11.5px",color:C.sub}},"🐾 나의 가계부 · v158"),h("div",{style:{fontSize:"16.5px",fontWeight:"800",letterSpacing:"-.01em",cursor:"pointer",display:"flex",alignItems:"center",gap:"4px"},onclick:()=>showMonthPicker()},yml(S.curYm),h("span",{style:{fontSize:"10px",color:C.faint}},"▾")))
       ),
       isPetTab
         ?h("div",{class:"pet-header-save","aria-label":"육성 데이터 저장 위치"},"이 기기에 안전 저장")
@@ -1197,7 +1200,8 @@ function showPetResetDialog(character,onReset){
 function buildPetRoom(){
   const engine=window.BudgetPetNursery;
   const ui=window.BudgetPetNurseryUI;
-  if(!engine||!ui){
+  const extras=window.BudgetPetNurseryExtras;
+  if(!engine||!ui||!extras){
     return[h("section",{class:"surface-card",style:{padding:"22px",background:C.w,border:`1px solid ${C.line}`,borderRadius:"18px"}},h("div",{style:{fontSize:"15px",fontWeight:"800"}},"육성방을 불러오지 못했어요"),h("div",{style:{marginTop:"7px",fontSize:"12px",color:C.sub,lineHeight:"1.6"}},"앱을 새로고침하면 저장된 후추·마요·짜장 상태로 다시 열립니다."))];
   }
   const characters=[
@@ -1217,6 +1221,7 @@ function buildPetRoom(){
   const tabs=h("div",{class:"pet-character-tabs",role:"tablist","aria-label":"육성할 고양이 선택"});
   const buttons={};
   const host=h("div",{class:"pet-page__host"});
+  const extrasHost=h("div",{class:"pet-page__extras-host"});
   const resetCopy=h("div",{class:"pet-page__reset-copy"});
   const resetButton=h("button",{class:"pet-page__reset-button"});
 
@@ -1234,13 +1239,15 @@ function buildPetRoom(){
   });
   const mountCurrent=()=>{
     if(ACTIVE_PET_VIEW){ACTIVE_PET_VIEW.destroy();ACTIVE_PET_VIEW=null;}
+    if(ACTIVE_PET_EXTRAS){ACTIVE_PET_EXTRAS.destroy();ACTIVE_PET_EXTRAS=null;}
     ACTIVE_PET_VIEW=ui.mount(host,{character:current});
+    ACTIVE_PET_EXTRAS=extras.mount(extrasHost,{character:current});
     updateMeta();
   };
   const selectCharacter=id=>{
     if(id===current)return;
     current=id;try{localStorage.setItem("pet_nursery_selected",current);}catch{}updateTabs();
-    if(ACTIVE_PET_VIEW)ACTIVE_PET_VIEW.setCharacter(current);else mountCurrent();
+    if(ACTIVE_PET_VIEW&&ACTIVE_PET_EXTRAS){ACTIVE_PET_VIEW.setCharacter(current);ACTIVE_PET_EXTRAS.setCharacter(current);}else mountCurrent();
     updateMeta();
   };
   characters.forEach(character=>{
@@ -1256,8 +1263,13 @@ function buildPetRoom(){
   );
   const resetCard=h("section",{class:"pet-page__reset"},h("div",{},h("div",{class:"pet-page__reset-title"},"처음부터 다시 키우기"),resetCopy),resetButton);
   resetButton.onclick=()=>showPetResetDialog(current,()=>{mountCurrent();updateMeta();});
-  host.addEventListener("petnurserychange",()=>updateMeta());
-  page.append(hero,selector,host,guide,resetCard);
+  page.addEventListener("petnurserychange",event=>{
+    const state=event.detail?.state||readState();
+    if(event.detail?.source==="paw_hunt")ACTIVE_PET_VIEW?.refresh(state);
+    else ACTIVE_PET_EXTRAS?.refresh(state);
+    updateMeta();
+  });
+  page.append(hero,selector,host,extrasHost,guide,resetCard);
   updateTabs();mountCurrent();
   return[page];
 }

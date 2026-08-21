@@ -1,7 +1,14 @@
 {
   "pack": "humajja-pet-v1-kitten-core",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "purpose": "후추·마요·짜장을 아기 때부터 다시 돌보는 다마고치형 육성 기능의 핵심 자산과 상태 규칙",
+  "state_schema_version": 2,
+  "features": {
+    "daily_care_missions": ["feed", "play", "pet"],
+    "growth_album_milestones_xp": [0, 120, 300, 600, 900, 1200],
+    "paw_hunt_daily_limit": 3,
+    "paw_hunt_xp": { "win": 15, "miss": 5 }
+  },
   "principles": {
     "no_death": true,
     "offline_decay_cap_hours": 24,

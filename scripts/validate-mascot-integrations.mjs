@@ -136,8 +136,8 @@ if (!app.includes("async function deleteRowChecked(") || !app.includes('.delete(
 if (!app.includes("async function deleteRowsChecked(") || !app.includes("partial.deletedIds=deletedIds")) failures.push("일괄 삭제 부분 성공 확인 헬퍼 누락");
 for (const marker of ["[품목삭제실패]", "[가격삭제실패]", "[거래삭제실패]", "[더치페이삭제실패]"]) if (!app.includes(marker)) failures.push(`삭제 실패 복구 누락: ${marker}`);
 for (const table of ["shopping_items", "fixed_costs", "investment_holdings", "loans"]) if (!app.includes(`deleteRowChecked("${table}"`)) failures.push(`${table} 삭제 결과 확인 누락`);
-if (!app.includes("나의 가계부 · v157")) failures.push("앱 버전 v157 표기 누락");
-if (!worker.includes('const CACHE = "budget-v157"')) failures.push("서비스 워커 v157 캐시 누락");
+if (!app.includes("나의 가계부 · v158")) failures.push("앱 버전 v158 표기 누락");
+if (!worker.includes('const CACHE = "budget-v158"')) failures.push("서비스 워커 v158 캐시 누락");
 if (!runtime.includes('"phase2h"')) failures.push("Phase 2H 애니메이션 파일명 규칙 누락");
 if (!runtime.includes('"phase2i"')) failures.push("Phase 2I 애니메이션 파일명 규칙 누락");
 if (!runtime.includes('"phase2k"')) failures.push("Phase 2K 애니메이션 파일명 규칙 누락");
@@ -151,7 +151,7 @@ if (!app.includes("mascotBudgetState(used,isCur)")) failures.push("홈 예산 �
 if (!app.includes('["pets","🐾 육성"]')) failures.push("고양이 육성방 탭 누락");
 if (!app.includes('S.tab==="pets"')) failures.push("고양이 육성방 렌더 분기 누락");
 if (!app.includes("ACTIVE_PET_VIEW.destroy()")) failures.push("육성방 화면 전환 시 타이머 정리 누락");
-for (const asset of ["pet-nursery.css", "pet-nursery.js", "pet-nursery-view.js", "PET_RUNTIME_ASSETS"]) {
+for (const asset of ["pet-nursery.css", "pet-nursery.js", "pet-nursery-view.js", "pet-nursery-extras.js", "PET_RUNTIME_ASSETS"]) {
   if (!worker.includes(asset)) failures.push(`육성방 오프라인 캐시 누락: ${asset}`);
 }
 
@@ -163,6 +163,6 @@ if (failures.length) {
     status: "passed",
     appEvents: requiredAppEvents.length,
     runtimeActions: requiredRuntimeActions.length,
-    version: "v157",
+    version: "v158",
   }));
 }

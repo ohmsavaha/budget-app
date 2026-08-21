@@ -1,7 +1,7 @@
 (function petNurseryBootstrap() {
   "use strict";
 
-  const VERSION = 1;
+  const VERSION = 2;
   const STORAGE_KEY = "humajja_pet_nursery_v1";
   const ROOT = "./assets/pet-v1";
   const CHARACTERS = Object.freeze(["huchu", "mayo", "jjajang"]);
@@ -11,6 +11,16 @@
   ]);
   const MAX_OFFLINE_HOURS = 24;
   const ADULT_XP = 1200;
+  const GAME_DAILY_LIMIT = 3;
+  const DAILY_MISSION_ACTIONS = Object.freeze(["feed", "play", "pet"]);
+  const MILESTONES = Object.freeze([
+    Object.freeze({ xp: 0, label: "처음 만난 날", visual: "idle" }),
+    Object.freeze({ xp: 120, label: "첫 식사", visual: "eat" }),
+    Object.freeze({ xp: 300, label: "놀이 친구", visual: "play" }),
+    Object.freeze({ xp: 600, label: "마음이 가까워진 날", visual: "love" }),
+    Object.freeze({ xp: 900, label: "의젓한 고양이", visual: "groom" }),
+    Object.freeze({ xp: ADULT_XP, label: "함께 자란 날", visual: "adult" }),
+  ]);
 
   const ACTIONS = Object.freeze({
     feed: {
@@ -101,6 +111,11 @@
         affection: 64,
       },
       cooldowns: {},
+      games: {
+        date: dateKey(now),
+        pawHuntPlays: 0,
+        pawHuntWins: 0,
+      },
       history: [],
     };
   }
@@ -114,13 +129,21 @@
       now: Date.parse(input.bornAt) || now,
       generation: input.generation,
     });
+    const defaultNeeds = clone(baseline.needs);
+    const defaultGames = clone(baseline.games);
     const state = Object.assign(baseline, clone(input));
     state.schemaVersion = VERSION;
-    state.needs = Object.assign(baseline.needs, clone(input.needs || {}));
+    state.needs = Object.assign(defaultNeeds, clone(input.needs || {}));
     NEED_KEYS.forEach((key) => { state.needs[key] = clamp(state.needs[key]); });
     state.xp = Math.max(0, Number(state.xp) || 0);
     state.stage = deriveStage(state.xp);
     state.cooldowns = clone(input.cooldowns || {});
+    state.games = Object.assign(defaultGames, clone(input.games || {}));
+    if (state.games.date !== dateKey(now)) {
+      state.games = { date: dateKey(now), pawHuntPlays: 0, pawHuntWins: 0 };
+    }
+    state.games.pawHuntPlays = Math.min(GAME_DAILY_LIMIT, Math.max(0, Number(state.games.pawHuntPlays) || 0));
+    state.games.pawHuntWins = Math.min(state.games.pawHuntPlays, Math.max(0, Number(state.games.pawHuntWins) || 0));
     state.history = Array.isArray(input.history) ? input.history.slice(-30) : [];
     return state;
   }
@@ -201,6 +224,61 @@
     if (state.needs.happiness < 30) return { id: "bored", label: "같이 놀고 싶어요", priority: 5 };
     if (state.needs.affection < 30) return { id: "lonely", label: "쓰다듬어 주세요", priority: 6 };
     return { id: "content", label: "편안하고 행복해요", priority: 7 };
+  }
+
+  function getDailyCare(input, now = Date.now()) {
+    const state = normalizeState(input, now);
+    const today = dateKey(now);
+    const completed = new Set(state.history
+      .filter((entry) => Number.isFinite(Date.parse(entry.at)) && dateKey(Date.parse(entry.at)) === today)
+      .map((entry) => entry.action));
+    const missions = DAILY_MISSION_ACTIONS.map((action) => ({ action, completed: completed.has(action) }));
+    return {
+      date: today,
+      missions,
+      completedCount: missions.filter((mission) => mission.completed).length,
+      complete: missions.every((mission) => mission.completed),
+    };
+  }
+
+  function getMilestones(input) {
+    const state = normalizeState(input);
+    return MILESTONES.map((milestone) => ({
+      ...milestone,
+      unlocked: state.xp >= milestone.xp,
+      asset: milestone.visual === "adult"
+        ? `./assets/mascot-v2/phase2a/static/${state.character}_breathe_frame_01_v01.png`
+        : `${ROOT}/static/${state.character}_baby_${milestone.visual}_frame_01_v01.png`,
+    }));
+  }
+
+  function playPawHunt(input, won, now = Date.now()) {
+    const state = tick(input, now);
+    if (state.games.pawHuntPlays >= GAME_DAILY_LIMIT) {
+      return { ok: false, reason: "daily_limit", state, remaining: 0 };
+    }
+    const isWin = Boolean(won);
+    const gainedXp = isWin ? 15 : 5;
+    state.games.pawHuntPlays += 1;
+    if (isWin) state.games.pawHuntWins += 1;
+    state.xp += gainedXp;
+    state.stage = deriveStage(state.xp);
+    state.needs.happiness = clamp(state.needs.happiness + (isWin ? 12 : 5));
+    state.needs.affection = clamp(state.needs.affection + (isWin ? 6 : 2));
+    state.lastAction = "paw_hunt";
+    state.lastActionAt = toIso(now);
+    state.currentVisual = "play";
+    state.visualUntil = toIso(now + 4200);
+    updateStreak(state, now);
+    state.history.push({ action: "paw_hunt", at: toIso(now), xp: gainedXp, won: isWin });
+    state.history = state.history.slice(-30);
+    return {
+      ok: true,
+      won: isWin,
+      state,
+      gainedXp,
+      remaining: GAME_DAILY_LIMIT - state.games.pawHuntPlays,
+    };
   }
 
   function resolveAsset(input, options = {}) {
@@ -288,12 +366,18 @@
     ACTIONS,
     MAX_OFFLINE_HOURS,
     ADULT_XP,
+    GAME_DAILY_LIMIT,
+    DAILY_MISSION_ACTIONS,
+    MILESTONES,
     createInitialState,
     normalizeState,
     tick,
     applyAction,
     cooldownRemaining,
     deriveStatus,
+    getDailyCare,
+    getMilestones,
+    playPawHunt,
     resolveAsset,
     getResetToken,
     resetToKitten,

@@ -139,7 +139,7 @@
       state = engine.savePet(result.state);
       pets[state.character] = state;
       render(`${state.displayName}와 즐거운 시간을 보냈어요. +${result.gainedXp} XP`);
-      root.dispatchEvent(new CustomEvent("petnurserychange", { detail: { state }, bubbles: true }));
+      root.dispatchEvent(new CustomEvent("petnurserychange", { detail: { state, source: "care_action" }, bubbles: true }));
     }
 
     function setCharacter(nextCharacter) {
@@ -154,6 +154,14 @@
       render();
     }
 
+    function refresh(nextState) {
+      state = nextState && nextState.character === character
+        ? engine.normalizeState(nextState)
+        : engine.loadAll()[character];
+      pets[character] = state;
+      render();
+    }
+
     reduceMotion.addEventListener?.("change", handleMotionChange);
     const interval = window.setInterval(() => render(), 60000);
     render();
@@ -162,6 +170,7 @@
       root,
       getState: () => engine.normalizeState(state),
       setCharacter,
+      refresh,
       destroy() {
         window.clearInterval(interval);
         reduceMotion.removeEventListener?.("change", handleMotionChange);

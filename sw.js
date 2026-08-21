@@ -1,5 +1,5 @@
 // 나의 가계부 서비스워커 — 오프라인 캐시 + 푸시 알림
-const CACHE = "budget-v157";
+const CACHE = "budget-v158";
 const PET_CHARACTERS = ["huchu", "mayo", "jjajang"];
 const PET_STATES = ["idle", "eat", "sleep", "play", "groom", "sick", "love"];
 const PET_RUNTIME_ASSETS = PET_CHARACTERS.flatMap((character) => PET_STATES.flatMap((state) => [
@@ -20,6 +20,7 @@ const CORE = [
   "./assets/pet-v1/pet-nursery.css",
   "./assets/pet-v1/pet-nursery.js",
   "./assets/pet-v1/pet-nursery-view.js",
+  "./assets/pet-v1/pet-nursery-extras.js",
   "./assets/pet-v1/manifest.json",
   "./assets/mascot-v2/phase2l/webp/group_group_budget_review_512_v01.webp",
   "./assets/mascot-v2/phase2l/static/group_group_budget_review_frame_01_v01.png",

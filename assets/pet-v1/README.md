@@ -1,6 +1,6 @@
 # 후추·마요·짜장 아기 고양이 육성 팩 v1
 
-가계부의 기존 성묘 마스코트와 분리된 다마고치형 육성 기능입니다. v157부터 앱의 `🐾 육성` 탭에 연결되며, 육성 상태는 회계 데이터와 분리해 현재 기기의 `localStorage`에만 저장합니다.
+가계부의 기존 성묘 마스코트와 분리된 다마고치형 육성 기능입니다. v157부터 앱의 `🐾 육성` 탭에 연결됐고, v158에서 일일 돌봄·성장 앨범·발바닥 찾기 놀이가 추가됐습니다. 육성 상태는 회계 데이터와 분리해 현재 기기의 `localStorage`에만 저장합니다.
 
 ## 포함 범위
 
@@ -11,6 +11,9 @@
 - 밥·잠·놀이·빗질·돌봄·쓰다듬기 행동과 개별 쿨다운
 - 성장 XP, 아기→성묘 전환, 돌봄 연속일, 오프라인 진행(최대 24시간)
 - 사망 없음, 다시 키우기 확인 토큰, 세대 기록
+- 밥·놀이·쓰다듬기로 구성한 일일 돌봄 약속 3종
+- 0·120·300·600·900·1200 XP 성장 추억 6단계
+- 하루 3회 발바닥 찾기 놀이와 성공·실패별 성장 보상
 - 모션 감소 환경의 정적 이미지 전환
 
 ## 파일 규칙
@@ -29,10 +32,16 @@ static/{character}_baby_{state}_frame_01_v01.png
 <link rel="stylesheet" href="./assets/pet-v1/pet-nursery.css">
 <script src="./assets/pet-v1/pet-nursery.js"></script>
 <script src="./assets/pet-v1/pet-nursery-view.js"></script>
+<script src="./assets/pet-v1/pet-nursery-extras.js"></script>
 <div id="pet-room"></div>
+<div id="pet-extras"></div>
 <script>
   const nursery = BudgetPetNurseryUI.mount(
     document.querySelector("#pet-room"),
+    { character: "huchu" },
+  );
+  const extras = BudgetPetNurseryExtras.mount(
+    document.querySelector("#pet-extras"),
     { character: "huchu" },
   );
 </script>
