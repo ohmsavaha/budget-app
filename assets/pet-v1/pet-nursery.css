@@ -184,6 +184,195 @@
   opacity: 0.52;
 }
 
+.pet-nursery__action[data-recommended="true"]:not(:disabled) {
+  border-color: rgba(238, 128, 111, 0.5);
+  background: #fff8f5;
+  box-shadow: inset 0 0 0 1px rgba(238, 128, 111, 0.08);
+}
+
+.pet-page {
+  display: grid;
+  gap: 14px;
+}
+
+.pet-page__hero,
+.pet-page__selector,
+.pet-page__guide,
+.pet-page__reset {
+  border: 1px solid rgba(78, 101, 85, 0.14);
+  border-radius: 20px;
+  background: rgba(255, 255, 255, 0.82);
+  box-shadow: 0 8px 24px rgba(68, 83, 72, 0.055);
+}
+
+.pet-page__hero {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 16px;
+  align-items: center;
+  padding: clamp(18px, 4vw, 25px);
+  overflow: hidden;
+  background:
+    radial-gradient(circle at 90% 12%, rgba(238, 128, 111, 0.16), transparent 36%),
+    linear-gradient(145deg, #ffffff, #f0f7f1);
+}
+
+.pet-page__eyebrow {
+  margin: 0 0 5px;
+  color: #67816e;
+  font-size: 12px;
+  font-weight: 850;
+  letter-spacing: 0.08em;
+}
+
+.pet-page__headline {
+  margin: 0;
+  color: #26332b;
+  font-size: clamp(22px, 5vw, 30px);
+  line-height: 1.2;
+  letter-spacing: -0.03em;
+}
+
+.pet-page__intro {
+  max-width: 520px;
+  margin: 8px 0 0;
+  color: #6d786f;
+  font-size: 13px;
+  line-height: 1.65;
+}
+
+.pet-page__save-badge,
+.pet-header-save {
+  padding: 8px 11px;
+  border: 1px solid rgba(127, 157, 134, 0.22);
+  border-radius: 999px;
+  color: #587060;
+  background: rgba(255, 255, 255, 0.72);
+  font-size: 11px;
+  font-weight: 800;
+  white-space: nowrap;
+}
+
+.pet-page__selector {
+  padding: 15px;
+}
+
+.pet-page__selector-title {
+  margin: 0 0 10px;
+  color: #4c5f51;
+  font-size: 12px;
+  font-weight: 850;
+}
+
+.pet-character-tabs {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 9px;
+}
+
+.pet-character-tab {
+  display: grid;
+  grid-template-columns: 44px minmax(0, 1fr);
+  gap: 9px;
+  align-items: center;
+  min-width: 0;
+  padding: 8px 10px;
+  border: 1px solid rgba(78, 101, 85, 0.13);
+  border-radius: 14px;
+  color: #5d6d61;
+  background: #fff;
+  text-align: left;
+}
+
+.pet-character-tab[data-active="true"] {
+  border-color: rgba(127, 157, 134, 0.62);
+  color: #26332b;
+  background: #f1f7f2;
+  box-shadow: inset 0 0 0 1px rgba(127, 157, 134, 0.08);
+}
+
+.pet-character-tab__avatar {
+  display: block;
+  width: 44px;
+  height: 44px;
+  object-fit: contain;
+}
+
+.pet-character-tab__name {
+  display: block;
+  overflow: hidden;
+  font-size: 13px;
+  font-weight: 850;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.pet-character-tab__hint {
+  display: block;
+  margin-top: 2px;
+  color: #879088;
+  font-size: 10.5px;
+  font-weight: 650;
+}
+
+.pet-page__guide {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 10px;
+  padding: 15px;
+}
+
+.pet-page__guide-item {
+  padding: 12px;
+  border-radius: 13px;
+  background: #fafcf9;
+}
+
+.pet-page__guide-title {
+  color: #425447;
+  font-size: 12px;
+  font-weight: 850;
+}
+
+.pet-page__guide-copy {
+  margin-top: 4px;
+  color: #778078;
+  font-size: 11px;
+  line-height: 1.55;
+}
+
+.pet-page__reset {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+  padding: 15px 17px;
+}
+
+.pet-page__reset-title {
+  color: #425047;
+  font-size: 12.5px;
+  font-weight: 850;
+}
+
+.pet-page__reset-copy {
+  margin-top: 3px;
+  color: #818982;
+  font-size: 11px;
+  line-height: 1.5;
+}
+
+.pet-page__reset-button {
+  flex: 0 0 auto;
+  padding: 9px 11px;
+  border: 1px solid rgba(170, 98, 85, 0.22);
+  border-radius: 11px;
+  color: #9a5c50;
+  background: #fffaf8;
+  font-size: 11.5px;
+  font-weight: 800;
+}
+
 .pet-nursery[data-pet-status="sick"] {
   --pet-sage-soft: #f6f1e9;
   background:
@@ -192,6 +381,34 @@
 }
 
 @media (max-width: 520px) {
+  .pet-page__hero {
+    grid-template-columns: 1fr;
+  }
+
+  .pet-page__save-badge {
+    justify-self: start;
+  }
+
+  .pet-character-tab {
+    grid-template-columns: 1fr;
+    justify-items: center;
+    padding: 8px 5px;
+    text-align: center;
+  }
+
+  .pet-character-tab__hint {
+    display: none;
+  }
+
+  .pet-page__guide {
+    grid-template-columns: 1fr;
+  }
+
+  .pet-page__reset {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
   .pet-nursery__room {
     grid-template-columns: 1fr;
   }

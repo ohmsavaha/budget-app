@@ -5,6 +5,8 @@ import vm from "node:vm";
 
 const repoRoot = new URL("../", import.meta.url).pathname;
 const root = join(repoRoot, "assets/pet-v1");
+const app = readFileSync(join(repoRoot, "index.html"), "utf8");
+const worker = readFileSync(join(repoRoot, "sw.js"), "utf8");
 const characters = ["huchu", "mayo", "jjajang"];
 const states = ["idle", "eat", "sleep", "play", "groom", "sick", "love"];
 const expectedDurations = [150, 170, 210, 300, 210, 170];
@@ -113,6 +115,17 @@ for (const character of characters) {
   }
 }
 
+for (const character of characters) {
+  for (const path of [
+    join(repoRoot, `assets/mascot-v2/phase2a/webp/${character}_breathe_512_v01.webp`),
+    join(repoRoot, `assets/mascot-v2/phase2a/static/${character}_breathe_frame_01_v01.png`),
+  ]) {
+    checkedFiles += 1;
+    if (!existsSync(path)) fail(`adult handoff asset missing: ${path}`);
+    else totalBytes += statSync(path).size;
+  }
+}
+
 const runtimePath = join(root, "pet-nursery.js");
 const viewPath = join(root, "pet-nursery-view.js");
 const cssPath = join(root, "pet-nursery.css");
@@ -149,6 +162,7 @@ if (existsSync(runtimePath)) {
     let rejected = false;
     try { api.resetToKitten(adult, "wrong", now); } catch (_error) { rejected = true; }
     if (!rejected) fail("unguarded reset was accepted");
+    if (api.getResetToken("huchu") !== "후추 다시 키우기") fail("localized guarded reset token invalid");
     const reset = api.resetToKitten(adult, api.getResetToken("huchu"), now);
     if (reset.generation !== 2 || reset.stage !== "kitten") fail("guarded reset invalid");
     api.saveAll({ huchu: initial, mayo: api.createInitialState("mayo", { now }), jjajang: api.createInitialState("jjajang", { now }) });
@@ -171,6 +185,21 @@ if (existsSync(cssPath)) {
   if (/position\s*:\s*(fixed|absolute)/.test(css)) fail("nursery CSS may not overlay app information");
 }
 
+for (const marker of [
+  'href="./assets/pet-v1/pet-nursery.css"',
+  'src="./assets/pet-v1/pet-nursery.js"',
+  'src="./assets/pet-v1/pet-nursery-view.js"',
+  '["pets","🐾 육성"]',
+  "function buildPetRoom(",
+  "function showPetResetDialog(",
+  "가계부 데이터와 분리 저장",
+]) {
+  if (!app.includes(marker)) fail(`app nursery integration missing: ${marker}`);
+}
+if (!worker.includes("PET_RUNTIME_ASSETS")) fail("pet runtime offline asset expansion missing");
+if (!worker.includes("PET_ADULT_HANDOFF_ASSETS")) fail("adult mascot handoff offline assets missing");
+if (!worker.includes('const CACHE = "budget-v157"')) fail("pet integration cache version missing");
+
 if (failures.length) {
   console.error(failures.join("\n"));
   process.exitCode = 1;
@@ -180,6 +209,7 @@ if (failures.length) {
     characters: characters.length,
     statesPerCharacter: states.length,
     animations: characters.length * states.length,
+    adultHandoffAssets: characters.length * 2,
     checkedFiles,
     totalBytes,
     offlineDecayCapHours: 24,

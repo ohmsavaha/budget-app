@@ -6,7 +6,7 @@ const app = readFileSync(join(repoRoot, "index.html"), "utf8");
 const worker = readFileSync(join(repoRoot, "sw.js"), "utf8");
 const failures = [];
 
-const expectedTabs = ["home", "spend", "shared", "assets", "calendar", "fixed", "invest", "yearly", "db"];
+const expectedTabs = ["home", "pets", "spend", "shared", "assets", "calendar", "fixed", "invest", "yearly", "db"];
 const tabDefinition = app.match(/const TAB_DEFS=\[(.*?)\];/s)?.[1] || "";
 const actualTabs = [...tabDefinition.matchAll(/\["([^"]+)",/g)].map(match => match[1]);
 if (JSON.stringify(actualTabs) !== JSON.stringify(expectedTabs)) {
@@ -15,7 +15,7 @@ if (JSON.stringify(actualTabs) !== JSON.stringify(expectedTabs)) {
 
 const requiredBuilders = [
   "buildHome", "buildSpend", "buildShared", "buildAssets", "buildCalendarView",
-  "buildFixed", "buildInvest", "buildYearly", "buildDbTab",
+  "buildFixed", "buildInvest", "buildYearly", "buildDbTab", "buildPetRoom",
 ];
 for (const builder of requiredBuilders) {
   if (!app.includes(`function ${builder}(`)) failures.push(`탭 빌더 누락: ${builder}`);
@@ -31,6 +31,7 @@ const hierarchyByTab = {
   invest: ["invest-hero", "invest-market-card", "invest-holdings-card"],
   yearly: ["year-dashboard", "year-mode-chart-card", "year-monthly-card"],
   db: ["db-dashboard", "db-hero", "db-main-card"],
+  pets: ["pet-page__hero", "pet-character-tabs", "pet-page__guide"],
 };
 for (const [tab, classes] of Object.entries(hierarchyByTab)) {
   for (const className of classes) {
@@ -40,8 +41,8 @@ for (const [tab, classes] of Object.entries(hierarchyByTab)) {
 
 if (!app.includes("@media (prefers-reduced-motion:reduce)")) failures.push("앱 셸 모션감소 규칙 누락");
 if (!app.includes('data-budget-mascot-stage')) failures.push("마스코트 전용 안전영역 누락");
-if (!app.includes("나의 가계부 · v155")) failures.push("앱 버전 v155 표기 누락");
-if (!worker.includes('const CACHE = "budget-v155"')) failures.push("서비스워커 v155 캐시 누락");
+if (!app.includes("나의 가계부 · v157")) failures.push("앱 버전 v157 표기 누락");
+if (!worker.includes('const CACHE = "budget-v157"')) failures.push("서비스워커 v157 캐시 누락");
 
 const globalFunctions = [...app.matchAll(/^function\s+([A-Za-z0-9_]+)\s*\(/gm)].map(match => match[1]);
 const duplicates = [...new Set(globalFunctions.filter((name, index) => globalFunctions.indexOf(name) !== index))];
@@ -53,7 +54,7 @@ if (failures.length) {
 } else {
   console.log(JSON.stringify({
     status: "passed",
-    version: "v155",
+    version: "v157",
     tabs: actualTabs.length,
     builders: requiredBuilders.length,
     hierarchyChecks: Object.values(hierarchyByTab).flat().length,

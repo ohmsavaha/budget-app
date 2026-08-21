@@ -102,7 +102,9 @@
       root.dataset.petStatus = status.id;
       root.dataset.petStage = state.stage;
       title.textContent = `${state.displayName} · ${state.generation}번째 성장`;
-      stage.textContent = `${stageLabel} · ${state.xp}/${engine.ADULT_XP} XP`;
+      stage.textContent = state.stage === "kitten"
+        ? `${stageLabel} · ${state.xp}/${engine.ADULT_XP} XP`
+        : `${stageLabel} · 성장 완료`;
       message.textContent = customMessage || `${state.displayName}: ${status.label}`;
       pet.src = asset.src;
       pet.onerror = () => {

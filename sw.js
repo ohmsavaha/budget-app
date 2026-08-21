@@ -1,5 +1,15 @@
 // 나의 가계부 서비스워커 — 오프라인 캐시 + 푸시 알림
-const CACHE = "budget-v155";
+const CACHE = "budget-v157";
+const PET_CHARACTERS = ["huchu", "mayo", "jjajang"];
+const PET_STATES = ["idle", "eat", "sleep", "play", "groom", "sick", "love"];
+const PET_RUNTIME_ASSETS = PET_CHARACTERS.flatMap((character) => PET_STATES.flatMap((state) => [
+  `./assets/pet-v1/webp/${character}_baby_${state}_512_v01.webp`,
+  `./assets/pet-v1/static/${character}_baby_${state}_frame_01_v01.png`,
+]));
+const PET_ADULT_HANDOFF_ASSETS = PET_CHARACTERS.flatMap((character) => [
+  `./assets/mascot-v2/phase2a/webp/${character}_breathe_512_v01.webp`,
+  `./assets/mascot-v2/phase2a/static/${character}_breathe_frame_01_v01.png`,
+]);
 const CORE = [
   "./",
   "./index.html",
@@ -7,6 +17,10 @@ const CORE = [
   "./icon-192.png",
   "./assets/mascot-v2/mascot-runtime.css",
   "./assets/mascot-v2/mascot-runtime.js",
+  "./assets/pet-v1/pet-nursery.css",
+  "./assets/pet-v1/pet-nursery.js",
+  "./assets/pet-v1/pet-nursery-view.js",
+  "./assets/pet-v1/manifest.json",
   "./assets/mascot-v2/phase2l/webp/group_group_budget_review_512_v01.webp",
   "./assets/mascot-v2/phase2l/static/group_group_budget_review_frame_01_v01.png",
   "./assets/mascot-v2/phase2m/webp/huchu_budget_warning_512_v01.webp",
@@ -23,6 +37,8 @@ const CORE = [
   "./assets/mascot-v2/phase2m/static/huchu_search_no_results_frame_01_v01.png",
   "./assets/mascot-v2/phase2m/static/mayo_history_empty_frame_01_v01.png",
   "./assets/mascot-v2/phase2m/static/mayo_retry_calm_frame_01_v01.png",
+  ...PET_RUNTIME_ASSETS,
+  ...PET_ADULT_HANDOFF_ASSETS,
 ];
 // 캐시 대상: 우리 파일 + 코드/차트 CDN. Supabase 데이터 API는 절대 캐시하지 않음 (가계부 데이터는 항상 최신이어야 함)
 const CACHEABLE_ORIGINS = [self.location.origin, "https://esm.sh", "https://cdnjs.cloudflare.com"];

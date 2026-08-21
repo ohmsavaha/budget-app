@@ -229,7 +229,7 @@
 
   function getResetToken(character) {
     assertCharacter(character);
-    return `RESET:${character}`;
+    return `${DISPLAY_NAMES[character]} 다시 키우기`;
   }
 
   function resetToKitten(input, confirmation, now = Date.now()) {
