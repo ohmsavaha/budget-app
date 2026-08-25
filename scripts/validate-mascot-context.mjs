@@ -68,4 +68,4 @@ expect("익숙한 사용처", pick({ category:"장보기", account:"개인", amo
 reset({ txns:[expense("2026-08-21")], prevTxns:[] });
 expect("카테고리 기본", pick({ category:"장보기", account:"개인", amount:10000, date:"2026-08-21", merchant:"새마트" }), "grocery_logged");
 
-console.log(JSON.stringify({ status:"passed", scenarios:10, version:"v162" }));
+console.log(JSON.stringify({ status:"passed", scenarios:10, version:"v163" }));

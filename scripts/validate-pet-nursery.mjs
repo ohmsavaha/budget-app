@@ -281,7 +281,7 @@ if (!worker.includes("PET_ADULT_HANDOFF_ASSETS")) fail("adult mascot handoff off
 if (!worker.includes("pet-nursery-extras.js")) fail("pet extras offline support missing");
 if (!worker.includes("pet-nursery-room.js")) fail("pet room offline support missing");
 if (!worker.includes("pet-nursery-memories.js")) fail("pet generation memories offline support missing");
-if (!worker.includes('const CACHE = "budget-v162"')) fail("pet integration cache version missing");
+if (!worker.includes('const CACHE = "budget-v163"')) fail("pet integration cache version missing");
 
 if (failures.length) {
   console.error(failures.join("\n"));

@@ -1,0 +1,18 @@
+{
+  "pack": "humajja-mascot-v2-phase2p",
+  "version": "1.0.0",
+  "purpose": "수입·정산환급·환불·저축 적립·비상금·저축 만기의 금융 의미를 구분하는 반응 팩",
+  "canvas": {"source":[1024,1024],"runtime":[512,512],"fallback":[128,128]},
+  "animation_count": 7,
+  "solo_action_count": 7,
+  "group_action_count": 0,
+  "animations": [
+    {"id":"huchu_salary_income_logged","actor":"huchu","display_name":"후추","action":"salary_income_logged","action_label":"근로수입 기록","durations_ms":[150,170,210,300,210,170],"total_duration_ms":1210,"loop":true,"anchor":{"x":0.5,"y":0.95}},
+    {"id":"jjajang_extra_income_logged","actor":"jjajang","display_name":"짜장","action":"extra_income_logged","action_label":"기타·부수입 기록","durations_ms":[150,170,210,300,210,170],"total_duration_ms":1210,"loop":true,"anchor":{"x":0.5,"y":0.95}},
+    {"id":"mayo_settlement_refund_logged","actor":"mayo","display_name":"마요","action":"settlement_refund_logged","action_label":"정산환급 기록","durations_ms":[150,170,210,300,210,170],"total_duration_ms":1210,"loop":true,"anchor":{"x":0.5,"y":0.95}},
+    {"id":"huchu_refund","actor":"huchu","display_name":"후추","action":"refund","action_label":"구매 환불 기록","durations_ms":[150,170,210,300,210,170],"total_duration_ms":1210,"loop":true,"anchor":{"x":0.5,"y":0.95}},
+    {"id":"jjajang_savings_progress","actor":"jjajang","display_name":"짜장","action":"savings_progress","action_label":"저축 납입 기록","durations_ms":[150,170,210,300,210,170],"total_duration_ms":1210,"loop":true,"anchor":{"x":0.5,"y":0.95}},
+    {"id":"mayo_emergency_fund","actor":"mayo","display_name":"마요","action":"emergency_fund","action_label":"비상금 적립","durations_ms":[150,170,210,300,210,170],"total_duration_ms":1210,"loop":true,"anchor":{"x":0.5,"y":0.95}},
+    {"id":"jjajang_savings_maturity","actor":"jjajang","display_name":"짜장","action":"savings_maturity","action_label":"저축 만기 기록","durations_ms":[150,170,210,300,210,170],"total_duration_ms":1210,"loop":true,"anchor":{"x":0.5,"y":0.95}}
+  ]
+}

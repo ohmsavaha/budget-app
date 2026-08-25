@@ -4,6 +4,10 @@ const REDUCED_MOTION = window.matchMedia("(prefers-reduced-motion: reduce)");
 const ENABLED_KEY = "mascot_v2_enabled";
 
 const PHASE_ACTIONS = Object.freeze({
+  phase2p: new Set([
+    "salary_income_logged", "extra_income_logged", "settlement_refund_logged",
+    "refund", "savings_progress", "emergency_fund", "savings_maturity",
+  ]),
   phase2o: new Set([
     "day_first_logged", "category_first_logged", "familiar_place_logged",
     "large_expense_logged", "budget_checkpoint_logged", "record_streak_logged",
@@ -141,6 +145,9 @@ const IDLE_BY_TAB = Object.freeze({
 });
 
 const PREFERRED_CHARACTER = Object.freeze({
+  salary_income_logged: "huchu",
+  extra_income_logged: "jjajang",
+  settlement_refund_logged: "mayo",
   day_first_logged: "mayo",
   category_first_logged: "jjajang",
   familiar_place_logged: "huchu",
@@ -259,7 +266,7 @@ const PREFERRED_CHARACTER = Object.freeze({
   investment_down: "mayo",
   dividend_interest: "mayo",
   networth_record: "mayo",
-  refund: "jjajang",
+  refund: "huchu",
   lowest_price: "jjajang",
   emergency_fund: "mayo",
   debt_payoff: "jjajang",
@@ -278,6 +285,9 @@ const PREFERRED_CHARACTER = Object.freeze({
 });
 
 const ACTION_COPY = Object.freeze({
+  salary_income_logged: ["근로수입 기록 완료", "후추가 일해서 들어온 금액을 월 수입에 또렷하게 남겼어요.", "good"],
+  extra_income_logged: ["기타·부수입 기록 완료", "짜장이 예상 밖에 들어온 금액도 빠뜨리지 않고 정리했어요.", "good"],
+  settlement_refund_logged: ["정산환급 기록 완료", "마요가 먼저 낸 돈 중 돌아온 금액을 수입과 구분해 맞췄어요.", "good"],
   day_first_logged: ["오늘의 첫 기록", "마요가 오늘 지출 기록의 첫 장을 차분히 열었어요.", "good"],
   category_first_logged: ["이달의 새 분류 기록", "짜장이 이번 달 처음 나온 분류를 보기 좋게 나눠뒀어요.", "good"],
   familiar_place_logged: ["익숙한 사용처 기록", "후추가 자주 찾는 사용처를 알아보고 빠짐없이 남겼어요.", "good"],
@@ -408,6 +418,9 @@ const ACTION_COPY = Object.freeze({
 });
 
 const PRIORITY = Object.freeze({
+  salary_income_logged: 4,
+  extra_income_logged: 4,
+  settlement_refund_logged: 4,
   day_first_logged: 3,
   category_first_logged: 3,
   familiar_place_logged: 3,
@@ -509,7 +522,7 @@ function phaseFor(action) {
 }
 
 function animatedName(phase, character, action) {
-  const suffix = ["phase2a", "phase2b", "phase2c", "phase2f", "phase2g", "phase2h", "phase2i", "phase2k", "phase2l", "phase2m", "phase2n", "phase2o"].includes(phase) ? "_512_v01.webp" : "_v01.webp";
+  const suffix = ["phase2a", "phase2b", "phase2c", "phase2f", "phase2g", "phase2h", "phase2i", "phase2k", "phase2l", "phase2m", "phase2n", "phase2o", "phase2p"].includes(phase) ? "_512_v01.webp" : "_v01.webp";
   return `${character}_${action}${suffix}`;
 }
 

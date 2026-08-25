@@ -1,5 +1,5 @@
 // 나의 가계부 서비스워커 — 오프라인 캐시 + 푸시 알림
-const CACHE = "budget-v162";
+const CACHE = "budget-v163";
 const PET_CHARACTERS = ["huchu", "mayo", "jjajang"];
 const PET_STATES = ["idle", "eat", "sleep", "play", "groom", "sick", "love"];
 const PET_RUNTIME_ASSETS = PET_CHARACTERS.flatMap((character) => PET_STATES.flatMap((state) => [
@@ -72,6 +72,20 @@ const CORE = [
   "./assets/mascot-v2/phase2o/static/huchu_large_expense_logged_frame_01_v01.png",
   "./assets/mascot-v2/phase2o/static/mayo_budget_checkpoint_logged_frame_01_v01.png",
   "./assets/mascot-v2/phase2o/static/jjajang_record_streak_logged_frame_01_v01.png",
+  "./assets/mascot-v2/phase2p/webp/huchu_salary_income_logged_512_v01.webp",
+  "./assets/mascot-v2/phase2p/webp/jjajang_extra_income_logged_512_v01.webp",
+  "./assets/mascot-v2/phase2p/webp/mayo_settlement_refund_logged_512_v01.webp",
+  "./assets/mascot-v2/phase2p/webp/huchu_refund_512_v01.webp",
+  "./assets/mascot-v2/phase2p/webp/jjajang_savings_progress_512_v01.webp",
+  "./assets/mascot-v2/phase2p/webp/mayo_emergency_fund_512_v01.webp",
+  "./assets/mascot-v2/phase2p/webp/jjajang_savings_maturity_512_v01.webp",
+  "./assets/mascot-v2/phase2p/static/huchu_salary_income_logged_frame_01_v01.png",
+  "./assets/mascot-v2/phase2p/static/jjajang_extra_income_logged_frame_01_v01.png",
+  "./assets/mascot-v2/phase2p/static/mayo_settlement_refund_logged_frame_01_v01.png",
+  "./assets/mascot-v2/phase2p/static/huchu_refund_frame_01_v01.png",
+  "./assets/mascot-v2/phase2p/static/jjajang_savings_progress_frame_01_v01.png",
+  "./assets/mascot-v2/phase2p/static/mayo_emergency_fund_frame_01_v01.png",
+  "./assets/mascot-v2/phase2p/static/jjajang_savings_maturity_frame_01_v01.png",
   ...PET_RUNTIME_ASSETS,
   ...PET_ADULT_HANDOFF_ASSETS,
 ];

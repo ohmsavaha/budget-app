@@ -74,7 +74,7 @@ for (const phase of phases) {
   }
 }
 
-const manifestPhases = ["phase2f", "phase2g", "phase2h", "phase2i", "phase2k", "phase2l", "phase2m", "phase2n", "phase2o"];
+const manifestPhases = ["phase2f", "phase2g", "phase2h", "phase2i", "phase2k", "phase2l", "phase2m", "phase2n", "phase2o", "phase2p"];
 for (const phase of manifestPhases) {
   const manifestPath = join(repoRoot, `assets/mascot-v2/${phase}/manifest.json`);
   if (!existsSync(manifestPath)) {
@@ -94,10 +94,10 @@ for (const phase of manifestPhases) {
           const size = statSync(path).size;
           totalBytes += size;
           if (size < 100) failures.push(`비정상적으로 작은 파일: ${path} (${size} bytes)`);
-          if (["phase2m", "phase2n", "phase2o"].includes(phase) && path.endsWith(".png") && !pngHasAlpha(path)) {
+          if (["phase2m", "phase2n", "phase2o", "phase2p"].includes(phase) && path.endsWith(".png") && !pngHasAlpha(path)) {
             failures.push(`${phase} 정적 PNG 알파 누락: ${path}`);
           }
-          if (["phase2i", "phase2k", "phase2l", "phase2m", "phase2n", "phase2o"].includes(phase) && path.endsWith(".webp")) {
+          if (["phase2i", "phase2k", "phase2l", "phase2m", "phase2n", "phase2o", "phase2p"].includes(phase) && path.endsWith(".webp")) {
             try {
               const info = inspectAnimatedWebP(path);
               const expectedDurations = [150, 170, 210, 300, 210, 170];
@@ -114,7 +114,7 @@ for (const phase of manifestPhases) {
           }
         }
       }
-      if (["phase2m", "phase2n", "phase2o"].includes(phase)) {
+      if (["phase2m", "phase2n", "phase2o", "phase2p"].includes(phase)) {
         const sourcePath = join(repoRoot, `assets/mascot-v2/${phase}/source/${actor}_${action}_master_v01.png`);
         checked += 1;
         if (!existsSync(sourcePath)) failures.push(`${phase} 원화 누락: ${sourcePath}`);

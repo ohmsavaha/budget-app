@@ -82,4 +82,4 @@ assert.ok((app.match(/deleteRowsChecked\(/g)||[]).length >= 3, "일괄 삭제 �
 assert.ok((app.match(/deleteRowChecked\("transactions"/g)||[]).length >= 3, "거래 단건 삭제 검증 연결 누락");
 for (const table of ["shopping_items", "fixed_costs", "investment_holdings", "loans"]) assert.ok(app.includes(`deleteRowChecked("${table}"`), `${table} 삭제 결과 확인 누락`);
 
-console.log(JSON.stringify({ status: "passed", scenarios: 6, guardedFlows: 12, version: "v162" }));
+console.log(JSON.stringify({ status: "passed", scenarios: 6, guardedFlows: 12, version: "v163" }));

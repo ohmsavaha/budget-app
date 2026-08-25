@@ -131,6 +131,22 @@ for (const [action, character] of [
 }
 
 for (const [action, character] of [
+  ["salary_income_logged", "huchu"],
+  ["extra_income_logged", "jjajang"],
+  ["settlement_refund_logged", "mayo"],
+  ["refund", "huchu"],
+  ["savings_progress", "jjajang"],
+  ["emergency_fund", "mayo"],
+  ["savings_maturity", "jjajang"],
+]) {
+  window.BudgetMascot.play({ action, character, duration: 10 });
+  if (!image.getAttribute("src")?.includes(`phase2p/webp/${character}_${action}_512`)) {
+    throw new Error(`Phase 2P 동작 실패: ${character}_${action}`);
+  }
+  await new Promise((resolve) => setTimeout(resolve, 15));
+}
+
+for (const [action, character] of [
   ["day_first_logged", "mayo"],
   ["category_first_logged", "jjajang"],
   ["familiar_place_logged", "huchu"],
@@ -239,8 +255,10 @@ if (!image.getAttribute("src")?.includes("phase2o/static/jjajang_record_streak_l
   throw new Error("Phase 2O 모션 감소 정적 대체 실패");
 }
 await new Promise((resolve) => setTimeout(resolve, 15));
-window.BudgetMascot.play({ action: "refund", character: "jjajang", duration: 10 });
-if (!image.getAttribute("src")?.endsWith(".png")) throw new Error("모션 감소 정적 대체 실패");
+window.BudgetMascot.play({ action: "savings_maturity", character: "jjajang", duration: 10 });
+if (!image.getAttribute("src")?.includes("phase2p/static/jjajang_savings_maturity_frame_01")) {
+  throw new Error("Phase 2P 모션 감소 정적 대체 실패");
+}
 
 window.BudgetMascot.setEnabled(false);
 
@@ -248,7 +266,7 @@ console.log(JSON.stringify({
   status: "passed",
   idle: "group_budget_review",
   reaction: "huchu_card_payment",
-  reducedMotion: "jjajang_refund_frame_01",
+  reducedMotion: "jjajang_savings_maturity_frame_01",
   phase2f: "head_tilt + group_cuddle",
   phase2g: "fixed_due_check + group_highfive + market_shelter",
   phase2h: "backup_complete + group_month_review + calendar_export",
@@ -259,5 +277,6 @@ console.log(JSON.stringify({
   phase2m: "budget + goal + empty + retry states",
   phase2n: "10 category-aware expense reactions",
   phase2o: "6 context-aware expense reactions",
+  phase2p: "7 income and savings reactions",
   toggle: "passed",
 }));

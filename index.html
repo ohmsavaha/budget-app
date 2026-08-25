@@ -1100,8 +1100,8 @@ function renderDash(){
       h("div",{style:{display:"flex",alignItems:"center",gap:"9px"}},
         h("span",{style:{fontSize:"21px"}},isPetTab?"🐾":(SN[Number(S.curYm.split("-")[1])]||"📒")),
         isPetTab
-          ?h("div",{},h("div",{style:{fontSize:"11.5px",color:C.sub}},"🐾 나의 가계부 · v162"),h("div",{style:{fontSize:"16.5px",fontWeight:"800",letterSpacing:"-.01em"}},"고양이 육성방"))
-          :h("div",{},h("div",{style:{fontSize:"11.5px",color:C.sub}},"🐾 나의 가계부 · v162"),h("div",{style:{fontSize:"16.5px",fontWeight:"800",letterSpacing:"-.01em",cursor:"pointer",display:"flex",alignItems:"center",gap:"4px"},onclick:()=>showMonthPicker()},yml(S.curYm),h("span",{style:{fontSize:"10px",color:C.faint}},"▾")))
+          ?h("div",{},h("div",{style:{fontSize:"11.5px",color:C.sub}},"🐾 나의 가계부 · v163"),h("div",{style:{fontSize:"16.5px",fontWeight:"800",letterSpacing:"-.01em"}},"고양이 육성방"))
+          :h("div",{},h("div",{style:{fontSize:"11.5px",color:C.sub}},"🐾 나의 가계부 · v163"),h("div",{style:{fontSize:"16.5px",fontWeight:"800",letterSpacing:"-.01em",cursor:"pointer",display:"flex",alignItems:"center",gap:"4px"},onclick:()=>showMonthPicker()},yml(S.curYm),h("span",{style:{fontSize:"10px",color:C.faint}},"▾")))
       ),
       isPetTab
         ?h("div",{class:"pet-header-save","aria-label":"육성 데이터 저장 위치"},"이 기기에 안전 저장")
@@ -6234,6 +6234,17 @@ function mascotContextualExpenseAction({category,account,payment,amount,date,mer
   if(place&&history.filter(t=>String(t.merchant||"").trim().toLocaleLowerCase("ko-KR")===place).length>=2)return "familiar_place_logged";
   return base;
 }
+const INCOME_MASCOT_BY_CATEGORY=Object.freeze({
+  "근로수입":"salary_income_logged",
+  "기타수입":"extra_income_logged",
+});
+function mascotMoneyFlowAction(type,category){
+  if(type==="수입")return INCOME_MASCOT_BY_CATEGORY[category]||"extra_income_logged";
+  if(type==="정산환급")return "settlement_refund_logged";
+  if(type==="환불/취소")return "refund";
+  if(type==="저축/적금")return "savings_progress";
+  return null;
+}
 function showAdd(preset){
   const ov=h("div",{style:{position:"fixed",inset:"0",background:"rgba(40,37,31,.42)",display:"flex",alignItems:"center",justifyContent:"center",padding:"16px",zIndex:"50"}});
   const sh=h("div",{style:{width:"100%",maxWidth:"520px",background:C.w,borderRadius:"20px",padding:"18px 20px 26px",maxHeight:"88vh",overflowY:"auto"}});
@@ -6325,15 +6336,14 @@ function showAdd(preset){
       if(error){alert("저장 실패: "+error.message);sv.disabled=false;sv.textContent="저장하기";return;}
     }
     const mascotAction=dutchOn&&n===1?"split_bill":
-      ["환불/취소","정산환급"].includes(typ.value)?"refund":
       typ.value==="소비(할부)"?"installment_plan":
       typ.value==="공용입금"?"shared_deposit":
-      typ.value==="수입"?"income_received":
-      typ.value==="저축/적금"?"savings_progress":
-      typ.value==="이체"?"transfer_complete":
-      typ.value==="투자"?"amount_entry":
-      typ.value==="카드대금"?"card_payment":
-      mascotContextualExpenseAction({category:selCat,account:selAcc,payment:selPay,amount:a,date:dt.value,merchant:mer.value});
+      (mascotMoneyFlowAction(typ.value,selCat)||(
+        typ.value==="이체"?"transfer_complete":
+        typ.value==="투자"?"amount_entry":
+        typ.value==="카드대금"?"card_payment":
+        mascotContextualExpenseAction({category:selCat,account:selAcc,payment:selPay,amount:a,date:dt.value,merchant:mer.value})
+      ));
     ov.remove();await loadMonth();const ct=document.getElementById("ct");if(ct){ct.innerHTML="";buildHome().forEach(n=>ct.append(n));}
     clearTimeout(mascotBudgetTimer);
     mascotEvent(mascotAction);

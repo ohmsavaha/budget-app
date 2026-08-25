@@ -241,6 +241,25 @@
   --mascot-stage-line: #e6ddca;
 }
 
+.budget-mascot-stage[data-action="salary_income_logged"],
+.budget-mascot-stage[data-action="extra_income_logged"],
+.budget-mascot-stage[data-action="savings_progress"],
+.budget-mascot-stage[data-action="savings_maturity"] {
+  --mascot-stage-bg:
+    radial-gradient(circle at 88% 18%, rgba(225, 178, 63, .20), transparent 35%),
+    linear-gradient(135deg, #fff 0%, #f0faf4 100%);
+  --mascot-stage-line: #cfe5d6;
+}
+
+.budget-mascot-stage[data-action="settlement_refund_logged"],
+.budget-mascot-stage[data-action="refund"],
+.budget-mascot-stage[data-action="emergency_fund"] {
+  --mascot-stage-bg:
+    radial-gradient(circle at 88% 18%, rgba(75, 132, 156, .16), transparent 35%),
+    linear-gradient(135deg, #fff 0%, #f2f8fa 100%);
+  --mascot-stage-line: #d3e4e8;
+}
+
 .budget-mascot-toggle {
   position: absolute;
   top: 8px;
